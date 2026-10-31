@@ -253,7 +253,7 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 - [x] **4.5. Break-Testing Fase 4:** Pruebas de estrés de WebGL (spam de clics en mapa y libros), intento de abrir PDFs privados desde el cliente sin sesión y responsividad.
 
 ### Fase 5: Frontend Administrativo (ERP Eclesiástico Completo) y Cierre
-- [ ] **5.1.** Construir pantallas de Login, Recuperación de Contraseña y Layout protegido por roles (RF-01).
+- [x] **5.1.** Construir pantallas de Login, Recuperación de Contraseña y Layout protegido por roles (RF-01).
 - [ ] **5.2.** Construir vistas del Dashboard con gráficas estadísticas y ocultamiento condicional de finanzas (RF-08).
 - [ ] **5.3.** Construir interfaces CRUD para Miembros (RF-02), Asistencia (RF-03), Eventos con Calendario (RF-04) y Ministerios (RF-05).
 - [ ] **5.4.** Construir módulo financiero de Donaciones Anónimas/Nominales (RF-06), Comunicados (RF-07), Descarga de Reportes PDF/Excel (RF-09) y Configuración + Subida de Libros PDF (RF-10).
@@ -268,12 +268,13 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | Parámetro de Control | Estado Actual |
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
-| **Fase Activa** | `Fase 4 (mejora de calidad visual pedida por el usuario) y luego Fase 5` |
-| **Última Tarea Completada** | `Calidad visual: libros de cuero con pan de oro, iglesias PBR (teja, piedra, cupula), rediseno moderno-RPG; vitest 59 OK` |
-| **Siguiente Tarea Inmediata** | `5.1. Sign-in (diseno split Asciify pedido por el usuario) y layout protegido` |
+| **Fase Activa** | `Fase 5: Frontend administrativo` |
+| **Última Tarea Completada** | `5.1. Sign-in split con artPanel Asciify, recuperacion de contrasena, rutas y layout por rol; fondo de koi de letras; vitest 71 OK` |
+| **Siguiente Tarea Inmediata** | `5.2. Dashboard administrativo` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `UnitTests 154 OK + BreakTests 151 OK (dinero hostil, acceso Finance, archivos disfrazados, codices privados, abuso de reportes)` |
+
 
 
 

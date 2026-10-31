@@ -9,7 +9,7 @@ const RpgView = lazy(() => import('./components/rpg-view/RpgView.tsx'))
 
 type View = 'map' | 'detail'
 
-export default function App() {
+export function PublicApp() {
   const [churches, setChurches] = useState<PublicChurch[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
@@ -37,6 +37,7 @@ export default function App() {
         <h1 className="text-2xl sm:text-3xl">ChurchSeeker</h1>
         <p className="rpg-label">Mérida · Yucatán</p>
       </header>
+      <a href="#/login" className="rpg-button absolute right-16 top-3 z-10 hidden sm:inline-block">Acceso del personal</a>
 
       <Suspense fallback={<p className="absolute left-1/2 top-1/2 -translate-x-1/2" role="status">Cargando…</p>}>
         {detail ? (
