@@ -1,5 +1,5 @@
-﻿import * as THREE from 'three'
-import { mulberry32 } from '../ascii/asciiEngine.ts'
+import * as THREE from 'three'
+import { mulberry32 } from './random.ts'
 
 // Procedural surface textures drawn on a canvas, so the app ships no image files and works offline.
 // Without a DOM (unit tests, server rendering) every function returns null and materials simply have no map.

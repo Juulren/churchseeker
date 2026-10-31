@@ -1,5 +1,4 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
-import AsciiBackground from './components/ascii/AsciiBackground.tsx'
 import { publicApi } from './services/api.ts'
 import type { PublicChurch } from './services/types.ts'
 
@@ -31,7 +30,6 @@ export function PublicApp() {
 
   return (
     <>
-      <AsciiBackground churchId={hoveredId ?? selectedId} />
 
       <header className="rpg-panel pointer-events-none absolute left-4 top-3 z-10 max-w-[calc(100vw-2rem)] px-3 py-1 sm:px-4">
         <h1 className="text-2xl sm:text-3xl">ChurchSeeker</h1>

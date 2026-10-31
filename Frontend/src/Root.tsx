@@ -1,6 +1,5 @@
-﻿import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
+import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
 import { PublicApp } from './App.tsx'
-import AsciiBackground from './components/ascii/AsciiBackground.tsx'
 import { authApi, session } from './services/auth.ts'
 import { navigate, parseRoute, useHash } from './state/route.ts'
 
@@ -31,12 +30,7 @@ export default function Root() {
     <Suspense fallback={<p role="status" className="p-6">Cargando…</p>}>
       {route.name === 'login' && !user && <SignIn />}
       {route.name === 'reset' && <ResetPassword email={route.params.get('email') ?? ''} token={route.params.get('token') ?? ''} />}
-      {route.name === 'admin' && user && (
-        <>
-          <AsciiBackground />
-          <AdminShell />
-        </>
-      )}
+      {route.name === 'admin' && user && <AdminShell />}
     </Suspense>
   )
 }

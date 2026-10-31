@@ -231,23 +231,3 @@ test.describe('devices', () => {
     })
   }
 })
-
-test('the ASCII background keeps animating without blocking the page', async ({ page }) => {
-  // Without WebGL the map is not created, so only the background runs: any blocking would be its fault.
-  await page.addInitScript(() => {
-    const original = HTMLCanvasElement.prototype.getContext
-    HTMLCanvasElement.prototype.getContext = function (type: string, ...rest: unknown[]) {
-      if (/webgl/i.test(type)) return null
-      return (original as (...a: unknown[]) => unknown).call(this, type, ...rest) as never
-    } as typeof original
-  })
-  await page.goto('/')
-  await expect(nav(page).getByRole('button')).toHaveCount(3)
-  const blocked = await page.evaluate(async () => {
-    let total = 0
-    new PerformanceObserver((l) => l.getEntries().forEach((e) => { total += Math.max(0, e.duration - 50) })).observe({ entryTypes: ['longtask'] })
-    await new Promise((r) => setTimeout(r, 3000))
-    return total
-  })
-  expect(blocked).toBeLessThan(300)
-})
