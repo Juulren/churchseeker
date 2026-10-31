@@ -155,6 +155,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
 
     private void StampUpdates()
     {
+        // Rows are never physically removed: use Deactivate()/Cancel() so history and audit stay intact.
+        if (ChangeTracker.Entries<BaseEntity>().Any(e => e.State == EntityState.Deleted && e.Entity is not AuditLog))
+            throw new InvalidOperationException("Physical deletes are forbidden. Deactivate the entity instead.");
+
         // Audit rows are append-only.
         if (ChangeTracker.Entries<AuditLog>().Any(e => e.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("AuditLog is immutable.");
@@ -185,6 +189,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
         AuditLogs.AddRange(audits);
     }
 }
+
 
 
 

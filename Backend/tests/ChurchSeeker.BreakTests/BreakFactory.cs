@@ -4,7 +4,11 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using ChurchSeeker.Domain.Enums;
+using ChurchSeeker.Infrastructure.Identity;
 using ChurchSeeker.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.IdentityModel.Tokens;
@@ -49,6 +53,25 @@ public class BreakFactory : WebApplicationFactory<Program>
         return c;
     }
 
+    public const string UserPassword = "B7eak!Passw0rd#x";
+
+    public async Task<HttpClient> UserClient(UserRole role, Guid churchId, string tag)
+    {
+        var email = $"{role}-{tag}@brk.local".ToLower();
+        using (var scope = Services.CreateScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = new ApplicationUser { Id = Guid.NewGuid(), UserName = email, Email = email, FullName = email, ChurchId = churchId };
+            var created = await users.CreateAsync(user, UserPassword);
+            if (!created.Succeeded) throw new InvalidOperationException(string.Join(";", created.Errors.Select(e => e.Description)));
+            await users.AddToRoleAsync(user, role.ToString());
+        }
+        return WithBearer(await AccessToken(await Login(Anonymous(), email, UserPassword)));
+    }
+
+    public static async Task<JsonElement> ReadJson(HttpResponseMessage r) =>
+        JsonDocument.Parse(await r.Content.ReadAsStringAsync()).RootElement.Clone();
+
     public static async Task<HttpResponseMessage> Login(HttpClient c, string email, string password) =>
         await c.PostAsJsonAsync("/api/auth/login", new { email, password });
 
@@ -79,3 +102,4 @@ public class BreakFactory : WebApplicationFactory<Program>
         return new JwtSecurityTokenHandler().WriteToken(jwt);
     }
 }
+
