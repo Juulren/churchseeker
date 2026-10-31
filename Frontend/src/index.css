@@ -1,19 +1,19 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 
 :root {
   --font-pixel: "VT323", ui-monospace, "Cascadia Mono", "Consolas", monospace;
-  --ink: #f4e9d0;
-  --ink-dim: #b9a77f;
-  --panel: rgba(18, 12, 8, 0.82);
-  --panel-edge: #c8a45a;
-  --accent: #e0a63a;
+  --ink: #f4f6f9;
+  --ink-dim: #a9b3c1;
+  --panel: rgba(10, 14, 20, 0.86);
+  --panel-edge: #dfe5ee;
+  --accent: #ffffff;
 }
 
 html, body, #root { height: 100%; }
 
 body {
   margin: 0;
-  background: #0b0705;
+  background: #05080c;
   color: var(--ink);
   font-family: var(--font-pixel);
   font-size: 18px;
@@ -24,19 +24,19 @@ body {
 .rpg-panel {
   background: var(--panel);
   border: 3px solid var(--panel-edge);
-  box-shadow: 0 0 0 3px #1a110a, 6px 6px 0 rgba(0, 0, 0, 0.45);
+  box-shadow: 0 0 0 3px #05080c, 6px 6px 0 rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(2px);
 }
 
 .rpg-button {
   border: 2px solid var(--panel-edge);
-  background: #2a1b10;
+  background: #141b25;
   color: var(--ink);
   padding: 0.25rem 0.75rem;
   cursor: pointer;
   font: inherit;
 }
-.rpg-button:hover, .rpg-button:focus-visible { background: var(--accent); color: #1a110a; outline: none; }
+.rpg-button:hover, .rpg-button:focus-visible { background: var(--accent); color: #05080c; outline: none; }
 .rpg-button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 @media (prefers-reduced-motion: reduce) {

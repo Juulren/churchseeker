@@ -107,9 +107,9 @@ export default function PdfReader({ title, spineColor, load, onClose }: Props) {
           transition={{ duration: swing, ease: 'easeInOut', opacity: { duration: swing, times: [0, 0.85, 1] } }}
         >
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-8 text-center"
-            style={{ background: spineColor, border: '6px solid #e0b04a', backfaceVisibility: 'hidden' }}>
+            style={{ background: spineColor, border: '6px solid #f4f6f9', backfaceVisibility: 'hidden' }}>
             <span className="text-4xl" style={{ color: '#f4e9d0', textShadow: '2px 2px 0 rgba(0,0,0,0.5)' }}>{title}</span>
-            <span style={{ color: '#e0b04a' }}>✠</span>
+            <span style={{ color: '#f4f6f9' }}>✠</span>
           </div>
           <div className="absolute inset-0" style={{ background: '#d9cba3', transform: 'rotateY(180deg)', backfaceVisibility: 'hidden' }} />
         </motion.div>

@@ -269,11 +269,12 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
 | **Fase Activa** | `Fase 4: Frontend Inmersivo (RPG, mapa 3D, ASCII, estante)` |
-| **Última Tarea Completada** | `4.4. Estante 3D de códices + visor PDF (react-pdf, apertura de pasta); vitest 57 OK` |
+| **Última Tarea Completada** | `4.2 rehecha: mapa real (MapLibre + Esri) con iglesias 3D en sus coordenadas, soporte .glb; fondo ASCII de peces; paleta blanca; vitest 50 OK` |
 | **Siguiente Tarea Inmediata** | `4.5. Break-Testing Fase 4 (Playwright con Edge, estres WebGL, PDF privado, responsividad)` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `UnitTests 154 OK + BreakTests 151 OK (dinero hostil, acceso Finance, archivos disfrazados, codices privados, abuso de reportes)` |
+
 
 
 

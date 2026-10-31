@@ -27,3 +27,6 @@ Thumbs.db
 storage/
 
 .claude/
+
+Frontend/test-results/
+Frontend/playwright-report/
