@@ -31,6 +31,8 @@ public class BreakFactory : WebApplicationFactory<Program>
         builder.UseSetting("Jwt:Key", JwtKey);
         builder.UseSetting("ConnectionStrings:Default", $"Data Source={_dbFile}");
         builder.UseSetting("Database:AutoCreate", "true");
+        // Development settings enable demo content; tests need an empty database.
+        builder.UseSetting("Seed:Demo", "false");
         builder.UseSetting("Storage:Root", StorageRoot);
         builder.UseSetting("RateLimiting:Auth", AuthLimit.ToString());
         builder.UseSetting("RateLimiting:Global", "100000");

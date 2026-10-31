@@ -240,7 +240,7 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 - [x] **3.6. Break-Testing Fase 3:** Intentar inyectar montos negativos en donaciones, acceder a reportes financieros con rol `Coordinador`/`Secretario`, y subir archivos `.exe` disfrazados de `.pdf` al estante de libros.
 
 ### Fase 4: Frontend Inmersivo — Estética RPG, Mapa 3D de Mérida, ASCII y Estante de Libros
-- [ ] **4.1. Fondo Animado ASCII:** Construir `<AsciiBackground />` con shaders/canvas a 60 FPS sin bloqueo de UI.
+- [x] **4.1. Fondo Animado ASCII:** Construir `<AsciiBackground />` con shaders/canvas a 60 FPS sin bloqueo de UI.
 - [ ] **4.2. Mapa Interactivo de Mérida + 3 Iglesias Low-Poly:**
   - [ ] Integrar mapa centrado en Mérida con los 3 modelos 3D Low-Poly personalizados según la religión/santos de cada iglesia.
   - [ ] Programar animación de selección y zoom cinematográfico con GSAP.
@@ -269,11 +269,12 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
 | **Fase Activa** | `Fase 4: Frontend Inmersivo (RPG, mapa 3D, ASCII, estante)` |
-| **Última Tarea Completada** | `3.6. Break-tests Fase 3 (151 break tests); Fase 3 completa, backend completo` |
-| **Siguiente Tarea Inmediata** | `4.1. Fondo ASCII <AsciiBackground />` |
+| **Última Tarea Completada** | `4.1. Fondo ASCII (worker + OffscreenCanvas, 60fps, paleta por iglesia) + cliente API + datos demo; vitest 22 OK, backend 158+151 OK` |
+| **Siguiente Tarea Inmediata** | `4.2. Mapa de Mérida + 3 iglesias low-poly + zoom GSAP` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `UnitTests 154 OK + BreakTests 151 OK (dinero hostil, acceso Finance, archivos disfrazados, codices privados, abuso de reportes)` |
+
 
 
 
