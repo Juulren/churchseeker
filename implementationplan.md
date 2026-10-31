@@ -202,7 +202,7 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
   - [x] Flujo seguro de recuperación y restablecimiento de contraseñas con tokens de un solo uso y expiración corta.
   - [x] Configurar los 5 roles: `Administrador`, `Pastor`, `Secretario`, `Tesorero` y `Coordinador`.
   - [x] Implementar guardias de autorización por rol y filtro global Multi-Tenant (`ChurchId`).
-- [ ] **1.3. Seguridad Web Base:** Configurar *Rate Limiting*, CORS estricto, cabeceras de seguridad (CSP, HSTS, X-Frame-Options) y `AuditLog`.
+- [x] **1.3. Seguridad Web Base:** Configurar *Rate Limiting*, CORS estricto, cabeceras de seguridad (CSP, HSTS, X-Frame-Options) y `AuditLog`.
 - [ ] **1.4. Break-Testing Fase 1:** Ejecutar pruebas de fuerza bruta en login, manipulación de firma JWT, escalada de privilegios entre roles y cruce de datos entre iglesias (IDOR).
 
 ### Fase 2: Módulos Operativos Core (RF-02, RF-03, RF-04, RF-05)
@@ -269,11 +269,12 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
 | **Fase Activa** | `Fase 1: Cimientos del Backend` |
-| **Última Tarea Completada** | `1.2. RF-01 auth (JWT, refresh rotativo, lockout, reset, roles, filtro tenant); 28 tests OK` |
-| **Siguiente Tarea Inmediata** | `1.3. Rate limiting, CORS, cabeceras de seguridad, AuditLog` |
+| **Última Tarea Completada** | `1.3. Rate limiting, CORS estricto, cabeceras de seguridad, AuditLog append-only; 37 tests OK` |
+| **Siguiente Tarea Inmediata** | `1.4. Break-Testing Fase 1 (suite ChurchSeeker.BreakTests)` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
-| **Estado de Pruebas (Break-Tests)** | `28 pruebas en UnitTests (auth API, lockout, JWT manipulado, alg=none, reuse de refresh, tenant filter). BreakTests aun vacio (1.4)` |
+| **Estado de Pruebas (Break-Tests)** | `37 pruebas en UnitTests (auth, lockout, JWT manipulado, alg=none, 429, CORS, cabeceras, audit inmutable). BreakTests aun vacio (1.4)` |
+
 
 
 

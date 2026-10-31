@@ -16,6 +16,7 @@ public class AuthApiFactory : WebApplicationFactory<Program>
 {
     public const string AdminEmail = "admin@test.local";
     public const string AdminPassword = "Adm1n!Passw0rd#";
+    protected virtual int AuthLimit => 10000;
     private readonly string _dbFile = Path.Combine(Path.GetTempPath(), $"cs-test-{Guid.NewGuid():N}.db");
 
     protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
@@ -24,6 +25,8 @@ public class AuthApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Jwt:Key", "test-key-test-key-test-key-test-key-1234");
         builder.UseSetting("ConnectionStrings:Default", $"Data Source={_dbFile}");
         builder.UseSetting("Database:AutoCreate", "true");
+        builder.UseSetting("RateLimiting:Auth", AuthLimit.ToString());
+        builder.UseSetting("Cors:AllowedOrigins:0", "http://localhost:5173");
         builder.UseSetting("Seed:AdminEmail", AdminEmail);
         builder.UseSetting("Seed:AdminPassword", AdminPassword);
         builder.UseSetting("Seed:AdminChurchId", ChurchSeedData.SantaLuciaId.ToString());
@@ -233,3 +236,4 @@ public class AuthApiTests : IClassFixture<AuthApiFactory>
         (await c.SendAsync(req)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 }
+

@@ -18,9 +18,11 @@ public interface ICurrentUser
     Guid? UserId { get; }
     Guid? ChurchId { get; }
     UserRole? Role { get; }
+    string? IpAddress { get; }
 }
 
 public interface IEmailSender
 {
     Task SendPasswordResetAsync(string email, string resetToken, CancellationToken ct = default);
 }
+

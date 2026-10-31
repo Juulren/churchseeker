@@ -1,4 +1,5 @@
-﻿using ChurchSeeker.Application.Auth;
+﻿using ChurchSeeker.Application.Auditing;
+using ChurchSeeker.Application.Auth;
 using ChurchSeeker.Domain.Entities;
 using ChurchSeeker.Domain.Enums;
 using ChurchSeeker.Infrastructure.Persistence;
@@ -16,12 +17,17 @@ public sealed class AuthService : IAuthService
     private readonly IEmailSender _mail;
     private readonly ICurrentUser _current;
     private readonly TimeProvider _clock;
+    private readonly IAuditLogger _audit;
 
     public AuthService(UserManager<ApplicationUser> users, AppDbContext db, ITokenService tokens,
-                       IEmailSender mail, ICurrentUser current, TimeProvider clock)
+                       IEmailSender mail, ICurrentUser current, TimeProvider clock, IAuditLogger audit)
     {
-        _users = users; _db = db; _tokens = tokens; _mail = mail; _current = current; _clock = clock;
+        _users = users; _db = db; _tokens = tokens; _mail = mail; _current = current; _clock = clock; _audit = audit;
     }
+
+    // Never put the email or password in audit details: only ids.
+    private Task AuditAsync(string action, ApplicationUser? user, CancellationToken ct, string? details = null) =>
+        _audit.WriteAsync(new AuditEntry(action, user?.ChurchId, user?.Id, nameof(ApplicationUser), user?.Id.ToString(), details), ct);
 
     private DateTime Now => _clock.GetUtcNow().UtcDateTime;
 
@@ -35,22 +41,29 @@ public sealed class AuthService : IAuthService
         {
             // Spend comparable time so response timing does not reveal unknown emails.
             _users.PasswordHasher.HashPassword(new ApplicationUser(), password);
+            await AuditAsync("auth.login.failed", null, ct, "unknown account");
             return AuthResult<AuthTokens>.Fail(AuthError.InvalidCredentials);
         }
 
         // Locked and inactive accounts get the same generic answer as a wrong password.
         if (!user.IsActive || await _users.IsLockedOutAsync(user))
+        {
+            await AuditAsync("auth.login.blocked", user, ct);
             return AuthResult<AuthTokens>.Fail(AuthError.InvalidCredentials);
+        }
 
         if (!await _users.CheckPasswordAsync(user, password))
         {
             await _users.AccessFailedAsync(user);
+            await AuditAsync("auth.login.failed", user, ct);
+            if (await _users.IsLockedOutAsync(user)) await AuditAsync("auth.account.locked", user, ct);
             return AuthResult<AuthTokens>.Fail(AuthError.InvalidCredentials);
         }
 
         await _users.ResetAccessFailedCountAsync(user);
         var issued = await IssueAsync(user, ct);
         await _db.SaveChangesAsync(ct);
+        await AuditAsync("auth.login.succeeded", user, ct);
         return AuthResult<AuthTokens>.Ok(issued.Tokens);
     }
 
@@ -70,6 +83,7 @@ public sealed class AuthService : IAuthService
             // A revoked token came back: assume theft and kill every session of that user.
             await RevokeAllAsync(stored.UserId, now, ct);
             await _db.SaveChangesAsync(ct);
+            await AuditAsync("auth.refresh.reuse_detected", await _users.FindByIdAsync(stored.UserId.ToString()), ct);
             return AuthResult<AuthTokens>.Fail(AuthError.InvalidToken);
         }
         if (!stored.IsActiveAt(now))
@@ -93,6 +107,7 @@ public sealed class AuthService : IAuthService
         if (stored is null) return;
         stored.Revoke(Now);
         await _db.SaveChangesAsync(ct);
+        await AuditAsync("auth.logout", await _users.FindByIdAsync(stored.UserId.ToString()), ct);
     }
 
     public async Task ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken ct = default)
@@ -101,6 +116,7 @@ public sealed class AuthService : IAuthService
         var user = await _users.FindByEmailAsync(request.Email?.Trim() ?? string.Empty);
         if (user is null || !user.IsActive) return;
         var token = await _users.GeneratePasswordResetTokenAsync(user);
+        await AuditAsync("auth.password.reset_requested", user, ct);
         await _mail.SendPasswordResetAsync(user.Email!, token, ct);
     }
 
@@ -115,13 +131,17 @@ public sealed class AuthService : IAuthService
         if (!result.Succeeded)
         {
             if (result.Errors.Any(e => e.Code == nameof(IdentityErrorDescriber.InvalidToken)))
+            {
+                await AuditAsync("auth.password.reset_failed", user, ct);
                 return AuthResult<bool>.Fail(AuthError.InvalidToken);
+            }
             return AuthResult<bool>.Fail(AuthError.Validation, result.Errors.Select(e => e.Description).ToArray());
         }
 
         await _users.ResetAccessFailedCountAsync(user);
         await RevokeAllAsync(user.Id, Now, ct);
         await _db.SaveChangesAsync(ct);
+        await AuditAsync("auth.password.reset_completed", user, ct);
         return AuthResult<bool>.Ok(true);
     }
 
@@ -145,6 +165,7 @@ public sealed class AuthService : IAuthService
             return AuthResult<UserInfo>.Fail(AuthError.Validation, created.Errors.Select(e => e.Description).ToArray());
 
         await _users.AddToRoleAsync(user, request.Role.ToString());
+        await _audit.WriteAsync(new AuditEntry("user.created", churchId, _current.UserId, nameof(ApplicationUser), user.Id.ToString(), $"role={request.Role}"), ct);
         return AuthResult<UserInfo>.Ok(new UserInfo(user.Id, email, name, request.Role, churchId));
     }
 
@@ -170,3 +191,4 @@ public sealed class AuthService : IAuthService
         return (new AuthTokens(access.Token, access.ExpiresAt, refresh.Raw, refresh.ExpiresAt, info), refresh.Hash);
     }
 }
+
