@@ -196,7 +196,7 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 - [x] **0.5.** Inicializar proyecto Frontend (React + TypeScript + Vite + Three.js + GSAP + Tailwind).
 
 ### Fase 1: Cimientos del Backend, Seguridad Base y RF-01 (Usuarios y Roles)
-- [ ] **1.1. Dominio POO Base:** Crear `BaseEntity`, `TenantEntity` (`ChurchId`) y entidades de las 3 iglesias iniciales de Mérida (*Database Seeder* con coordenadas reales).
+- [x] **1.1. Dominio POO Base:** Crear `BaseEntity`, `TenantEntity` (`ChurchId`) y entidades de las 3 iglesias iniciales de Mérida (*Database Seeder* con coordenadas reales).
 - [ ] **1.2. RF-01 (Autenticación y Roles):**
   - [ ] Registrar usuarios del sistema e implementar login/logout con correo y contraseña (`Argon2`/`BCrypt` + JWT + Cookie `HttpOnly`).
   - [ ] Flujo seguro de recuperación y restablecimiento de contraseñas con tokens de un solo uso y expiración corta.
@@ -269,10 +269,11 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
 | **Fase Activa** | `Fase 1: Cimientos del Backend` |
-| **Última Tarea Completada** | `0.5. Fase 0 completa (sln .NET 8 + Vite frontend)` |
-| **Siguiente Tarea Inmediata** | `1.1. Dominio POO base (BaseEntity, TenantEntity, seeder 3 iglesias)` |
+| **Última Tarea Completada** | `1.1. Dominio POO base + seeder 3 iglesias (rama feat/rf-01-domain-base)` |
+| **Siguiente Tarea Inmediata** | `1.2. RF-01 Auth: Identity, JWT, refresh cookie, roles, filtro tenant` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `Pendiente de inicialización de proyectos xUnit / Playwright` |
+
 
 
