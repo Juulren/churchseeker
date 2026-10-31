@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, type RefObject } from 'react'
+import { useEffect, useRef, type RefObject } from 'react'
 import { useThree } from '@react-three/fiber'
 import gsap from 'gsap'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
@@ -8,6 +8,8 @@ interface Props {
   pose: Pose
   controls: RefObject<OrbitControlsImpl | null>
   seconds?: number
+  /** Called when a move finishes (not when it is interrupted by a newer one). */
+  onArrive?: () => void
 }
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k
@@ -17,7 +19,9 @@ const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce
  * Cinematic camera moves. Every new pose starts from wherever the camera is right now, and the previous
  * tween is killed first, so clicking quickly between churches can never queue up or jump.
  */
-export default function CameraRig({ pose, controls, seconds = 1.5 }: Props) {
+export default function CameraRig({ pose, controls, seconds = 1.5, onArrive }: Props) {
+  const arrive = useRef(onArrive)
+  arrive.current = onArrive
   const camera = useThree((s) => s.camera)
   const invalidate = useThree((s) => s.invalidate)
   const tween = useRef<gsap.core.Tween | null>(null)
@@ -40,7 +44,7 @@ export default function CameraRig({ pose, controls, seconds = 1.5 }: Props) {
         c.update()
         invalidate()
       },
-      onComplete: () => { c.enabled = true },
+      onComplete: () => { c.enabled = true; arrive.current?.() },
     })
     return () => {
       tween.current?.kill()
