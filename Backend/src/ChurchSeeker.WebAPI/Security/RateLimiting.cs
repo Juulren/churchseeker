@@ -8,12 +8,14 @@ public static class RateLimitPolicies
     public const string Auth = "auth";
     // Reserved for report and export endpoints (RF-09).
     public const string Reports = "reports";
+    public const string Public = "public";
 
     public static IServiceCollection AddAppRateLimiting(this IServiceCollection services, IConfiguration config)
     {
         var global = config.GetValue("RateLimiting:Global", 300);
         var auth = config.GetValue("RateLimiting:Auth", 10);
         var reports = config.GetValue("RateLimiting:Reports", 10);
+        var publicRead = config.GetValue("RateLimiting:Public", 60);
 
         static string Key(HttpContext ctx) => ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         static FixedWindowRateLimiterOptions Window(int limit) =>
@@ -31,6 +33,8 @@ public static class RateLimitPolicies
                 RateLimitPartition.GetFixedWindowLimiter("g:" + Key(ctx), _ => Window(global)));
             o.AddPolicy(Auth, ctx => RateLimitPartition.GetFixedWindowLimiter("a:" + Key(ctx), _ => Window(auth)));
             o.AddPolicy(Reports, ctx => RateLimitPartition.GetFixedWindowLimiter("r:" + Key(ctx), _ => Window(reports)));
+            o.AddPolicy(Public, ctx => RateLimitPartition.GetFixedWindowLimiter("p:" + Key(ctx), _ => Window(publicRead)));
         });
     }
 }
+

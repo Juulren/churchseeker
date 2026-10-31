@@ -12,19 +12,23 @@ namespace ChurchSeeker.Infrastructure.Persistence;
 public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
 {
     private readonly ICurrentUser? _currentUser;
+    private readonly PublicTenantScope? _publicScope;
 
-    public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUser? currentUser = null) : base(options)
+    public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUser? currentUser = null,
+                      PublicTenantScope? publicScope = null) : base(options)
     {
         _currentUser = currentUser;
+        _publicScope = publicScope;
     }
 
     public DbSet<Church> Churches => Set<Church>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Member> Members => Set<Member>();
+    public DbSet<ChurchEvent> Events => Set<ChurchEvent>();
 
     // Fail closed: no authenticated church means the tenant filter matches nothing.
-    private Guid? CurrentChurchId => _currentUser?.ChurchId;
+    private Guid? CurrentChurchId => _publicScope?.ChurchId ?? _currentUser?.ChurchId;
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -75,6 +79,17 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             e.Property(x => x.Email).HasMaxLength(256);
             e.HasOne<Church>().WithMany().HasForeignKey(x => x.ChurchId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => new { x.ChurchId, x.FullName });
+        });
+
+        b.Entity<ChurchEvent>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Title).IsRequired().HasMaxLength(200);
+            e.Property(x => x.Description).HasMaxLength(4000);
+            e.Property(x => x.Location).IsRequired().HasMaxLength(200);
+            e.HasOne<Church>().WithMany().HasForeignKey(x => x.ChurchId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Member>().WithMany().HasForeignKey(x => x.ResponsibleMemberId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.ChurchId, x.Date });
         });
 
         ApplyTenantFilters(b);
@@ -137,5 +152,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
         AuditLogs.AddRange(audits);
     }
 }
+
 
 
