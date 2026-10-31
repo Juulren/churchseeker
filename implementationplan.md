@@ -231,9 +231,9 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 - [x] **3.3. RF-10 (Configuración de la Iglesia + Estante de Libros PDF):**
   - [x] Registrar/actualizar nombre de la iglesia, logotipo, dirección, contacto, coordenadas en Mérida, modelo 3D y horarios habituales.
   - [x] Implementar subida segura de "Escritos / Códices" en PDF (validación de *Magic Bytes*, estilo de lomo grueso y bandera `Público` vs. `Privado para trabajadores`).
-- [ ] **3.4. RF-08 (Panel Principal / Dashboard):**
-  - [ ] Mostrar KPIs: Total de miembros activos, eventos próximos, asistencias registradas y cantidad de ministerios.
-  - [ ] Mostrar resumen de ingresos registrados **únicamente** para roles autorizados (oculto desde el backend para otros roles) + gráficas estadísticas.
+- [x] **3.4. RF-08 (Panel Principal / Dashboard):**
+  - [x] Mostrar KPIs: Total de miembros activos, eventos próximos, asistencias registradas y cantidad de ministerios.
+  - [x] Mostrar resumen de ingresos registrados **únicamente** para roles autorizados (oculto desde el backend para otros roles) + gráficas estadísticas.
 - [ ] **3.5. RF-09 (Reportes Exportables):**
   - [ ] Generar reportes de: Miembros, Asistencia por evento, Participación por ministerio e Ingresos por periodo.
   - [ ] Implementar exportación polimórfica a **PDF** y **Excel (`.xlsx`)**.
@@ -269,11 +269,12 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
 | **Fase Activa** | `Fase 3: Finanzas, Comunicados, Configuración, Códices y Reportes` |
-| **Última Tarea Completada** | `3.3. RF-10 Configuración de iglesia + estante de códices PDF seguro (magic bytes, scripts PDF, GUID, publico/privado); 138+95 tests OK` |
-| **Siguiente Tarea Inmediata** | `3.4. RF-08 Dashboard` |
+| **Última Tarea Completada** | `3.4. RF-08 Dashboard (KPIs, gráfica semanal, ingresos solo Finance); 145+95 tests OK` |
+| **Siguiente Tarea Inmediata** | `3.5. RF-09 Reportes PDF/Excel` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `UnitTests 90 OK + BreakTests 95 OK (SQLi, XSS, fechas hostiles, borrado fisico, carreras, fuzz de queries, IDOR, rate limit publico)` |
+
 
 
 
