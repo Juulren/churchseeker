@@ -54,13 +54,13 @@ public sealed class AuthService : IAuthService
 
         if (!await _users.CheckPasswordAsync(user, password))
         {
-            await _users.AccessFailedAsync(user);
+            user = await RetryOnConflictAsync(user, u => _users.AccessFailedAsync(u)) ?? user;
             await AuditAsync("auth.login.failed", user, ct);
             if (await _users.IsLockedOutAsync(user)) await AuditAsync("auth.account.locked", user, ct);
             return AuthResult<AuthTokens>.Fail(AuthError.InvalidCredentials);
         }
 
-        await _users.ResetAccessFailedCountAsync(user);
+        user = await RetryOnConflictAsync(user, u => _users.ResetAccessFailedCountAsync(u)) ?? user;
         var issued = await IssueAsync(user, ct);
         await _db.SaveChangesAsync(ct);
         await AuditAsync("auth.login.succeeded", user, ct);
@@ -167,6 +167,33 @@ public sealed class AuthService : IAuthService
         await _users.AddToRoleAsync(user, request.Role.ToString());
         await _audit.WriteAsync(new AuditEntry("user.created", churchId, _current.UserId, nameof(ApplicationUser), user.Id.ToString(), $"role={request.Role}"), ct);
         return AuthResult<UserInfo>.Ok(new UserInfo(user.Id, email, name, request.Role, churchId));
+    }
+
+    // Concurrent requests update the same user row (failed-count, stamp). Identity uses optimistic
+    // concurrency, so reload and retry: dropping an update would let parallel guesses outrun the lockout.
+    // UserManager reports a conflict as a failed result and leaves the stale entity tracked,
+    // so the tracker must be cleared or the next SaveChanges (audit write) would throw.
+    private async Task<ApplicationUser?> RetryOnConflictAsync(ApplicationUser user, Func<ApplicationUser, Task<IdentityResult>> update)
+    {
+        const int maxAttempts = 12;
+        var id = user.Id;
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            IdentityResult? result = null;
+            try { result = await update(user); }
+            catch (DbUpdateConcurrencyException) { /* handled below */ }
+
+            if (result is { Succeeded: true }) return user;
+
+            _db.ChangeTracker.Clear();
+            var fresh = await _users.FindByIdAsync(id.ToString());
+            if (fresh is null) return null;
+            user = fresh;
+            await Task.Delay(Random.Shared.Next(1, 15));
+        }
+        // Give up quietly: the caller still answers 401, never a 500.
+        _db.ChangeTracker.Clear();
+        return await _users.FindByIdAsync(id.ToString());
     }
 
     private async Task RevokeAllAsync(Guid userId, DateTime now, CancellationToken ct)
