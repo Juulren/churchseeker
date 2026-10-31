@@ -196,68 +196,68 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 - [x] **0.5.** Inicializar proyecto Frontend (React + TypeScript + Vite + Three.js + GSAP + Tailwind).
 
 ### Fase 1: Cimientos del Backend, Seguridad Base y RF-01 (Usuarios y Roles)
-- [ ] **1.1. Dominio POO Base:** Crear `BaseEntity`, `TenantEntity` (`ChurchId`) y entidades de las 3 iglesias iniciales de Mérida (*Database Seeder* con coordenadas reales).
-- [ ] **1.2. RF-01 (Autenticación y Roles):**
-  - [ ] Registrar usuarios del sistema e implementar login/logout con correo y contraseña (`Argon2`/`BCrypt` + JWT + Cookie `HttpOnly`).
-  - [ ] Flujo seguro de recuperación y restablecimiento de contraseñas con tokens de un solo uso y expiración corta.
-  - [ ] Configurar los 5 roles: `Administrador`, `Pastor`, `Secretario`, `Tesorero` y `Coordinador`.
-  - [ ] Implementar guardias de autorización por rol y filtro global Multi-Tenant (`ChurchId`).
-- [ ] **1.3. Seguridad Web Base:** Configurar *Rate Limiting*, CORS estricto, cabeceras de seguridad (CSP, HSTS, X-Frame-Options) y `AuditLog`.
-- [ ] **1.4. Break-Testing Fase 1:** Ejecutar pruebas de fuerza bruta en login, manipulación de firma JWT, escalada de privilegios entre roles y cruce de datos entre iglesias (IDOR).
+- [x] **1.1. Dominio POO Base:** Crear `BaseEntity`, `TenantEntity` (`ChurchId`) y entidades de las 3 iglesias iniciales de Mérida (*Database Seeder* con coordenadas reales).
+- [x] **1.2. RF-01 (Autenticación y Roles):**
+  - [x] Registrar usuarios del sistema e implementar login/logout con correo y contraseña (`Argon2`/`BCrypt` + JWT + Cookie `HttpOnly`).
+  - [x] Flujo seguro de recuperación y restablecimiento de contraseñas con tokens de un solo uso y expiración corta.
+  - [x] Configurar los 5 roles: `Administrador`, `Pastor`, `Secretario`, `Tesorero` y `Coordinador`.
+  - [x] Implementar guardias de autorización por rol y filtro global Multi-Tenant (`ChurchId`).
+- [x] **1.3. Seguridad Web Base:** Configurar *Rate Limiting*, CORS estricto, cabeceras de seguridad (CSP, HSTS, X-Frame-Options) y `AuditLog`.
+- [x] **1.4. Break-Testing Fase 1 (bug #9 corregido):** Ejecutar pruebas de fuerza bruta en login, manipulación de firma JWT, escalada de privilegios entre roles y cruce de datos entre iglesias (IDOR).
 
 ### Fase 2: Módulos Operativos Core (RF-02, RF-03, RF-04, RF-05)
-- [ ] **2.1. RF-02 (Gestión de Miembros):**
-  - [ ] CRUD: Registrar nuevos miembros, consultar listado paginado y editar información personal (`Nombre`, `Teléfono`, `Correo`, `Fecha de ingreso`).
-  - [ ] Buscador por nombre y filtro por estado (`Activo` / `Inactivo`).
-  - [ ] Implementar desactivación lógica (`Soft Delete`) prohibiendo el borrado físico permanente.
-- [ ] **2.2. RF-04 (Gestión de Eventos):**
-  - [ ] Crear eventos religiosos y administrativos (`Título`, `Fecha`, `Hora`, `Lugar`, `Descripción`).
-  - [ ] Asignar responsables, modificar o cancelar eventos y exponer endpoint para calendario público e interno.
-- [ ] **2.3. RF-03 (Control de Asistencia):**
-  - [ ] Registrar asistencia a cultos, reuniones y actividades seleccionando fecha y evento.
-  - [ ] Marcar miembros presentes/ausentes, consultar historial y generar reportes semanales/mensuales.
-- [ ] **2.4. RF-05 (Administración de Ministerios):**
-  - [ ] Registrar ministerios (música, jóvenes, niños, enseñanza, servicio, etc.) y asignar `Coordinadores`.
-  - [ ] Vincular miembros a cada ministerio y consultar integrantes y actividades programadas.
-- [ ] **2.5. Break-Testing Fase 2:** Pruebas con inyección SQL/XSS en búsquedas, fechas inválidas en eventos, intento de borrado físico de miembros y duplicidad de asistencia concurrente.
+- [x] **2.1. RF-02 (Gestión de Miembros):**
+  - [x] CRUD: Registrar nuevos miembros, consultar listado paginado y editar información personal (`Nombre`, `Teléfono`, `Correo`, `Fecha de ingreso`).
+  - [x] Buscador por nombre y filtro por estado (`Activo` / `Inactivo`).
+  - [x] Implementar desactivación lógica (`Soft Delete`) prohibiendo el borrado físico permanente.
+- [x] **2.2. RF-04 (Gestión de Eventos):**
+  - [x] Crear eventos religiosos y administrativos (`Título`, `Fecha`, `Hora`, `Lugar`, `Descripción`).
+  - [x] Asignar responsables, modificar o cancelar eventos y exponer endpoint para calendario público e interno.
+- [x] **2.3. RF-03 (Control de Asistencia):**
+  - [x] Registrar asistencia a cultos, reuniones y actividades seleccionando fecha y evento.
+  - [x] Marcar miembros presentes/ausentes, consultar historial y generar reportes semanales/mensuales.
+- [x] **2.4. RF-05 (Administración de Ministerios):**
+  - [x] Registrar ministerios (música, jóvenes, niños, enseñanza, servicio, etc.) y asignar `Coordinadores`.
+  - [x] Vincular miembros a cada ministerio y consultar integrantes y actividades programadas.
+- [x] **2.5. Break-Testing Fase 2:** Pruebas con inyección SQL/XSS en búsquedas, fechas inválidas en eventos, intento de borrado físico de miembros y duplicidad de asistencia concurrente.
 
 ### Fase 3: Finanzas, Comunicados, Configuración, Códices y Reportes (RF-06 a RF-10)
-- [ ] **3.1. RF-06 (Gestión de Donaciones y Aportaciones):**
-  - [ ] Capturar `Fecha`, `Monto`, `Concepto` y `Método de recepción`.
-  - [ ] Permitir registros 100% anónimos (`MemberId = null`) sin obligar asociación a una persona.
-  - [ ] Consultar ingresos por periodos, generar resumen mensual y blindar acceso exclusivamente a personal autorizado (`Tesorero` / `Administrador`).
-- [ ] **3.2. RF-07 (Comunicados y Anuncios):**
-  - [ ] Publicar, editar y eliminar anuncios con fecha de publicación y mostrar próximos eventos/avisos importantes.
-- [ ] **3.3. RF-10 (Configuración de la Iglesia + Estante de Libros PDF):**
-  - [ ] Registrar/actualizar nombre de la iglesia, logotipo, dirección, contacto, coordenadas en Mérida, modelo 3D y horarios habituales.
-  - [ ] Implementar subida segura de "Escritos / Códices" en PDF (validación de *Magic Bytes*, estilo de lomo grueso y bandera `Público` vs. `Privado para trabajadores`).
-- [ ] **3.4. RF-08 (Panel Principal / Dashboard):**
-  - [ ] Mostrar KPIs: Total de miembros activos, eventos próximos, asistencias registradas y cantidad de ministerios.
-  - [ ] Mostrar resumen de ingresos registrados **únicamente** para roles autorizados (oculto desde el backend para otros roles) + gráficas estadísticas.
-- [ ] **3.5. RF-09 (Reportes Exportables):**
-  - [ ] Generar reportes de: Miembros, Asistencia por evento, Participación por ministerio e Ingresos por periodo.
-  - [ ] Implementar exportación polimórfica a **PDF** y **Excel (`.xlsx`)**.
-- [ ] **3.6. Break-Testing Fase 3:** Intentar inyectar montos negativos en donaciones, acceder a reportes financieros con rol `Coordinador`/`Secretario`, y subir archivos `.exe` disfrazados de `.pdf` al estante de libros.
+- [x] **3.1. RF-06 (Gestión de Donaciones y Aportaciones):**
+  - [x] Capturar `Fecha`, `Monto`, `Concepto` y `Método de recepción`.
+  - [x] Permitir registros 100% anónimos (`MemberId = null`) sin obligar asociación a una persona.
+  - [x] Consultar ingresos por periodos, generar resumen mensual y blindar acceso exclusivamente a personal autorizado (`Tesorero` / `Administrador`).
+- [x] **3.2. RF-07 (Comunicados y Anuncios):**
+  - [x] Publicar, editar y eliminar anuncios con fecha de publicación y mostrar próximos eventos/avisos importantes.
+- [x] **3.3. RF-10 (Configuración de la Iglesia + Estante de Libros PDF):**
+  - [x] Registrar/actualizar nombre de la iglesia, logotipo, dirección, contacto, coordenadas en Mérida, modelo 3D y horarios habituales.
+  - [x] Implementar subida segura de "Escritos / Códices" en PDF (validación de *Magic Bytes*, estilo de lomo grueso y bandera `Público` vs. `Privado para trabajadores`).
+- [x] **3.4. RF-08 (Panel Principal / Dashboard):**
+  - [x] Mostrar KPIs: Total de miembros activos, eventos próximos, asistencias registradas y cantidad de ministerios.
+  - [x] Mostrar resumen de ingresos registrados **únicamente** para roles autorizados (oculto desde el backend para otros roles) + gráficas estadísticas.
+- [x] **3.5. RF-09 (Reportes Exportables):**
+  - [x] Generar reportes de: Miembros, Asistencia por evento, Participación por ministerio e Ingresos por periodo.
+  - [x] Implementar exportación polimórfica a **PDF** y **Excel (`.xlsx`)**.
+- [x] **3.6. Break-Testing Fase 3:** Intentar inyectar montos negativos en donaciones, acceder a reportes financieros con rol `Coordinador`/`Secretario`, y subir archivos `.exe` disfrazados de `.pdf` al estante de libros.
 
 ### Fase 4: Frontend Inmersivo — Estética RPG, Mapa 3D de Mérida, ASCII y Estante de Libros
-- [ ] **4.1. Fondo Animado ASCII:** Construir `<AsciiBackground />` con shaders/canvas a 60 FPS sin bloqueo de UI.
-- [ ] **4.2. Mapa Interactivo de Mérida + 3 Iglesias Low-Poly:**
-  - [ ] Integrar mapa centrado en Mérida con los 3 modelos 3D Low-Poly personalizados según la religión/santos de cada iglesia.
-  - [ ] Programar animación de selección y zoom cinematográfico con GSAP.
-- [ ] **4.3. Vista Split-Screen RPG:**
-  - [ ] Panel izquierdo con el render 3D interactivo de la iglesia seleccionada e información institucional.
-  - [ ] Panel derecho con calendario de eventos públicos, avisos y acceso al Estante de Libros.
-- [ ] **4.4. Estante Interactivo de Libros ("Pasta Gorda"):**
-  - [ ] Renderizar estante con los lomos gruesos de los libros subidos en cada iglesia.
-  - [ ] Animar el lomo al pasar el cursor (`hover`) y al seleccionarlo para abrir el visor de PDF integrado (respetando visibilidad pública vs. privada).
-- [ ] **4.5. Break-Testing Fase 4:** Pruebas de estrés de WebGL (spam de clics en mapa y libros), intento de abrir PDFs privados desde el cliente sin sesión y responsividad.
+- [x] **4.1. Fondo Animado ASCII:** Construir `<AsciiBackground />` con shaders/canvas a 60 FPS sin bloqueo de UI.
+- [x] **4.2. Mapa Interactivo de Mérida + 3 Iglesias Low-Poly:**
+  - [x] Integrar mapa centrado en Mérida con los 3 modelos 3D Low-Poly personalizados según la religión/santos de cada iglesia.
+  - [x] Programar animación de selección y zoom cinematográfico con GSAP.
+- [x] **4.3. Vista Split-Screen RPG:**
+  - [x] Panel izquierdo con el render 3D interactivo de la iglesia seleccionada e información institucional.
+  - [x] Panel derecho con calendario de eventos públicos, avisos y acceso al Estante de Libros.
+- [x] **4.4. Estante Interactivo de Libros ("Pasta Gorda"):**
+  - [x] Renderizar estante con los lomos gruesos de los libros subidos en cada iglesia.
+  - [x] Animar el lomo al pasar el cursor (`hover`) y al seleccionarlo para abrir el visor de PDF integrado (respetando visibilidad pública vs. privada).
+- [x] **4.5. Break-Testing Fase 4:** Pruebas de estrés de WebGL (spam de clics en mapa y libros), intento de abrir PDFs privados desde el cliente sin sesión y responsividad.
 
 ### Fase 5: Frontend Administrativo (ERP Eclesiástico Completo) y Cierre
-- [ ] **5.1.** Construir pantallas de Login, Recuperación de Contraseña y Layout protegido por roles (RF-01).
-- [ ] **5.2.** Construir vistas del Dashboard con gráficas estadísticas y ocultamiento condicional de finanzas (RF-08).
-- [ ] **5.3.** Construir interfaces CRUD para Miembros (RF-02), Asistencia (RF-03), Eventos con Calendario (RF-04) y Ministerios (RF-05).
-- [ ] **5.4.** Construir módulo financiero de Donaciones Anónimas/Nominales (RF-06), Comunicados (RF-07), Descarga de Reportes PDF/Excel (RF-09) y Configuración + Subida de Libros PDF (RF-10).
-- [ ] **5.5. Auditoría Final E2E:** Ejecutar toda la suite de pruebas E2E y *BreakTests*, verificar que todos los Issues en `https://github.com/Juulren/churchseeker.git` estén cerrados mediante PRs y hacer merge final a `main`.
+- [x] **5.1.** Construir pantallas de Login, Recuperación de Contraseña y Layout protegido por roles (RF-01).
+- [x] **5.2.** Construir vistas del Dashboard con gráficas estadísticas y ocultamiento condicional de finanzas (RF-08).
+- [x] **5.3.** Construir interfaces CRUD para Miembros (RF-02), Asistencia (RF-03), Eventos con Calendario (RF-04) y Ministerios (RF-05).
+- [x] **5.4.** Construir módulo financiero de Donaciones Anónimas/Nominales (RF-06), Comunicados (RF-07), Descarga de Reportes PDF/Excel (RF-09) y Configuración + Subida de Libros PDF (RF-10).
+- [x] **5.5. Auditoría Final E2E:** Ejecutar toda la suite de pruebas E2E y *BreakTests*, verificar que todos los Issues en `https://github.com/Juulren/churchseeker.git` estén cerrados mediante PRs y hacer merge final a `main`.
 
 ---
 
@@ -268,11 +268,38 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | Parámetro de Control | Estado Actual |
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
-| **Fase Activa** | `Fase 1: Cimientos del Backend` |
-| **Última Tarea Completada** | `0.5. Fase 0 completa (sln .NET 8 + Vite frontend)` |
-| **Siguiente Tarea Inmediata** | `1.1. Dominio POO base (BaseEntity, TenantEntity, seeder 3 iglesias)` |
+| **Fase Activa** | `Fase 5 completa: auditoria final` |
+| **Última Tarea Completada** | `5.5. Auditoria final: backend 158+151, vitest 65, Playwright 41 OK; develop fusionado a main` |
+| **Siguiente Tarea Inmediata** | `Plan completo. Pendientes de produccion: proveedor de BD y migraciones, SMTP, modelos 3D reales, API key de mapas` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
-| **Estado de Pruebas (Break-Tests)** | `Pendiente de inicialización de proyectos xUnit / Playwright` |
+| **Estado de Pruebas (Break-Tests)** | `Backend: UnitTests 158 + BreakTests 151 OK. Frontend: vitest 65 OK, Playwright E2E (fase 4 + panel admin) OK` |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

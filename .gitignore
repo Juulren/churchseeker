@@ -19,3 +19,17 @@ uploads/
 .DS_Store
 Thumbs.db
 .idea/
+
+*.db
+*.db-shm
+*.db-wal
+
+storage/
+
+.claude/
+
+Frontend/test-results/
+Frontend/playwright-report/
+
+.agents/
+skills-lock.json

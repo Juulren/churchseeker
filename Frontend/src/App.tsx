@@ -1,122 +1,90 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+import { publicApi } from './services/api.ts'
+import type { PublicChurch } from './services/types.ts'
 
-function App() {
-  const [count, setCount] = useState(0)
+// three.js is heavy: the map and the detail view load on demand, after the first paint.
+const RealMap = lazy(() => import('./components/map3d/RealMap.tsx'))
+const RpgView = lazy(() => import('./components/rpg-view/RpgView.tsx'))
+
+type View = 'map' | 'detail'
+
+export function PublicApp() {
+  const [churches, setChurches] = useState<PublicChurch[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [view, setView] = useState<View>('map')
+
+  useEffect(() => {
+    const controller = new AbortController()
+    publicApi.churches()
+      .then((list) => { if (!controller.signal.aborted) setChurches(list) })
+      .catch((e: unknown) => { if (!controller.signal.aborted) setError(e instanceof Error ? e.message : 'Error desconocido') })
+    return () => controller.abort()
+  }, [])
+
+  const selected = churches?.find((c) => c.id === selectedId) ?? null
+  const enter = useCallback(() => setView('detail'), [])
+  const back = useCallback(() => { setView('map'); setSelectedId(null) }, [])
+  const detail = view === 'detail' && selected
 
   return (
     <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
 
-      <div className="ticks"></div>
+      <header className="rpg-panel pointer-events-none absolute left-4 top-3 z-10 max-w-[calc(100vw-2rem)] px-3 py-1 sm:px-4">
+        <h1 className="text-2xl sm:text-3xl">ChurchSeeker</h1>
+        <p className="rpg-label">Mérida · Yucatán</p>
+      </header>
+      <a href="#/login" className="rpg-button absolute right-16 top-3 z-10 hidden sm:inline-block">Acceso del personal</a>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      <Suspense fallback={<p className="absolute left-1/2 top-1/2 -translate-x-1/2" role="status">Cargando…</p>}>
+        {detail ? (
+          <RpgView church={selected} onBack={back} />
+        ) : (
+          churches && (
+            <RealMap churches={churches} selectedId={selectedId} hoveredId={hoveredId} onSelect={setSelectedId}
+              onHover={setHoveredId} onArrive={enter} />
+          )
+        )}
+      </Suspense>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+      {!detail && (
+        <>
+          {/* Always available, also for keyboards, screen readers and devices without WebGL. */}
+          <nav className="rpg-panel absolute bottom-4 left-4 z-10 w-72 p-3" aria-label="Iglesias de Mérida">
+            {error && <p role="alert">{error}</p>}
+            {!error && !churches && <p>Cargando iglesias…</p>}
+            <ul className="flex flex-col gap-2">
+              {churches?.map((c) => (
+                <li key={c.id}>
+                  <button
+                    className="rpg-button w-full text-left"
+                    aria-pressed={c.id === selectedId}
+                    onClick={() => setSelectedId(c.id)}
+                    onMouseEnter={() => setHoveredId(c.id)}
+                    onMouseLeave={() => setHoveredId(null)}
+                    onFocus={() => setHoveredId(c.id)}
+                    onBlur={() => setHoveredId(null)}
+                  >
+                    {c.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          {selected && (
+            <aside className="rpg-panel absolute bottom-4 right-4 z-10 w-80 p-3" aria-live="polite">
+              <h2 className="text-2xl" style={{ color: 'var(--accent)' }}>{selected.name}</h2>
+              <p style={{ color: 'var(--ink-dim)' }}>{selected.denomination} · {selected.patronSaint}</p>
+              <div className="mt-3 flex gap-2">
+                <button className="rpg-button" onClick={enter}>Entrar</button>
+                <button className="rpg-button" onClick={() => setSelectedId(null)}>Volver al mapa</button>
+              </div>
+            </aside>
+          )}
+        </>
+      )}
     </>
   )
 }
-
-export default App
