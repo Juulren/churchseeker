@@ -226,8 +226,8 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
   - [x] Capturar `Fecha`, `Monto`, `Concepto` y `Método de recepción`.
   - [x] Permitir registros 100% anónimos (`MemberId = null`) sin obligar asociación a una persona.
   - [x] Consultar ingresos por periodos, generar resumen mensual y blindar acceso exclusivamente a personal autorizado (`Tesorero` / `Administrador`).
-- [ ] **3.2. RF-07 (Comunicados y Anuncios):**
-  - [ ] Publicar, editar y eliminar anuncios con fecha de publicación y mostrar próximos eventos/avisos importantes.
+- [x] **3.2. RF-07 (Comunicados y Anuncios):**
+  - [x] Publicar, editar y eliminar anuncios con fecha de publicación y mostrar próximos eventos/avisos importantes.
 - [ ] **3.3. RF-10 (Configuración de la Iglesia + Estante de Libros PDF):**
   - [ ] Registrar/actualizar nombre de la iglesia, logotipo, dirección, contacto, coordenadas en Mérida, modelo 3D y horarios habituales.
   - [ ] Implementar subida segura de "Escritos / Códices" en PDF (validación de *Magic Bytes*, estilo de lomo grueso y bandera `Público` vs. `Privado para trabajadores`).
@@ -269,11 +269,12 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
 | **Fase Activa** | `Fase 3: Finanzas, Comunicados, Configuración, Códices y Reportes` |
-| **Última Tarea Completada** | `3.1. RF-06 Donaciones (anónimas, centavos exactos, anulación, resumen mensual, solo Finance); 113+95 tests OK` |
-| **Siguiente Tarea Inmediata** | `3.2. RF-07 Comunicados` |
+| **Última Tarea Completada** | `3.2. RF-07 Comunicados (programados, vencen, importantes, feed público); 124+95 tests OK` |
+| **Siguiente Tarea Inmediata** | `3.3. RF-10 Configuración + Estante de códices PDF` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `UnitTests 90 OK + BreakTests 95 OK (SQLi, XSS, fechas hostiles, borrado fisico, carreras, fuzz de queries, IDOR, rate limit publico)` |
+
 
 
 

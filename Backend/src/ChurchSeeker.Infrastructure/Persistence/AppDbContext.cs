@@ -30,6 +30,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     public DbSet<Ministry> Ministries => Set<Ministry>();
     public DbSet<MinistryMember> MinistryMembers => Set<MinistryMember>();
     public DbSet<Donation> Donations => Set<Donation>();
+    public DbSet<Announcement> Announcements => Set<Announcement>();
 
     // Fail closed: no authenticated church means the tenant filter matches nothing.
     private Guid? CurrentChurchId => _publicScope?.ChurchId ?? _currentUser?.ChurchId;
@@ -135,6 +136,15 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             e.HasIndex(x => new { x.ChurchId, x.Date });
         });
 
+        b.Entity<Announcement>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Title).IsRequired().HasMaxLength(200);
+            e.Property(x => x.Body).IsRequired().HasMaxLength(8000);
+            e.HasOne<Church>().WithMany().HasForeignKey(x => x.ChurchId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.ChurchId, x.PublishDate });
+        });
+
         ApplyTenantFilters(b);
     }
 
@@ -199,6 +209,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
         AuditLogs.AddRange(audits);
     }
 }
+
 
 
 
