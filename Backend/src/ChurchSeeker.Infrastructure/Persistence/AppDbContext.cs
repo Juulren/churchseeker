@@ -20,6 +20,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
 
     public DbSet<Church> Churches => Set<Church>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     // Fail closed: no authenticated church means the tenant filter matches nothing.
     private Guid? CurrentChurchId => _currentUser?.ChurchId;
@@ -53,6 +54,18 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             e.HasIndex(x => x.UserId);
         });
 
+        b.Entity<AuditLog>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Action).IsRequired().HasMaxLength(100);
+            e.Property(x => x.EntityName).HasMaxLength(100);
+            e.Property(x => x.EntityId).HasMaxLength(64);
+            e.Property(x => x.Details).HasMaxLength(1000);
+            e.Property(x => x.IpAddress).HasMaxLength(64);
+            e.HasIndex(x => x.ChurchId);
+            e.HasIndex(x => x.CreatedAt);
+        });
+
         ApplyTenantFilters(b);
     }
 
@@ -83,7 +96,34 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
 
     private void StampUpdates()
     {
+        // Audit rows are append-only.
+        if (ChangeTracker.Entries<AuditLog>().Any(e => e.State is EntityState.Modified or EntityState.Deleted))
+            throw new InvalidOperationException("AuditLog is immutable.");
+
+        var audits = new List<AuditLog>();
+        foreach (var entry in ChangeTracker.Entries().Where(e => e.Entity is IAuditedEntity
+                     && e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted))
+        {
+            var churchId = (entry.Entity as TenantEntity)?.ChurchId ?? _currentUser?.ChurchId;
+            var name = entry.Entity.GetType().Name;
+            var id = entry.Property("Id").CurrentValue?.ToString();
+            var action = entry.State switch
+            {
+                EntityState.Added => "Created",
+                EntityState.Deleted => "Deleted",
+                _ => "Updated"
+            };
+            // Property names only: values may be personal or financial and must not leak into logs.
+            var changed = entry.State == EntityState.Modified
+                ? string.Join(",", entry.Properties.Where(p => p.IsModified).Select(p => p.Metadata.Name))
+                : null;
+            audits.Add(new AuditLog($"{name}.{action}", churchId, _currentUser?.UserId, name, id, changed, _currentUser?.IpAddress));
+        }
+
         foreach (var entry in ChangeTracker.Entries<BaseEntity>().Where(e => e.State == EntityState.Modified))
             entry.Entity.Touch();
+
+        AuditLogs.AddRange(audits);
     }
 }
+

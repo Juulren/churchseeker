@@ -34,6 +34,7 @@ public class TenantFilterTests
         public bool IsAuthenticated => ChurchId.HasValue;
         public Guid? UserId => null;
         public UserRole? Role => null;
+        public string? IpAddress => null;
     }
 
     [Fact]
@@ -60,3 +61,4 @@ public class TenantFilterTests
         none.Notes.Count().Should().Be(0);
     }
 }
+

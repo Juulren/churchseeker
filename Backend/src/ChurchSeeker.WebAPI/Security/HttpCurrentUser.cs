@@ -17,6 +17,9 @@ public sealed class HttpCurrentUser : ICurrentUser
     public UserRole? Role =>
         Enum.TryParse<UserRole>(Principal?.FindFirst("role")?.Value, out var r) && Enum.IsDefined(r) ? r : null;
 
+    public string? IpAddress => _accessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+
     private Guid? ParseGuid(string claim) =>
         Guid.TryParse(Principal?.FindFirst(claim)?.Value, out var g) && g != Guid.Empty ? g : null;
 }
+

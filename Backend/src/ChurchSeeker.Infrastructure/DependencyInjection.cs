@@ -1,4 +1,5 @@
-﻿using ChurchSeeker.Application.Auth;
+﻿using ChurchSeeker.Application.Auditing;
+using ChurchSeeker.Application.Auth;
 using ChurchSeeker.Infrastructure.Identity;
 using ChurchSeeker.Infrastructure.Persistence;
 using ChurchSeeker.Infrastructure.Security;
@@ -44,6 +45,8 @@ public static class DependencyInjection
         services.AddSingleton<ITokenService, TokenService>();
         services.AddScoped<IEmailSender, LoggingEmailSender>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IAuditLogger, AuditLogger>();
         return services;
     }
 }
+

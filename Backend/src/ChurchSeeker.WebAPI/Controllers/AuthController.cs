@@ -2,6 +2,7 @@
 using ChurchSeeker.WebAPI.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace ChurchSeeker.WebAPI.Controllers;
 
@@ -22,11 +23,13 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
     [AllowAnonymous]
     public async Task<IActionResult> Login(LoginRequest request, CancellationToken ct) =>
         ToResponse(await _auth.LoginAsync(request, ct));
 
     [HttpPost("refresh")]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
     [AllowAnonymous]
     public async Task<IActionResult> Refresh(CancellationToken ct) =>
         ToResponse(await _auth.RefreshAsync(Request.Cookies[RefreshCookie], ct));
@@ -42,6 +45,7 @@ public class AuthController : ControllerBase
 
     // Always 204: the response never reveals whether the email exists.
     [HttpPost("forgot-password")]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
     [AllowAnonymous]
     public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request, CancellationToken ct)
     {
@@ -50,6 +54,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("reset-password")]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
     [AllowAnonymous]
     public async Task<IActionResult> ResetPassword(ResetPasswordRequest request, CancellationToken ct) =>
         Map(await _auth.ResetPasswordAsync(request, ct), _ => NoContent());
@@ -89,3 +94,4 @@ public class AuthController : ControllerBase
         Expires = expires.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(expires.Value, DateTimeKind.Utc)) : null
     };
 }
+

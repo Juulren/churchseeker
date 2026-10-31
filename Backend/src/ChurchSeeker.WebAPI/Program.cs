@@ -16,6 +16,21 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+builder.Services.AddAppRateLimiting(builder.Configuration);
+
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+if (allowedOrigins.Any(o => o.Trim() == "*" || !Uri.TryCreate(o, UriKind.Absolute, out _)))
+    throw new InvalidOperationException("Cors:AllowedOrigins must list explicit absolute origins (no wildcard).");
+builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
+{
+    // No configured origins means no cross-origin access at all.
+    if (allowedOrigins.Length > 0)
+        p.WithOrigins(allowedOrigins)
+         .WithMethods("GET", "POST", "PUT", "DELETE")
+         .WithHeaders("Content-Type", "Authorization")
+         .AllowCredentials();
+}));
+
 var jwt = builder.Configuration.GetSection("Jwt");
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -57,7 +72,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseSecurityHeaders(allowSwagger: app.Environment.IsDevelopment());
+if (!app.Environment.IsDevelopment())
+    app.UseHsts();
 app.UseHttpsRedirection();
+app.UseCors();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
@@ -65,3 +85,4 @@ app.MapControllers();
 app.Run();
 
 public partial class Program;
+
