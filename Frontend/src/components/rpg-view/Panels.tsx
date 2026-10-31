@@ -1,4 +1,4 @@
-﻿import type { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import type { ChurchProfile, PublicAnnouncement, PublicEvent } from '../../services/types.ts'
 import type { Section } from './churchData.ts'
 import { formatDate, formatShortDate, formatTime, groupEventsByDate, scheduleLabel } from './format.ts'
@@ -6,7 +6,7 @@ import { formatDate, formatShortDate, formatTime, groupEventsByDate, scheduleLab
 const dim = { color: 'var(--ink-dim)' } as const
 
 export function PanelTitle({ children }: { children: ReactNode }) {
-  return <h3 className="mb-2 border-b-2 pb-1 text-2xl" style={{ color: 'var(--accent)', borderColor: 'var(--panel-edge)' }}>{children}</h3>
+  return <h3 className="rpg-title text-2xl">{children}</h3>
 }
 
 function State<T>({ section, loading, empty, children }: { section: Section<T> | undefined; loading: boolean; empty: string; children: (data: T) => ReactNode }) {

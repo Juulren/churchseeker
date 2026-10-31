@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { MercatorCoordinate, type CustomLayerInterface, type CustomRenderMethodInput, type Map as MapLibreMap } from 'maplibre-gl'
 import { disposeObject } from './churchBuilder.ts'
+import { makeEnvironment } from '../quality/materials.ts'
 import { loadChurchObject } from './churchObject.ts'
 import { styleFor } from './churchStyles.ts'
 import type { PublicChurch } from '../../services/types.ts'
@@ -31,6 +32,7 @@ export class ChurchLayer implements CustomLayerInterface {
   private items: Item[] = []
   private generation = 0
   private last = 0
+  private environment: THREE.Texture | null = null
   private sizeW = 0
   private sizeH = 0
   private readonly rotationX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2)
@@ -39,10 +41,17 @@ export class ChurchLayer implements CustomLayerInterface {
     this.map = map
     this.renderer = new THREE.WebGLRenderer({ canvas: map.getCanvas(), context: gl, antialias: true })
     this.renderer.autoClear = false
+    const renderer = this.renderer
+    makeEnvironment(renderer).then((t) => {
+      this.environment = t
+      for (const it of this.items) it.scene.environment = t
+      this.map?.triggerRepaint()
+    })
   }
 
   onRemove() {
     this.clear()
+    this.environment?.dispose()
     this.renderer?.dispose()
     this.renderer = null
     this.map = null
@@ -60,7 +69,9 @@ export class ChurchLayer implements CustomLayerInterface {
     const generation = this.generation
     for (const church of churches) {
       const scene = new THREE.Scene()
-      scene.add(new THREE.HemisphereLight('#fff1d0', '#6a5a48', 1.4))
+      scene.environment = this.environment
+      scene.environmentIntensity = 0.9
+      scene.add(new THREE.HemisphereLight('#fff1d0', '#6a5a48', 0.7))
       const sun = new THREE.DirectionalLight('#ffe4b0', 1.8)
       sun.position.set(-30, 60, 40)
       scene.add(sun)

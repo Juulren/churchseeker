@@ -1,12 +1,20 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
+/*
+  Visual system: "modern RPG". Dark glass surfaces with hairline borders and corner ornaments, a serif display
+  face for titles (the feel of a quest log) and a clean sans for reading. White is the only accent.
+  System font stacks only: nothing is downloaded.
+*/
 :root {
-  --font-pixel: "VT323", ui-monospace, "Cascadia Mono", "Consolas", monospace;
-  --ink: #f4f6f9;
-  --ink-dim: #a9b3c1;
-  --panel: rgba(10, 14, 20, 0.86);
-  --panel-edge: #dfe5ee;
+  --font-display: "Cormorant Garamond", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --font-body: "Inter", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --ink: #f3f5f8;
+  --ink-dim: #9aa6b6;
+  --panel: rgba(9, 13, 19, 0.72);
+  --panel-edge: rgba(255, 255, 255, 0.22);
+  --panel-edge-strong: rgba(255, 255, 255, 0.85);
   --accent: #ffffff;
+  --radius: 14px;
 }
 
 html, body, #root { height: 100%; }
@@ -15,29 +23,71 @@ body {
   margin: 0;
   background: #05080c;
   color: var(--ink);
-  font-family: var(--font-pixel);
-  font-size: 18px;
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  line-height: 1.55;
+  letter-spacing: 0.005em;
   overflow: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* RPG window frame used by every panel. */
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; letter-spacing: 0.02em; line-height: 1.15; }
+h1 { font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; }
+h2 { font-size: 2rem; }
+h4 { font-size: 1.25rem; }
+
+/* Frosted glass surface with a hairline border and L-shaped corner marks, like a game UI frame. */
 .rpg-panel {
+  position: relative;
   background: var(--panel);
-  border: 3px solid var(--panel-edge);
-  box-shadow: 0 0 0 3px #05080c, 6px 6px 0 rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(2px);
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--radius);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
 }
+.rpg-panel::before, .rpg-panel::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  border: 1.5px solid var(--panel-edge-strong);
+}
+.rpg-panel::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; border-top-left-radius: var(--radius); }
+.rpg-panel::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; border-bottom-right-radius: var(--radius); }
 
 .rpg-button {
-  border: 2px solid var(--panel-edge);
-  background: #141b25;
+  border: 1px solid var(--panel-edge);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--ink);
-  padding: 0.25rem 0.75rem;
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
   cursor: pointer;
   font: inherit;
+  font-size: 0.93rem;
+  letter-spacing: 0.02em;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
-.rpg-button:hover, .rpg-button:focus-visible { background: var(--accent); color: #05080c; outline: none; }
-.rpg-button:disabled { opacity: 0.5; cursor: not-allowed; }
+.rpg-button:hover, .rpg-button:focus-visible { background: #fff; color: #05080c; border-color: #fff; outline: none; }
+.rpg-button:focus-visible { box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35); }
+.rpg-button:active { transform: translateY(1px); }
+.rpg-button:disabled { opacity: 0.45; cursor: not-allowed; }
+.rpg-button[aria-pressed="true"] { background: #fff; color: #05080c; border-color: #fff; }
+
+/* Section heading with a diamond ornament and a fading rule (quest-log style). */
+.rpg-title { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.7rem; }
+.rpg-title::before { content: "◆"; font-size: 0.6rem; color: var(--ink-dim); }
+.rpg-title::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--panel-edge), transparent); }
+
+.rpg-label { font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); }
+
+a { color: var(--ink); text-decoration-color: var(--panel-edge); text-underline-offset: 3px; }
+a:hover { text-decoration-color: #fff; }
+
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.22); border-radius: 999px; border: 3px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-track { background: transparent; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }

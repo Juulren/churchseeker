@@ -30,3 +30,6 @@ storage/
 
 Frontend/test-results/
 Frontend/playwright-report/
+
+.agents/
+skills-lock.json

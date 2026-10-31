@@ -1,9 +1,12 @@
-﻿import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Html, useCursor } from '@react-three/drei'
 import * as THREE from 'three'
 import GraphicsBoundary from '../map3d/GraphicsBoundary.tsx'
 import { hasWebGL } from '../map3d/webgl.ts'
+import LocalEnvironment from '../quality/LocalEnvironment.tsx'
+import { woodMaterial } from '../quality/materials.ts'
+import { buildBook, disposeBook } from './bookModel.ts'
 import { ROW_HEIGHT, layoutShelf, type BookSlot, type ShelfBook } from './shelfLayout.ts'
 
 interface Props {
@@ -13,13 +16,15 @@ interface Props {
   onOpen: (id: string) => void
 }
 
-const WOOD = '#5a3b22'
-const PLANK = '#7a5230'
-const GOLD = '#e0b04a'
 
 function Book({ slot, hovered, onHover, onOpen }: { slot: BookSlot } & Pick<Props, 'onHover' | 'onOpen'> & { hovered: boolean }) {
   const group = useRef<THREE.Group>(null)
   useCursor(hovered)
+  const model = useMemo(
+    () => buildBook({ w: slot.w, h: slot.h, d: slot.d, color: slot.color, title: slot.title, author: slot.author, isPublic: slot.isPublic }),
+    [slot.w, slot.h, slot.d, slot.color, slot.title, slot.author, slot.isPublic],
+  )
+  useEffect(() => () => disposeBook(model), [model])
   useFrame((_, dt) => {
     const g = group.current
     if (!g) return
@@ -28,39 +33,18 @@ function Book({ slot, hovered, onHover, onOpen }: { slot: BookSlot } & Pick<Prop
     g.position.y = THREE.MathUtils.damp(g.position.y, slot.y + slot.h / 2 + (hovered ? 0.12 : 0), 9, dt)
     g.rotation.y = THREE.MathUtils.damp(g.rotation.y, hovered ? -0.22 : 0, 9, dt)
   })
-  const { w, h, d } = slot
   return (
     <group
       ref={group}
-      position={[slot.x, slot.y + h / 2, 0]}
+      position={[slot.x, slot.y + slot.h / 2, 0]}
       rotation={[0, 0, slot.tilt]}
       onPointerOver={(e) => { e.stopPropagation(); onHover(slot.id) }}
       onPointerOut={() => onHover(null)}
       onClick={(e) => { e.stopPropagation(); onOpen(slot.id) }}
     >
-      <mesh>
-        <boxGeometry args={[w, h, d]} />
-        <meshStandardMaterial color={slot.color} flatShading />
-      </mesh>
-      {/* gold bands, label plate and, for private books, a clasp */}
-      {[1, -1].map((s) => (
-        <mesh key={s} position={[0, s * (h / 2 - 0.13), 0]}>
-          <boxGeometry args={[w + 0.02, 0.07, d + 0.02]} />
-          <meshStandardMaterial color={GOLD} flatShading />
-        </mesh>
-      ))}
-      <mesh position={[0, h * 0.08, d / 2 + 0.006]}>
-        <boxGeometry args={[w * 0.78, h * 0.34, 0.02]} />
-        <meshStandardMaterial color="#efe2bf" flatShading />
-      </mesh>
-      {!slot.isPublic && (
-        <mesh position={[0, -h * 0.3, d / 2 + 0.01]}>
-          <boxGeometry args={[w * 0.55, 0.2, 0.04]} />
-          <meshStandardMaterial color="#2b2b2b" emissive={GOLD} emissiveIntensity={0.5} flatShading />
-        </mesh>
-      )}
+      <primitive object={model} />
       {hovered && (
-        <Html position={[0, h / 2 + 0.55, d / 2]} center zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
+        <Html position={[0, slot.h / 2 + 0.55, slot.d / 2]} center zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
           <div className="rpg-panel whitespace-nowrap px-3 py-1 text-center" style={{ fontSize: 15 }}>
             <div style={{ color: 'var(--accent)' }}>{slot.title}</div>
             <div style={{ color: 'var(--ink-dim)', fontSize: 12 }}>{slot.isPublic ? 'Público' : 'Privado · personal de la iglesia'}</div>
@@ -70,7 +54,6 @@ function Book({ slot, hovered, onHover, onOpen }: { slot: BookSlot } & Pick<Prop
     </group>
   )
 }
-
 /** Moves the camera back far enough for the whole shelf to fit, whatever its size or the canvas shape. */
 function FitCamera({ width, rows }: { width: number; rows: number }) {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
@@ -93,25 +76,29 @@ function Scene({ books, hoveredId, onHover, onOpen }: Props) {
   const layout = useMemo(() => layoutShelf(books), [books])
   const { width, rows } = layout
   const shelfW = Math.max(width + 1.4, 4)
+  const n = Math.max(rows, 1)
+  const centreY = -((n - 1) * ROW_HEIGHT) / 2 + 1.1
+  const plank = woodMaterial('#8a5a34', [Math.max(2, Math.round(shelfW / 2)), 1])
+  const frame = woodMaterial('#5d3b21', [1, 2])
   return (
     <>
-      <hemisphereLight args={['#fff1d0', '#4a3a28', 1.1]} />
-      <directionalLight position={[3, 8, 12]} intensity={1.5} color="#ffe4b0" />
-      <FitCamera width={shelfW} rows={Math.max(rows, 1)} />
-      {Array.from({ length: Math.max(rows, 1) }, (_, r) => (
-        <mesh key={r} position={[0, -r * ROW_HEIGHT - 0.15, 0.1]}>
+      <LocalEnvironment />
+      <hemisphereLight args={['#fff6e4', '#3a2c20', 0.5]} />
+      <directionalLight position={[4, 9, 12]} intensity={2.1} color="#ffeccb" castShadow shadow-mapSize={[2048, 2048]}
+        shadow-camera-left={-12} shadow-camera-right={12} shadow-camera-top={8} shadow-camera-bottom={-12} shadow-bias={-0.0004} />
+      <pointLight position={[-6, 3, 8]} intensity={18} color="#ffd9a0" />
+      <FitCamera width={shelfW} rows={n} />
+      {Array.from({ length: n }, (_, r) => (
+        <mesh key={r} position={[0, -r * ROW_HEIGHT - 0.15, 0.1]} material={plank} castShadow receiveShadow>
           <boxGeometry args={[shelfW, 0.3, 1.9]} />
-          <meshStandardMaterial color={PLANK} flatShading />
         </mesh>
       ))}
-      <mesh position={[0, -((Math.max(rows, 1) - 1) * ROW_HEIGHT) / 2 + 1.1, -0.9]}>
-        <boxGeometry args={[shelfW, Math.max(rows, 1) * ROW_HEIGHT + 0.3, 0.12]} />
-        <meshStandardMaterial color={WOOD} flatShading />
+      <mesh position={[0, centreY, -0.9]} material={frame} receiveShadow>
+        <boxGeometry args={[shelfW, n * ROW_HEIGHT + 0.3, 0.12]} />
       </mesh>
       {[-1, 1].map((s) => (
-        <mesh key={s} position={[s * (shelfW / 2 + 0.1), -((Math.max(rows, 1) - 1) * ROW_HEIGHT) / 2 + 1.1, 0.1]}>
-          <boxGeometry args={[0.22, Math.max(rows, 1) * ROW_HEIGHT + 0.3, 1.9]} />
-          <meshStandardMaterial color={WOOD} flatShading />
+        <mesh key={s} position={[s * (shelfW / 2 + 0.1), centreY, 0.1]} material={frame} castShadow receiveShadow>
+          <boxGeometry args={[0.22, n * ROW_HEIGHT + 0.3, 1.9]} />
         </mesh>
       ))}
       {layout.slots.map((s) => (
@@ -124,11 +111,11 @@ function Scene({ books, hoveredId, onHover, onOpen }: Props) {
 export default function Bookshelf3D(props: Props) {
   if (!hasWebGL()) return null
   const rows = layoutShelf(props.books).rows
-  const height = Math.min(520, Math.max(220, 200 + (rows - 1) * 150))
+  const height = Math.min(640, Math.max(340, 330 + (rows - 1) * 190))
   return (
     <GraphicsBoundary fallback={null}>
       <div style={{ height }} className="overflow-hidden" aria-hidden="true">
-        <Canvas camera={{ fov: 35, position: [0, 1, 12] }} dpr={[1, 1.5]} gl={{ antialias: false, alpha: true }}>
+        <Canvas shadows="soft" camera={{ fov: 35, position: [0, 1, 12] }} dpr={[1, 2]} gl={{ antialias: true, alpha: true }}>
           <Scene {...props} />
         </Canvas>
       </div>
