@@ -4,6 +4,7 @@ using ChurchSeeker.Application.Announcements;
 using ChurchSeeker.Application.Auth;
 using ChurchSeeker.Application.Books;
 using ChurchSeeker.Application.Churches;
+using ChurchSeeker.Application.Dashboard;
 using ChurchSeeker.Application.Storage;
 using ChurchSeeker.Infrastructure.Storage;
 using ChurchSeeker.Application.Common;
@@ -63,6 +64,7 @@ public static class DependencyInjection
         services.AddScoped<IAttendanceService, AttendanceService>();
         services.AddScoped<IMinistryService, MinistryService>();
         services.AddScoped<IDonationService, DonationService>();
+        services.AddScoped<IDashboardService, DashboardService>();
         services.Configure<StorageOptions>(config.GetSection(StorageOptions.Section));
         services.AddSingleton<IFileStorage, LocalFileStorage>();
         services.AddScoped<ChurchService>();
@@ -81,6 +83,7 @@ public static class DependencyInjection
         return services;
     }
 }
+
 
 
 
