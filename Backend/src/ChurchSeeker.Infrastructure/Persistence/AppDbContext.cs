@@ -26,6 +26,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Member> Members => Set<Member>();
     public DbSet<ChurchEvent> Events => Set<ChurchEvent>();
+    public DbSet<Attendance> Attendances => Set<Attendance>();
 
     // Fail closed: no authenticated church means the tenant filter matches nothing.
     private Guid? CurrentChurchId => _publicScope?.ChurchId ?? _currentUser?.ChurchId;
@@ -92,6 +93,17 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             e.HasIndex(x => new { x.ChurchId, x.Date });
         });
 
+        b.Entity<Attendance>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasOne<Church>().WithMany().HasForeignKey(x => x.ChurchId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<ChurchEvent>().WithMany().HasForeignKey(x => x.EventId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Member>().WithMany().HasForeignKey(x => x.MemberId).OnDelete(DeleteBehavior.Restrict);
+            // No duplicate attendance for the same member at the same event, even under concurrency.
+            e.HasIndex(x => new { x.EventId, x.MemberId }).IsUnique();
+            e.HasIndex(x => x.MemberId);
+        });
+
         ApplyTenantFilters(b);
     }
 
@@ -152,6 +164,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
         AuditLogs.AddRange(audits);
     }
 }
+
 
 
 
