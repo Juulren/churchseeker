@@ -210,9 +210,9 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
   - [x] CRUD: Registrar nuevos miembros, consultar listado paginado y editar información personal (`Nombre`, `Teléfono`, `Correo`, `Fecha de ingreso`).
   - [x] Buscador por nombre y filtro por estado (`Activo` / `Inactivo`).
   - [x] Implementar desactivación lógica (`Soft Delete`) prohibiendo el borrado físico permanente.
-- [ ] **2.2. RF-04 (Gestión de Eventos):**
-  - [ ] Crear eventos religiosos y administrativos (`Título`, `Fecha`, `Hora`, `Lugar`, `Descripción`).
-  - [ ] Asignar responsables, modificar o cancelar eventos y exponer endpoint para calendario público e interno.
+- [x] **2.2. RF-04 (Gestión de Eventos):**
+  - [x] Crear eventos religiosos y administrativos (`Título`, `Fecha`, `Hora`, `Lugar`, `Descripción`).
+  - [x] Asignar responsables, modificar o cancelar eventos y exponer endpoint para calendario público e interno.
 - [ ] **2.3. RF-03 (Control de Asistencia):**
   - [ ] Registrar asistencia a cultos, reuniones y actividades seleccionando fecha y evento.
   - [ ] Marcar miembros presentes/ausentes, consultar historial y generar reportes semanales/mensuales.
@@ -269,11 +269,12 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
 | **Fase Activa** | `Fase 2: Módulos Operativos Core` |
-| **Última Tarea Completada** | `2.1. RF-02 Miembros (CRUD, búsqueda, paginación, soft delete); 54 tests OK` |
-| **Siguiente Tarea Inmediata** | `2.2. RF-04 Eventos` |
+| **Última Tarea Completada** | `2.2. RF-04 Eventos (CRUD, cancelar, responsable, calendario público e interno); 70+39 tests OK` |
+| **Siguiente Tarea Inmediata** | `2.3. RF-03 Asistencia` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `UnitTests 37 OK + BreakTests 39 OK (fuerza bruta concurrente, JWT, roles, IDOR, fuzz de entrada)` |
+
 
 
 
