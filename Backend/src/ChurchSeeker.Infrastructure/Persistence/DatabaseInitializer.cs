@@ -1,4 +1,4 @@
-﻿using ChurchSeeker.Domain.Enums;
+using ChurchSeeker.Domain.Enums;
 using ChurchSeeker.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +19,9 @@ public static class DatabaseInitializer
         foreach (var role in Enum.GetNames<UserRole>())
             if (!await roles.RoleExistsAsync(role))
                 await roles.CreateAsync(new IdentityRole<Guid>(role) { Id = Guid.NewGuid() });
+
+        if (config.GetValue("Seed:Demo", false))
+            await DemoDataSeeder.SeedAsync(services);
 
         // Optional first administrator. Credentials come from configuration/secrets, never from code.
         var email = config["Seed:AdminEmail"];
