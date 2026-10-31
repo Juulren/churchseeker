@@ -257,7 +257,7 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 - [x] **5.2.** Construir vistas del Dashboard con gráficas estadísticas y ocultamiento condicional de finanzas (RF-08).
 - [x] **5.3.** Construir interfaces CRUD para Miembros (RF-02), Asistencia (RF-03), Eventos con Calendario (RF-04) y Ministerios (RF-05).
 - [x] **5.4.** Construir módulo financiero de Donaciones Anónimas/Nominales (RF-06), Comunicados (RF-07), Descarga de Reportes PDF/Excel (RF-09) y Configuración + Subida de Libros PDF (RF-10).
-- [ ] **5.5. Auditoría Final E2E:** Ejecutar toda la suite de pruebas E2E y *BreakTests*, verificar que todos los Issues en `https://github.com/Juulren/churchseeker.git` estén cerrados mediante PRs y hacer merge final a `main`.
+- [x] **5.5. Auditoría Final E2E:** Ejecutar toda la suite de pruebas E2E y *BreakTests*, verificar que todos los Issues en `https://github.com/Juulren/churchseeker.git` estén cerrados mediante PRs y hacer merge final a `main`.
 
 ---
 
@@ -268,12 +268,14 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | Parámetro de Control | Estado Actual |
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
-| **Fase Activa** | `Fase 5: Frontend administrativo` |
-| **Última Tarea Completada** | `5.2 a 5.4: panel administrativo completo (dashboard, miembros, eventos, asistencia, ministerios, donaciones, comunicados, reportes, configuracion, codices, usuarios); vitest 65 + 17 E2E admin OK` |
-| **Siguiente Tarea Inmediata** | `5.5. Auditoria final y merge a main` |
+| **Fase Activa** | `Fase 5 completa: auditoria final` |
+| **Última Tarea Completada** | `5.5. Auditoria final: backend 158+151, vitest 65, Playwright 41 OK; develop fusionado a main` |
+| **Siguiente Tarea Inmediata** | `Plan completo. Pendientes de produccion: proveedor de BD y migraciones, SMTP, modelos 3D reales, API key de mapas` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
-| **Estado de Pruebas (Break-Tests)** | `UnitTests 154 OK + BreakTests 151 OK (dinero hostil, acceso Finance, archivos disfrazados, codices privados, abuso de reportes)` |
+| **Estado de Pruebas (Break-Tests)** | `Backend: UnitTests 158 + BreakTests 151 OK. Frontend: vitest 65 OK, Playwright E2E (fase 4 + panel admin) OK` |
+
+
 
 
 
