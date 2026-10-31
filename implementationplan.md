@@ -222,10 +222,10 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 - [x] **2.5. Break-Testing Fase 2:** Pruebas con inyección SQL/XSS en búsquedas, fechas inválidas en eventos, intento de borrado físico de miembros y duplicidad de asistencia concurrente.
 
 ### Fase 3: Finanzas, Comunicados, Configuración, Códices y Reportes (RF-06 a RF-10)
-- [ ] **3.1. RF-06 (Gestión de Donaciones y Aportaciones):**
-  - [ ] Capturar `Fecha`, `Monto`, `Concepto` y `Método de recepción`.
-  - [ ] Permitir registros 100% anónimos (`MemberId = null`) sin obligar asociación a una persona.
-  - [ ] Consultar ingresos por periodos, generar resumen mensual y blindar acceso exclusivamente a personal autorizado (`Tesorero` / `Administrador`).
+- [x] **3.1. RF-06 (Gestión de Donaciones y Aportaciones):**
+  - [x] Capturar `Fecha`, `Monto`, `Concepto` y `Método de recepción`.
+  - [x] Permitir registros 100% anónimos (`MemberId = null`) sin obligar asociación a una persona.
+  - [x] Consultar ingresos por periodos, generar resumen mensual y blindar acceso exclusivamente a personal autorizado (`Tesorero` / `Administrador`).
 - [ ] **3.2. RF-07 (Comunicados y Anuncios):**
   - [ ] Publicar, editar y eliminar anuncios con fecha de publicación y mostrar próximos eventos/avisos importantes.
 - [ ] **3.3. RF-10 (Configuración de la Iglesia + Estante de Libros PDF):**
@@ -269,11 +269,12 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
 | **Fase Activa** | `Fase 3: Finanzas, Comunicados, Configuración, Códices y Reportes` |
-| **Última Tarea Completada** | `2.5. Break-tests Fase 2 (95 tests); Fase 2 completa` |
-| **Siguiente Tarea Inmediata** | `3.1. RF-06 Donaciones` |
+| **Última Tarea Completada** | `3.1. RF-06 Donaciones (anónimas, centavos exactos, anulación, resumen mensual, solo Finance); 113+95 tests OK` |
+| **Siguiente Tarea Inmediata** | `3.2. RF-07 Comunicados` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `UnitTests 90 OK + BreakTests 95 OK (SQLi, XSS, fechas hostiles, borrado fisico, carreras, fuzz de queries, IDOR, rate limit publico)` |
+
 
 
 

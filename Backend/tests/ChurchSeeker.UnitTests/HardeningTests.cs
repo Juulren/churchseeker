@@ -116,22 +116,22 @@ public class HardeningTests : IClassFixture<AuthApiFactory>, IClassFixture<LowLi
         await FluentActions.Awaiting(() => db.SaveChangesAsync()).Should().ThrowAsync<InvalidOperationException>();
     }
 
-    private sealed class Donation : TenantEntity, IAuditedEntity
+    private sealed class Pledge : TenantEntity, IAuditedEntity
     {
-        private Donation() { }
-        public Donation(Guid churchId, decimal amount) : base(churchId) => Amount = amount;
+        private Pledge() { }
+        public Pledge(Guid churchId, decimal amount) : base(churchId) => Amount = amount;
         public decimal Amount { get; set; }
     }
 
     private sealed class AuditedDb : AppDbContext
     {
         public AuditedDb(DbContextOptions<AppDbContext> o, ICurrentUser u) : base(o, u) { }
-        public DbSet<Donation> Donations => Set<Donation>();
+        public DbSet<Pledge> Pledges => Set<Pledge>();
 
         protected override void OnModelCreating(ModelBuilder b)
         {
             base.OnModelCreating(b);
-            b.Entity<Donation>().HasKey(x => x.Id);
+            b.Entity<Pledge>().HasKey(x => x.Id);
             ApplyTenantFilters(b);
         }
     }
@@ -153,16 +153,17 @@ public class HardeningTests : IClassFixture<AuthApiFactory>, IClassFixture<LowLi
         using var db = new AuditedDb(opts, new Who(ChurchSeedData.CathedralId));
         db.Database.EnsureCreated();
 
-        var d = new Donation(ChurchSeedData.CathedralId, 123456.78m);
-        db.Donations.Add(d);
+        var d = new Pledge(ChurchSeedData.CathedralId, 123456.78m);
+        db.Pledges.Add(d);
         db.SaveChanges();
         d.Amount = 999111.22m;
         db.SaveChanges();
 
         var logs = db.AuditLogs.AsNoTracking().OrderBy(a => a.CreatedAt).ToList();
-        logs.Select(l => l.Action).Should().Equal("Donation.Created", "Donation.Updated");
+        logs.Select(l => l.Action).Should().Equal("Pledge.Created", "Pledge.Updated");
         logs[1].Details.Should().Be("Amount");
         logs.Should().OnlyContain(l => l.ChurchId == ChurchSeedData.CathedralId && l.IpAddress == "10.0.0.1");
         string.Join("|", logs.Select(l => l.Details)).Should().NotContain("123456").And.NotContain("999111");
     }
 }
+
