@@ -1,6 +1,6 @@
-﻿import type { PublicEvent, ScheduleSlot } from '../../services/types.ts'
+import type { PublicEvent, ScheduleSlot } from '../../services/types.ts'
 
-const DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+export const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 const TIME = /^(\d{2}):(\d{2})/
 
@@ -29,7 +29,7 @@ export function formatTime(value: string): string {
   return m ? `${m[1]}:${m[2]}` : String(value)
 }
 
-export const dayName = (day: number): string => DAYS[day] ?? '—'
+export const dayName = (day: number): string => DAY_NAMES[day] ?? '—'
 
 export const scheduleLabel = (s: ScheduleSlot): string => `${dayName(s.day)} ${formatTime(s.time)} · ${s.description}`
 
