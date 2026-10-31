@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Text.Json;
 using ChurchSeeker.Application.Auth;
 using ChurchSeeker.Domain.Common;
 using ChurchSeeker.Domain.Entities;
@@ -6,6 +7,7 @@ using ChurchSeeker.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace ChurchSeeker.Infrastructure.Persistence;
 
@@ -31,6 +33,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     public DbSet<MinistryMember> MinistryMembers => Set<MinistryMember>();
     public DbSet<Donation> Donations => Set<Donation>();
     public DbSet<Announcement> Announcements => Set<Announcement>();
+    public DbSet<ChurchArchiveBook> ArchiveBooks => Set<ChurchArchiveBook>();
 
     // Fail closed: no authenticated church means the tenant filter matches nothing.
     private Guid? CurrentChurchId => _publicScope?.ChurchId ?? _currentUser?.ChurchId;
@@ -47,6 +50,17 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             e.Property(x => x.PatronSaint).IsRequired().HasMaxLength(150);
             e.Property(x => x.Address).IsRequired().HasMaxLength(300);
             e.Property(x => x.ModelPath).HasMaxLength(300);
+            e.Property(x => x.ContactPhone).HasMaxLength(30);
+            e.Property(x => x.ContactEmail).HasMaxLength(256);
+            e.Property(x => x.LogoFile).HasMaxLength(64);
+            e.Property(x => x.ModelFile).HasMaxLength(64);
+            e.Property(x => x.Schedules).HasConversion(
+                v => JsonSerializer.Serialize(v.ToList(), (JsonSerializerOptions?)null),
+                v => (IReadOnlyList<ScheduleSlot>)(JsonSerializer.Deserialize<List<ScheduleSlot>>(v, (JsonSerializerOptions?)null) ?? new List<ScheduleSlot>()),
+                new ValueComparer<IReadOnlyList<ScheduleSlot>>(
+                    (a, c) => a!.SequenceEqual(c!),
+                    v => v.Aggregate(0, (h, x) => HashCode.Combine(h, x.GetHashCode())),
+                    v => v.ToList()));
             e.HasData(ChurchSeedData.Churches());
         });
 
@@ -145,6 +159,18 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             e.HasIndex(x => new { x.ChurchId, x.PublishDate });
         });
 
+        b.Entity<ChurchArchiveBook>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Title).IsRequired().HasMaxLength(200);
+            e.Property(x => x.Description).HasMaxLength(2000);
+            e.Property(x => x.Author).HasMaxLength(150);
+            e.Property(x => x.SpineColor).IsRequired().HasMaxLength(7);
+            e.Property(x => x.StoredFileName).IsRequired().HasMaxLength(64);
+            e.HasOne<Church>().WithMany().HasForeignKey(x => x.ChurchId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.ChurchId, x.Title });
+        });
+
         ApplyTenantFilters(b);
     }
 
@@ -209,6 +235,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
         AuditLogs.AddRange(audits);
     }
 }
+
 
 
 

@@ -1,4 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
@@ -20,6 +20,7 @@ public class BreakFactory : WebApplicationFactory<Program>
     public const string JwtKey = "break-key-break-key-break-key-break-1234";
     public const string AdminEmail = "admin@break.local";
     public const string AdminPassword = "Adm1n!Passw0rd#";
+    public string StorageRoot { get; } = Path.Combine(Path.GetTempPath(), $"cs-store-{Guid.NewGuid():N}");
     private readonly string _dbFile = Path.Combine(Path.GetTempPath(), $"cs-break-{Guid.NewGuid():N}.db");
 
     protected virtual int AuthLimit => 100000;
@@ -30,6 +31,7 @@ public class BreakFactory : WebApplicationFactory<Program>
         builder.UseSetting("Jwt:Key", JwtKey);
         builder.UseSetting("ConnectionStrings:Default", $"Data Source={_dbFile}");
         builder.UseSetting("Database:AutoCreate", "true");
+        builder.UseSetting("Storage:Root", StorageRoot);
         builder.UseSetting("RateLimiting:Auth", AuthLimit.ToString());
         builder.UseSetting("RateLimiting:Global", "100000");
         builder.UseSetting("Seed:AdminEmail", AdminEmail);
@@ -42,6 +44,7 @@ public class BreakFactory : WebApplicationFactory<Program>
         base.Dispose(disposing);
         Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         try { File.Delete(_dbFile); } catch { /* best effort */ }
+        try { if (Directory.Exists(StorageRoot)) Directory.Delete(StorageRoot, true); } catch { /* best effort */ }
     }
 
     public HttpClient Anonymous() => CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
@@ -102,4 +105,5 @@ public class BreakFactory : WebApplicationFactory<Program>
         return new JwtSecurityTokenHandler().WriteToken(jwt);
     }
 }
+
 

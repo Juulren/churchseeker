@@ -2,6 +2,10 @@
 using ChurchSeeker.Application.Attendance;
 using ChurchSeeker.Application.Announcements;
 using ChurchSeeker.Application.Auth;
+using ChurchSeeker.Application.Books;
+using ChurchSeeker.Application.Churches;
+using ChurchSeeker.Application.Storage;
+using ChurchSeeker.Infrastructure.Storage;
 using ChurchSeeker.Application.Common;
 using ChurchSeeker.Application.Donations;
 using ChurchSeeker.Application.Events;
@@ -59,6 +63,14 @@ public static class DependencyInjection
         services.AddScoped<IAttendanceService, AttendanceService>();
         services.AddScoped<IMinistryService, MinistryService>();
         services.AddScoped<IDonationService, DonationService>();
+        services.Configure<StorageOptions>(config.GetSection(StorageOptions.Section));
+        services.AddSingleton<IFileStorage, LocalFileStorage>();
+        services.AddScoped<ChurchService>();
+        services.AddScoped<IChurchService>(sp => sp.GetRequiredService<ChurchService>());
+        services.AddScoped<IPublicChurchService>(sp => sp.GetRequiredService<ChurchService>());
+        services.AddScoped<BookService>();
+        services.AddScoped<IBookService>(sp => sp.GetRequiredService<BookService>());
+        services.AddScoped<IPublicBookService>(sp => sp.GetRequiredService<BookService>());
         services.AddScoped<AnnouncementService>();
         services.AddScoped<IAnnouncementService>(sp => sp.GetRequiredService<AnnouncementService>());
         services.AddScoped<IPublicAnnouncementService>(sp => sp.GetRequiredService<AnnouncementService>());
@@ -69,6 +81,7 @@ public static class DependencyInjection
         return services;
     }
 }
+
 
 
 
