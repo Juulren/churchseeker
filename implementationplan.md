@@ -244,9 +244,9 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 - [x] **4.2. Mapa Interactivo de Mérida + 3 Iglesias Low-Poly:**
   - [x] Integrar mapa centrado en Mérida con los 3 modelos 3D Low-Poly personalizados según la religión/santos de cada iglesia.
   - [x] Programar animación de selección y zoom cinematográfico con GSAP.
-- [ ] **4.3. Vista Split-Screen RPG:**
-  - [ ] Panel izquierdo con el render 3D interactivo de la iglesia seleccionada e información institucional.
-  - [ ] Panel derecho con calendario de eventos públicos, avisos y acceso al Estante de Libros.
+- [x] **4.3. Vista Split-Screen RPG:**
+  - [x] Panel izquierdo con el render 3D interactivo de la iglesia seleccionada e información institucional.
+  - [x] Panel derecho con calendario de eventos públicos, avisos y acceso al Estante de Libros.
 - [ ] **4.4. Estante Interactivo de Libros ("Pasta Gorda"):**
   - [ ] Renderizar estante con los lomos gruesos de los libros subidos en cada iglesia.
   - [ ] Animar el lomo al pasar el cursor (`hover`) y al seleccionarlo para abrir el visor de PDF integrado (respetando visibilidad pública vs. privada).
@@ -269,11 +269,12 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
 | **Fase Activa** | `Fase 4: Frontend Inmersivo (RPG, mapa 3D, ASCII, estante)` |
-| **Última Tarea Completada** | `4.2. Mapa 3D de Mérida (R3F), 3 iglesias low-poly procedurales, zoom GSAP, lista accesible; vitest 39 OK` |
-| **Siguiente Tarea Inmediata** | `4.3. Vista Split-Screen RPG` |
+| **Última Tarea Completada** | `4.3. Vista split-screen RPG (40/60), carga diferida de three; vitest 47 OK` |
+| **Siguiente Tarea Inmediata** | `4.4. Estante interactivo de libros + visor PDF` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `UnitTests 154 OK + BreakTests 151 OK (dinero hostil, acceso Finance, archivos disfrazados, codices privados, abuso de reportes)` |
+
 
 
 

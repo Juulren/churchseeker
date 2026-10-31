@@ -17,6 +17,8 @@ interface Props {
   hoveredId: string | null
   onSelect: (id: string) => void
   onHover: (id: string | null) => void
+  /** The camera reached the selected church (the app then opens its detail view). */
+  onArrive?: (id: string) => void
 }
 
 const HALF = 38
@@ -30,7 +32,7 @@ function Unavailable() {
 }
 
 /** Interactive island map of Mérida with a low-poly 3D model for every church. */
-export default function MeridaMap({ churches, selectedId, hoveredId, onSelect, onHover }: Props) {
+export default function MeridaMap({ churches, selectedId, hoveredId, onSelect, onHover, onArrive }: Props) {
   const controls = useRef<OrbitControlsImpl>(null)
   const [contextLost, setContextLost] = useState(false)
   // Bumped when the GPU context comes back, to rebuild the scene from scratch.
@@ -89,7 +91,7 @@ export default function MeridaMap({ churches, selectedId, hoveredId, onSelect, o
             minPolarAngle={0.35}
             maxPolarAngle={1.38}
           />
-          <CameraRig pose={pose} controls={controls} />
+          <CameraRig pose={pose} controls={controls} onArrive={selected ? () => onArrive?.(selected.church.id) : undefined} />
         </Canvas>
       </GraphicsBoundary>
       {contextLost && (
