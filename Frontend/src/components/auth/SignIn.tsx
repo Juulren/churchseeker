@@ -1,14 +1,15 @@
-﻿import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { authApi, loginMessage } from '../../services/auth.ts'
 import { navigate } from '../../state/route.ts'
 import AsciiSpinner from './AsciiSpinner.tsx'
 import Field, { LockIcon, MailIcon } from './Field.tsx'
-import { renderChurchPortrait } from './churchPortrait.ts'
+import { startLiveChurch, type LiveChurch } from './churchPortrait.ts'
 import { emailError, passwordError } from './validators.ts'
 
 const CATHEDRAL = '11111111-1111-1111-1111-111111111111'
 type Mode = 'signin' | 'forgot' | 'sent'
-interface ArtHandle { pulse: (from?: HTMLElement, strength?: number) => void; shimmer: (on: boolean) => void; destroy: () => void }
+// The live art is a video in characters: it has no pulse or shimmer, so those calls are optional.
+interface ArtHandle { pulse?: (from?: HTMLElement, strength?: number) => void; shimmer?: (on: boolean) => void; destroy: () => void }
 
 /** Split sign-in: the church in characters that trail under the cursor, and the form on the right. */
 export default function SignIn() {
@@ -27,28 +28,31 @@ export default function SignIn() {
     const el = artSide.current
     if (!el) return
     let alive = true
-    let url: string | null = null
+    let live: LiveChurch | null = null
     ;(async () => {
-      const [{ artPanel }, portrait] = await Promise.all([import('asciify-engine/kit'), renderChurchPortrait(CATHEDRAL)])
-      if (!alive || !portrait) { if (portrait) URL.revokeObjectURL(portrait); return }
-      url = portrait
-      art.current = artPanel(el, { image: portrait, clear: brand.current ?? undefined, focus: { x: 0.5, y: 0.45 }, label: 'Catedral de San Ildefonso en caracteres' }) as unknown as ArtHandle
+      const [{ asciiVideo }, church] = await Promise.all([import('asciify-engine/kit'), startLiveChurch(CATHEDRAL)])
+      if (!church) return
+      if (!alive) { church.stop(); return }
+      live = church
+      el.appendChild(church.video)
+      church.video.style.display = 'none'
+      art.current = asciiVideo(el, { src: church.video, autoplay: true, label: 'Catedral de San Ildefonso girando, en caracteres' }) as unknown as ArtHandle
     })().catch(() => { /* the form works without the art */ })
     return () => {
       alive = false
       art.current?.destroy()
       art.current = null
-      if (url) URL.revokeObjectURL(url)
+      live?.stop()
+      live?.video.remove()
     }
   }, [])
-
   const run = async (work: () => Promise<void>) => {
     setBusy(true)
-    art.current?.pulse(button.current ?? undefined, 1.8)
-    art.current?.shimmer(true)
+    art.current?.pulse?.(button.current ?? undefined, 1.8)
+    art.current?.shimmer?.(true)
     try { await work() } finally {
-      art.current?.shimmer(false)
-      art.current?.pulse(undefined, 0.6)
+      art.current?.shimmer?.(false)
+      art.current?.pulse?.(undefined, 0.6)
       setBusy(false)
     }
   }
