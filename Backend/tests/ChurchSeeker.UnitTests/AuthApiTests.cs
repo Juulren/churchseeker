@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -17,6 +17,7 @@ public class AuthApiFactory : WebApplicationFactory<Program>
     public const string AdminEmail = "admin@test.local";
     public const string AdminPassword = "Adm1n!Passw0rd#";
     protected virtual int AuthLimit => 10000;
+    public string StorageRoot { get; } = Path.Combine(Path.GetTempPath(), $"cs-store-{Guid.NewGuid():N}");
     private readonly string _dbFile = Path.Combine(Path.GetTempPath(), $"cs-test-{Guid.NewGuid():N}.db");
 
     protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
@@ -25,6 +26,7 @@ public class AuthApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Jwt:Key", "test-key-test-key-test-key-test-key-1234");
         builder.UseSetting("ConnectionStrings:Default", $"Data Source={_dbFile}");
         builder.UseSetting("Database:AutoCreate", "true");
+        builder.UseSetting("Storage:Root", StorageRoot);
         builder.UseSetting("RateLimiting:Auth", AuthLimit.ToString());
         builder.UseSetting("Cors:AllowedOrigins:0", "http://localhost:5173");
         builder.UseSetting("Seed:AdminEmail", AdminEmail);
@@ -37,6 +39,7 @@ public class AuthApiFactory : WebApplicationFactory<Program>
         base.Dispose(disposing);
         Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         try { File.Delete(_dbFile); } catch { /* best effort */ }
+        try { if (Directory.Exists(StorageRoot)) Directory.Delete(StorageRoot, true); } catch { /* best effort */ }
     }
 }
 
@@ -236,4 +239,5 @@ public class AuthApiTests : IClassFixture<AuthApiFactory>
         (await c.SendAsync(req)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 }
+
 
