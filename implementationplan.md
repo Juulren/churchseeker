@@ -203,7 +203,7 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
   - [x] Configurar los 5 roles: `Administrador`, `Pastor`, `Secretario`, `Tesorero` y `Coordinador`.
   - [x] Implementar guardias de autorización por rol y filtro global Multi-Tenant (`ChurchId`).
 - [x] **1.3. Seguridad Web Base:** Configurar *Rate Limiting*, CORS estricto, cabeceras de seguridad (CSP, HSTS, X-Frame-Options) y `AuditLog`.
-- [ ] **1.4. Break-Testing Fase 1:** Ejecutar pruebas de fuerza bruta en login, manipulación de firma JWT, escalada de privilegios entre roles y cruce de datos entre iglesias (IDOR).
+- [x] **1.4. Break-Testing Fase 1 (bug #9 corregido):** Ejecutar pruebas de fuerza bruta en login, manipulación de firma JWT, escalada de privilegios entre roles y cruce de datos entre iglesias (IDOR).
 
 ### Fase 2: Módulos Operativos Core (RF-02, RF-03, RF-04, RF-05)
 - [ ] **2.1. RF-02 (Gestión de Miembros):**
@@ -268,12 +268,13 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | Parámetro de Control | Estado Actual |
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
-| **Fase Activa** | `Fase 1: Cimientos del Backend` |
-| **Última Tarea Completada** | `1.3. Rate limiting, CORS estricto, cabeceras de seguridad, AuditLog append-only; 37 tests OK` |
-| **Siguiente Tarea Inmediata** | `1.4. Break-Testing Fase 1 (suite ChurchSeeker.BreakTests)` |
+| **Fase Activa** | `Fase 2: Módulos Operativos Core` |
+| **Última Tarea Completada** | `1.4. Break-tests Fase 1 (39 tests); Fase 1 completa` |
+| **Siguiente Tarea Inmediata** | `2.1. RF-02 Gestión de Miembros (CRUD, búsqueda, soft delete)` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
-| **Estado de Pruebas (Break-Tests)** | `37 pruebas en UnitTests (auth, lockout, JWT manipulado, alg=none, 429, CORS, cabeceras, audit inmutable). BreakTests aun vacio (1.4)` |
+| **Estado de Pruebas (Break-Tests)** | `UnitTests 37 OK + BreakTests 39 OK (fuerza bruta concurrente, JWT, roles, IDOR, fuzz de entrada)` |
+
 
 
 
