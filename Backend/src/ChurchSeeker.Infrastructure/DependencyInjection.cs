@@ -5,7 +5,9 @@ using ChurchSeeker.Application.Auth;
 using ChurchSeeker.Application.Books;
 using ChurchSeeker.Application.Churches;
 using ChurchSeeker.Application.Dashboard;
+using ChurchSeeker.Application.Reports;
 using ChurchSeeker.Application.Storage;
+using ChurchSeeker.Infrastructure.Reports;
 using ChurchSeeker.Infrastructure.Storage;
 using ChurchSeeker.Application.Common;
 using ChurchSeeker.Application.Donations;
@@ -65,6 +67,10 @@ public static class DependencyInjection
         services.AddScoped<IMinistryService, MinistryService>();
         services.AddScoped<IDonationService, DonationService>();
         services.AddScoped<IDashboardService, DashboardService>();
+        services.AddSingleton<IReportExporter, PdfReportExporter>();
+        services.AddSingleton<IReportExporter, ExcelReportExporter>();
+        services.AddScoped<IReportService, ReportService>();
+        services.AddScoped<IReportExportService, ReportExportService>();
         services.Configure<StorageOptions>(config.GetSection(StorageOptions.Section));
         services.AddSingleton<IFileStorage, LocalFileStorage>();
         services.AddScoped<ChurchService>();
@@ -83,6 +89,7 @@ public static class DependencyInjection
         return services;
     }
 }
+
 
 
 
