@@ -247,9 +247,9 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 - [x] **4.3. Vista Split-Screen RPG:**
   - [x] Panel izquierdo con el render 3D interactivo de la iglesia seleccionada e información institucional.
   - [x] Panel derecho con calendario de eventos públicos, avisos y acceso al Estante de Libros.
-- [ ] **4.4. Estante Interactivo de Libros ("Pasta Gorda"):**
-  - [ ] Renderizar estante con los lomos gruesos de los libros subidos en cada iglesia.
-  - [ ] Animar el lomo al pasar el cursor (`hover`) y al seleccionarlo para abrir el visor de PDF integrado (respetando visibilidad pública vs. privada).
+- [x] **4.4. Estante Interactivo de Libros ("Pasta Gorda"):**
+  - [x] Renderizar estante con los lomos gruesos de los libros subidos en cada iglesia.
+  - [x] Animar el lomo al pasar el cursor (`hover`) y al seleccionarlo para abrir el visor de PDF integrado (respetando visibilidad pública vs. privada).
 - [ ] **4.5. Break-Testing Fase 4:** Pruebas de estrés de WebGL (spam de clics en mapa y libros), intento de abrir PDFs privados desde el cliente sin sesión y responsividad.
 
 ### Fase 5: Frontend Administrativo (ERP Eclesiástico Completo) y Cierre
@@ -269,11 +269,12 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
 | **Fase Activa** | `Fase 4: Frontend Inmersivo (RPG, mapa 3D, ASCII, estante)` |
-| **Última Tarea Completada** | `4.3. Vista split-screen RPG (40/60), carga diferida de three; vitest 47 OK` |
-| **Siguiente Tarea Inmediata** | `4.4. Estante interactivo de libros + visor PDF` |
+| **Última Tarea Completada** | `4.4. Estante 3D de códices + visor PDF (react-pdf, apertura de pasta); vitest 57 OK` |
+| **Siguiente Tarea Inmediata** | `4.5. Break-Testing Fase 4 (Playwright con Edge, estres WebGL, PDF privado, responsividad)` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `UnitTests 154 OK + BreakTests 151 OK (dinero hostil, acceso Finance, archivos disfrazados, codices privados, abuso de reportes)` |
+
 
 
 

@@ -1,6 +1,8 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+﻿import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
+import { publicApi } from '../../services/api.ts'
 import type { PublicChurch } from '../../services/types.ts'
+import Bookshelf from '../bookshelf/Bookshelf.tsx'
 import ChurchStage from './ChurchStage.tsx'
 import { EventsPanel, InfoPanel, NewsPanel } from './Panels.tsx'
 import { useChurchData } from './useChurchData.ts'
@@ -8,21 +10,24 @@ import { useChurchData } from './useChurchData.ts'
 interface Props {
   church: PublicChurch
   onBack: () => void
-  /** Slot for the codex shelf (task 4.4). */
-  shelf?: ReactNode
 }
 
-/** RPG split screen: the 3D church and its institutional data on the left (40%), events, notices and the shelf on the right (60%). */
-export default function RpgView({ church, onBack, shelf }: Props) {
+/** RPG split screen: the 3D church and its institutional data on the left (40%), events, notices and the codex shelf on the right (60%). */
+export default function RpgView({ church, onBack }: Props) {
   const { data, loading } = useChurchData(church.id)
   const heading = useRef<HTMLHeadingElement>(null)
+  const [readerOpen, setReaderOpen] = useState(false)
 
   useEffect(() => { heading.current?.focus() }, [church.id])
   useEffect(() => {
+    // While a book is open, Esc closes the book (handled by the reader), not the whole view.
+    if (readerOpen) return
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onBack() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onBack])
+  }, [onBack, readerOpen])
+
+  const fetchFile = useCallback((bookId: string) => publicApi.bookFile(church.id, bookId), [church.id])
 
   return (
     <motion.div
@@ -51,7 +56,7 @@ export default function RpgView({ church, onBack, shelf }: Props) {
         </header>
         <EventsPanel section={data?.events} loading={loading} />
         <NewsPanel section={data?.announcements} loading={loading} />
-        {shelf}
+        <Bookshelf section={data?.books} loading={loading} fetchFile={fetchFile} onReaderChange={setReaderOpen} />
       </div>
     </motion.div>
   )
