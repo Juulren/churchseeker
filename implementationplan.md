@@ -250,7 +250,7 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 - [x] **4.4. Estante Interactivo de Libros ("Pasta Gorda"):**
   - [x] Renderizar estante con los lomos gruesos de los libros subidos en cada iglesia.
   - [x] Animar el lomo al pasar el cursor (`hover`) y al seleccionarlo para abrir el visor de PDF integrado (respetando visibilidad pública vs. privada).
-- [ ] **4.5. Break-Testing Fase 4:** Pruebas de estrés de WebGL (spam de clics en mapa y libros), intento de abrir PDFs privados desde el cliente sin sesión y responsividad.
+- [x] **4.5. Break-Testing Fase 4:** Pruebas de estrés de WebGL (spam de clics en mapa y libros), intento de abrir PDFs privados desde el cliente sin sesión y responsividad.
 
 ### Fase 5: Frontend Administrativo (ERP Eclesiástico Completo) y Cierre
 - [ ] **5.1.** Construir pantallas de Login, Recuperación de Contraseña y Layout protegido por roles (RF-01).
@@ -268,12 +268,13 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | Parámetro de Control | Estado Actual |
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
-| **Fase Activa** | `Fase 4: Frontend Inmersivo (RPG, mapa 3D, ASCII, estante)` |
-| **Última Tarea Completada** | `4.2 rehecha: mapa real (MapLibre + Esri) con iglesias 3D en sus coordenadas, soporte .glb; fondo ASCII de peces; paleta blanca; vitest 50 OK` |
-| **Siguiente Tarea Inmediata** | `4.5. Break-Testing Fase 4 (Playwright con Edge, estres WebGL, PDF privado, responsividad)` |
+| **Fase Activa** | `Fase 4 (mejora de calidad visual pedida por el usuario) y luego Fase 5` |
+| **Última Tarea Completada** | `4.5. 25 pruebas E2E Playwright (Edge) + 50 vitest; usuario pidio dejar el low-poly y subir calidad (libros primero)` |
+| **Siguiente Tarea Inmediata** | `Calidad visual: libros realistas (cuero, oro, sombras), iglesias con materiales PBR; luego 5.1` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `UnitTests 154 OK + BreakTests 151 OK (dinero hostil, acceso Finance, archivos disfrazados, codices privados, abuso de reportes)` |
+
 
 
 

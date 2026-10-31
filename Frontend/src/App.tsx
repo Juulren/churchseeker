@@ -33,8 +33,8 @@ export default function App() {
     <>
       <AsciiBackground churchId={hoveredId ?? selectedId} />
 
-      <header className="rpg-panel pointer-events-none absolute left-4 top-3 z-10 px-4 py-1">
-        <h1 className="text-4xl tracking-widest" style={{ color: 'var(--accent)' }}>ChurchSeeker</h1>
+      <header className="rpg-panel pointer-events-none absolute left-4 top-3 z-10 max-w-[calc(100vw-2rem)] px-3 py-1 sm:px-4">
+        <h1 className="text-3xl tracking-wider sm:text-4xl sm:tracking-widest" style={{ color: 'var(--accent)' }}>ChurchSeeker</h1>
         <p style={{ color: 'var(--ink-dim)' }}>Mérida, Yucatán</p>
       </header>
 

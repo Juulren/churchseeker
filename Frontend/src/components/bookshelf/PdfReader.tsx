@@ -86,7 +86,7 @@ export default function PdfReader({ title, spineColor, load, onClose }: Props) {
           <div className="min-h-0 flex-1 overflow-auto bg-[#e9e2d0] p-3 text-black">
             {error && <p role="alert" className="p-4">{error}</p>}
             {!error && !file && <p className="p-4">Abriendo el libro…</p>}
-            {file && (
+            {file && !error && (
               <Document file={file} options={OPTIONS} suspense={false} loading={<p className="p-4">Preparando páginas…</p>}
                 error={<p role="alert" className="p-4">No se pudo leer el PDF.</p>}
                 onLoadSuccess={({ numPages }) => { setPages(numPages); setPage(1) }}
