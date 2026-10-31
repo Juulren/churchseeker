@@ -60,6 +60,7 @@ builder.Services.AddAuthorization(o =>
     o.AddPolicy(Policies.AdminOnly, p => p.RequireRole("Administrador"));
     o.AddPolicy(Policies.Finance, p => p.RequireRole("Tesorero", "Administrador"));
     o.AddPolicy(Policies.Management, p => p.RequireRole("Administrador", "Pastor", "Secretario"));
+    o.AddPolicy(Policies.MinistryAccess, p => p.RequireRole("Administrador", "Pastor", "Secretario", "Coordinador"));
 });
 
 var app = builder.Build();
@@ -85,4 +86,5 @@ app.MapControllers();
 app.Run();
 
 public partial class Program;
+
 

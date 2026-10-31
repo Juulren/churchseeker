@@ -27,6 +27,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     public DbSet<Member> Members => Set<Member>();
     public DbSet<ChurchEvent> Events => Set<ChurchEvent>();
     public DbSet<Attendance> Attendances => Set<Attendance>();
+    public DbSet<Ministry> Ministries => Set<Ministry>();
+    public DbSet<MinistryMember> MinistryMembers => Set<MinistryMember>();
 
     // Fail closed: no authenticated church means the tenant filter matches nothing.
     private Guid? CurrentChurchId => _publicScope?.ChurchId ?? _currentUser?.ChurchId;
@@ -90,6 +92,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             e.Property(x => x.Location).IsRequired().HasMaxLength(200);
             e.HasOne<Church>().WithMany().HasForeignKey(x => x.ChurchId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<Member>().WithMany().HasForeignKey(x => x.ResponsibleMemberId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Ministry>().WithMany().HasForeignKey(x => x.MinistryId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => new { x.ChurchId, x.Date });
         });
 
@@ -102,6 +105,24 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             // No duplicate attendance for the same member at the same event, even under concurrency.
             e.HasIndex(x => new { x.EventId, x.MemberId }).IsUnique();
             e.HasIndex(x => x.MemberId);
+        });
+
+        b.Entity<Ministry>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).IsRequired().HasMaxLength(150);
+            e.Property(x => x.Description).HasMaxLength(1000);
+            e.HasOne<Church>().WithMany().HasForeignKey(x => x.ChurchId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.ChurchId, x.Name }).IsUnique();
+        });
+
+        b.Entity<MinistryMember>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasOne<Church>().WithMany().HasForeignKey(x => x.ChurchId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Ministry>().WithMany().HasForeignKey(x => x.MinistryId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Member>().WithMany().HasForeignKey(x => x.MemberId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.MinistryId, x.MemberId }).IsUnique();
         });
 
         ApplyTenantFilters(b);
@@ -164,6 +185,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
         AuditLogs.AddRange(audits);
     }
 }
+
 
 
 

@@ -4,10 +4,10 @@ using ChurchSeeker.Domain.Enums;
 namespace ChurchSeeker.Application.Events;
 
 public record EventRequest(string Title, string? Description, DateOnly Date, TimeOnly Time, string Location,
-                           EventKind Kind, bool IsPublic, Guid? ResponsibleMemberId);
+                           EventKind Kind, bool IsPublic, Guid? ResponsibleMemberId, Guid? MinistryId = null);
 
 public record EventResponse(Guid Id, string Title, string? Description, DateOnly Date, TimeOnly Time, string Location,
-                            EventKind Kind, bool IsPublic, Guid? ResponsibleMemberId, bool IsCancelled);
+                            EventKind Kind, bool IsPublic, Guid? ResponsibleMemberId, bool IsCancelled, Guid? MinistryId);
 
 // What the anonymous calendar may show: no responsible member, no visibility flag.
 public record PublicEventResponse(Guid Id, string Title, string? Description, DateOnly Date, TimeOnly Time,
@@ -28,3 +28,4 @@ public interface IPublicEventService
 {
     Task<Result<IReadOnlyList<PublicEventResponse>>> ListAsync(Guid churchId, DateOnly? from, DateOnly? to, CancellationToken ct = default);
 }
+

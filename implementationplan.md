@@ -216,9 +216,9 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 - [x] **2.3. RF-03 (Control de Asistencia):**
   - [x] Registrar asistencia a cultos, reuniones y actividades seleccionando fecha y evento.
   - [x] Marcar miembros presentes/ausentes, consultar historial y generar reportes semanales/mensuales.
-- [ ] **2.4. RF-05 (Administración de Ministerios):**
-  - [ ] Registrar ministerios (música, jóvenes, niños, enseñanza, servicio, etc.) y asignar `Coordinadores`.
-  - [ ] Vincular miembros a cada ministerio y consultar integrantes y actividades programadas.
+- [x] **2.4. RF-05 (Administración de Ministerios):**
+  - [x] Registrar ministerios (música, jóvenes, niños, enseñanza, servicio, etc.) y asignar `Coordinadores`.
+  - [x] Vincular miembros a cada ministerio y consultar integrantes y actividades programadas.
 - [ ] **2.5. Break-Testing Fase 2:** Pruebas con inyección SQL/XSS en búsquedas, fechas inválidas en eventos, intento de borrado físico de miembros y duplicidad de asistencia concurrente.
 
 ### Fase 3: Finanzas, Comunicados, Configuración, Códices y Reportes (RF-06 a RF-10)
@@ -269,11 +269,12 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
 | **Fase Activa** | `Fase 2: Módulos Operativos Core` |
-| **Última Tarea Completada** | `2.3. RF-03 Asistencia (upsert, historial, resumen semanal/mensual, unique index); 80+39 tests OK` |
-| **Siguiente Tarea Inmediata** | `2.4. RF-05 Ministerios` |
+| **Última Tarea Completada** | `2.4. RF-05 Ministerios (coordinador, integrantes, actividades); 90+39 tests OK` |
+| **Siguiente Tarea Inmediata** | `2.5. Break-Testing Fase 2` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `UnitTests 37 OK + BreakTests 39 OK (fuerza bruta concurrente, JWT, roles, IDOR, fuzz de entrada)` |
+
 
 
 

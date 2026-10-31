@@ -16,14 +16,15 @@ public sealed class EventService : IEventService, IPublicEventService
     private readonly IRepository<ChurchEvent> _events;
     private readonly IRepository<Member> _members;
     private readonly IRepository<Church> _churches;
+    private readonly IRepository<Ministry> _ministries;
     private readonly ICurrentUser _current;
     private readonly PublicTenantScope _publicScope;
     private readonly TimeProvider _clock;
 
-    public EventService(IRepository<ChurchEvent> events, IRepository<Member> members, IRepository<Church> churches,
+    public EventService(IRepository<ChurchEvent> events, IRepository<Member> members, IRepository<Church> churches, IRepository<Ministry> ministries,
                         ICurrentUser current, PublicTenantScope publicScope, TimeProvider clock)
     {
-        _events = events; _members = members; _churches = churches;
+        _events = events; _members = members; _churches = churches; _ministries = ministries;
         _current = current; _publicScope = publicScope; _clock = clock;
     }
 
@@ -55,11 +56,11 @@ public sealed class EventService : IEventService, IPublicEventService
     public async Task<Result<EventResponse>> CreateAsync(EventRequest r, CancellationToken ct = default)
     {
         if (_current.ChurchId is not { } churchId) return Result<EventResponse>.Fail(ErrorKind.Forbidden);
-        var check = await CheckResponsibleAsync(r.ResponsibleMemberId, ct);
+        var check = await CheckResponsibleAsync(r.ResponsibleMemberId, r.MinistryId, ct);
         if (check is not null) return check;
         try
         {
-            var e = new ChurchEvent(churchId, r.Title, r.Description, r.Date, r.Time, r.Location, r.Kind, r.IsPublic, r.ResponsibleMemberId);
+            var e = new ChurchEvent(churchId, r.Title, r.Description, r.Date, r.Time, r.Location, r.Kind, r.IsPublic, r.ResponsibleMemberId, r.MinistryId);
             await _events.AddAsync(e, ct);
             await _events.SaveChangesAsync(ct);
             return Result<EventResponse>.Ok(ToResponse(e));
@@ -71,11 +72,11 @@ public sealed class EventService : IEventService, IPublicEventService
     {
         var e = await _events.GetByIdAsync(id, ct);
         if (e is null) return Result<EventResponse>.Fail(ErrorKind.NotFound);
-        var check = await CheckResponsibleAsync(r.ResponsibleMemberId, ct);
+        var check = await CheckResponsibleAsync(r.ResponsibleMemberId, r.MinistryId, ct);
         if (check is not null) return check;
         try
         {
-            e.Update(r.Title, r.Description, r.Date, r.Time, r.Location, r.Kind, r.IsPublic, r.ResponsibleMemberId);
+            e.Update(r.Title, r.Description, r.Date, r.Time, r.Location, r.Kind, r.IsPublic, r.ResponsibleMemberId, r.MinistryId);
             await _events.SaveChangesAsync(ct);
             return Result<EventResponse>.Ok(ToResponse(e));
         }
@@ -111,13 +112,16 @@ public sealed class EventService : IEventService, IPublicEventService
     }
 
     // The responsible person must be an active member of the SAME church (tenant filter enforces it).
-    private async Task<Result<EventResponse>?> CheckResponsibleAsync(Guid? memberId, CancellationToken ct)
+    private async Task<Result<EventResponse>?> CheckResponsibleAsync(Guid? memberId, Guid? ministryId, CancellationToken ct)
     {
-        if (memberId is null) return null;
-        var ok = await _members.Query().AsNoTracking().AnyAsync(m => m.Id == memberId && m.IsActive, ct);
-        return ok ? null : Result<EventResponse>.Fail(ErrorKind.Validation, "ResponsibleMemberId does not match an active member.");
+        if (memberId is not null && !await _members.Query().AsNoTracking().AnyAsync(m => m.Id == memberId && m.IsActive, ct))
+            return Result<EventResponse>.Fail(ErrorKind.Validation, "ResponsibleMemberId does not match an active member.");
+        if (ministryId is not null && !await _ministries.Query().AsNoTracking().AnyAsync(m => m.Id == ministryId && m.IsActive, ct))
+            return Result<EventResponse>.Fail(ErrorKind.Validation, "MinistryId does not match an active ministry.");
+        return null;
     }
 
     private static EventResponse ToResponse(ChurchEvent e) =>
-        new(e.Id, e.Title, e.Description, e.Date, e.Time, e.Location, e.Kind, e.IsPublic, e.ResponsibleMemberId, e.IsCancelled);
+        new(e.Id, e.Title, e.Description, e.Date, e.Time, e.Location, e.Kind, e.IsPublic, e.ResponsibleMemberId, e.IsCancelled, e.MinistryId);
 }
+
