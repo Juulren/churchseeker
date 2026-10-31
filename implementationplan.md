@@ -192,8 +192,8 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 - [x] **0.1.** Inicializar repositorio local y vincular remoto a `https://github.com/Juulren/churchseeker.git`.
 - [x] **0.2.** Crear estructura de carpetas (`/Backend`, `/Frontend`, `/.github`), archivo `.gitignore` y plantillas de Issues/PRs.
 - [x] **0.3.** (issues #1-#5) Crear los *Issues* iniciales en GitHub para las Fases 1 a 5 y asociarlos a este plan.
-- [ ] **0.4.** Configurar la solución `.sln` en C# (.NET 8) con las 4 capas limpias + 2 proyectos de pruebas (`UnitTests` y `BreakTests`).
-- [ ] **0.5.** Inicializar proyecto Frontend (React + TypeScript + Vite + Three.js + GSAP + Tailwind).
+- [x] **0.4.** Configurar la solución `.sln` en C# (.NET 8) con las 4 capas limpias + 2 proyectos de pruebas (`UnitTests` y `BreakTests`).
+- [x] **0.5.** Inicializar proyecto Frontend (React + TypeScript + Vite + Three.js + GSAP + Tailwind).
 
 ### Fase 1: Cimientos del Backend, Seguridad Base y RF-01 (Usuarios y Roles)
 - [ ] **1.1. Dominio POO Base:** Crear `BaseEntity`, `TenantEntity` (`ChurchId`) y entidades de las 3 iglesias iniciales de Mérida (*Database Seeder* con coordenadas reales).
@@ -268,10 +268,11 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | Parámetro de Control | Estado Actual |
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
-| **Fase Activa** | `Fase 0: Inicialización de GitHub y Entorno` |
-| **Última Tarea Completada** | `0.3. Issues #1-#5 creados` |
-| **Siguiente Tarea Inmediata** | `0.4. Solución .sln .NET 8 con 4 capas + 2 proyectos de pruebas` |
+| **Fase Activa** | `Fase 1: Cimientos del Backend` |
+| **Última Tarea Completada** | `0.5. Fase 0 completa (sln .NET 8 + Vite frontend)` |
+| **Siguiente Tarea Inmediata** | `1.1. Dominio POO base (BaseEntity, TenantEntity, seeder 3 iglesias)` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `Pendiente de inicialización de proyectos xUnit / Playwright` |
+
 

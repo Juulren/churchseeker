@@ -1,0 +1,6 @@
+@ChurchSeeker.WebAPI_HostAddress = http://localhost:5054
+
+GET {{ChurchSeeker.WebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
