@@ -1,4 +1,4 @@
-﻿import { defineConfig } from '@playwright/test'
+import { defineConfig } from '@playwright/test'
 
 // End-to-end and break tests run against the production build (with its CSP) served by `vite preview`,
 // and the real API with demo data. They use the system Microsoft Edge, so no browser download is needed.
@@ -22,6 +22,8 @@ export default defineConfig({
       url: 'http://localhost:5054/api/public/churches',
       reuseExistingServer: true,
       timeout: 180_000,
+      // Test administrator for the staff area (local test database only).
+      env: { Seed__AdminEmail: process.env.E2E_ADMIN_EMAIL ?? 'admin@churchseeker.local', Seed__AdminPassword: process.env.E2E_ADMIN_PASSWORD ?? 'Adm1n!Passw0rd#', RateLimiting__Auth: '1000' },
     },
     {
       command: 'npm run build && npm run preview -- --port 4173 --strictPort',
