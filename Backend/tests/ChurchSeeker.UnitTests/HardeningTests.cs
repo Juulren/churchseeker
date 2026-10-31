@@ -15,6 +15,7 @@ namespace ChurchSeeker.UnitTests;
 public class LowLimitFactory : AuthApiFactory
 {
     protected override int AuthLimit => 3;
+    protected override int ReportsLimit => 3;
 }
 
 public class HardeningTests : IClassFixture<AuthApiFactory>, IClassFixture<LowLimitFactory>

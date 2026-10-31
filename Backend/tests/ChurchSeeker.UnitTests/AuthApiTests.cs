@@ -17,6 +17,7 @@ public class AuthApiFactory : WebApplicationFactory<Program>
     public const string AdminEmail = "admin@test.local";
     public const string AdminPassword = "Adm1n!Passw0rd#";
     protected virtual int AuthLimit => 10000;
+    protected virtual int ReportsLimit => 10000;
     public string StorageRoot { get; } = Path.Combine(Path.GetTempPath(), $"cs-store-{Guid.NewGuid():N}");
     private readonly string _dbFile = Path.Combine(Path.GetTempPath(), $"cs-test-{Guid.NewGuid():N}.db");
 
@@ -28,6 +29,7 @@ public class AuthApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Database:AutoCreate", "true");
         builder.UseSetting("Storage:Root", StorageRoot);
         builder.UseSetting("RateLimiting:Auth", AuthLimit.ToString());
+        builder.UseSetting("RateLimiting:Reports", ReportsLimit.ToString());
         builder.UseSetting("Cors:AllowedOrigins:0", "http://localhost:5173");
         builder.UseSetting("Seed:AdminEmail", AdminEmail);
         builder.UseSetting("Seed:AdminPassword", AdminPassword);
