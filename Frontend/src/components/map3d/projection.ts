@@ -32,24 +32,3 @@ const finite = (n: number) => Number.isFinite(n)
 export function validCoordinates<T extends LatLng>(items: T[]): T[] {
   return items.filter((i) => finite(i.lat) && finite(i.lng) && Math.abs(i.lat) <= 90 && Math.abs(i.lng) <= 180)
 }
-
-export interface Pose { position: [number, number, number]; lookAt: [number, number, number] }
-
-/** Camera pose that frames one church from the south at a pleasant elevation. */
-export function focusPose(target: Vec2, distance = 15, elevationDeg = 30): Pose {
-  const e = (elevationDeg * Math.PI) / 180
-  return {
-    position: [target.x, Math.sin(e) * distance + 1.5, target.z + Math.cos(e) * distance],
-    lookAt: [target.x, 1.5, target.z],
-  }
-}
-
-/** Camera pose that shows every church at once. */
-export function overviewPose(points: Vec2[]): Pose {
-  if (points.length === 0) return { position: [0, 45, 55], lookAt: [0, 0, 0] }
-  const cx = points.reduce((s, p) => s + p.x, 0) / points.length
-  const cz = points.reduce((s, p) => s + p.z, 0) / points.length
-  const radius = Math.max(...points.map((p) => Math.hypot(p.x - cx, p.z - cz)))
-  const distance = Math.min(Math.max(radius * 3.2 + 30, 55), 130)
-  return { position: [cx, distance * 0.7, cz + distance * 0.8], lookAt: [cx, 0, cz] }
-}

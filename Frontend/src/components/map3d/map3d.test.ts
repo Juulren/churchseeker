@@ -1,9 +1,8 @@
-﻿import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { styleFor } from './churchStyles.ts'
 import {
-  MERIDA_CENTER, UNIT_METERS, centroid, focusPose, overviewPose, project, validCoordinates,
+  MERIDA_CENTER, UNIT_METERS, centroid, project, validCoordinates,
 } from './projection.ts'
-import { BLOCK, STREET, mulberry32, scatterHouses, scatterTrees } from './scatter.ts'
 
 // The three pilot churches (same coordinates as the database seed).
 const CATHEDRAL = { lat: 20.96737, lng: -89.62369 }
@@ -66,37 +65,6 @@ describe('validCoordinates', () => {
   })
 })
 
-describe('camera poses', () => {
-  it('frames a church from the south, above the ground, looking at it', () => {
-    const pose = focusPose({ x: 10, z: -4 }, 20)
-    expect(pose.position[0]).toBeCloseTo(10)
-    expect(pose.position[2]).toBeGreaterThan(-4)
-    expect(pose.position[1]).toBeGreaterThan(1.5)
-    expect(pose.lookAt[0]).toBe(10)
-    expect(pose.lookAt[2]).toBe(-4)
-    expect(Math.hypot(pose.position[1] - pose.lookAt[1], pose.position[2] - pose.lookAt[2])).toBeCloseTo(20, 5)
-  })
-
-  it('zooms out far enough to show every church', () => {
-    const pts = [{ x: -20, z: 10 }, { x: 15, z: -18 }, { x: 5, z: 6 }]
-    const pose = overviewPose(pts)
-    expect(pose.lookAt[1]).toBe(0)
-    const dist = Math.hypot(pose.position[0] - pose.lookAt[0], pose.position[1], pose.position[2] - pose.lookAt[2])
-    expect(dist).toBeGreaterThan(55)
-    expect(dist).toBeLessThanOrEqual(130 * 1.1)
-  })
-
-  it('has a default view when there are no churches', () => {
-    expect(overviewPose([])).toEqual({ position: [0, 45, 55], lookAt: [0, 0, 0] })
-  })
-
-  it('caps the distance when churches are scattered widely', () => {
-    const pose = overviewPose([{ x: -5000, z: 0 }, { x: 5000, z: 0 }])
-    const dist = Math.hypot(pose.position[0] - pose.lookAt[0], pose.position[1], pose.position[2] - pose.lookAt[2])
-    expect(dist).toBeLessThanOrEqual(130 * 1.1)
-  })
-})
-
 describe('styleFor', () => {
   it('gives the pilot churches their own architecture', () => {
     const cathedral = styleFor({ id: '11111111-1111-1111-1111-111111111111' })
@@ -121,43 +89,3 @@ describe('styleFor', () => {
   })
 })
 
-describe('scatter', () => {
-  const exclusions = [{ x: 0, z: 0, r: 5 }, { x: 20, z: -12, r: 5 }]
-
-  it('is deterministic', () => {
-    expect(scatterHouses(7, 38, exclusions)).toEqual(scatterHouses(7, 38, exclusions))
-    expect(scatterTrees(7, 38, 100, exclusions)).toEqual(scatterTrees(7, 38, 100, exclusions))
-    expect(mulberry32(1)()).toBe(mulberry32(1)())
-    expect(mulberry32(1)()).not.toBe(mulberry32(2)())
-  })
-
-  it('never buries a church under houses or trees', () => {
-    const houses = scatterHouses(2026, 38, exclusions)
-    const trees = scatterTrees(2026, 38, 140, exclusions)
-    expect(houses.length).toBeGreaterThan(50)
-    for (const e of exclusions) {
-      for (const h of houses) expect(Math.hypot(h.x - e.x, h.z - e.z)).toBeGreaterThanOrEqual(e.r)
-      for (const t of trees) expect(Math.hypot(t.x - e.x, t.z - e.z)).toBeGreaterThanOrEqual(e.r)
-    }
-  })
-
-  it('keeps houses inside the island and trees off the streets', () => {
-    for (const h of scatterHouses(2026, 38, [])) {
-      expect(Math.abs(h.x)).toBeLessThanOrEqual(38)
-      expect(Math.abs(h.z)).toBeLessThanOrEqual(38)
-      expect(h.h).toBeGreaterThan(0)
-    }
-    for (const t of scatterTrees(2026, 38, 140, [])) {
-      const fx = ((t.x % BLOCK) + BLOCK) % BLOCK
-      const fz = ((t.z % BLOCK) + BLOCK) % BLOCK
-      expect(Math.min(fx, BLOCK - fx)).toBeGreaterThanOrEqual(STREET)
-      expect(Math.min(fz, BLOCK - fz)).toBeGreaterThanOrEqual(STREET)
-    }
-  })
-
-  it('terminates and stays bounded with absurd inputs', () => {
-    expect(scatterTrees(1, 38, 1_000, [{ x: 0, z: 0, r: 1000 }])).toEqual([])
-    expect(scatterHouses(1, 0, [])).toEqual([])
-    expect(scatterHouses(1, 38, [{ x: 0, z: 0, r: 1e6 }])).toEqual([])
-  })
-})

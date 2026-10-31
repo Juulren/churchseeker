@@ -1,5 +1,5 @@
-// Pure rendering logic for the animated ASCII background. It has no DOM dependency, so it runs
-// unchanged inside a Web Worker (OffscreenCanvas) or on the main thread as a fallback.
+﻿// Pure rendering logic for the animated ASCII background: schools of fish swimming through a dark sea.
+// It has no DOM dependency, so it runs unchanged inside a Web Worker (OffscreenCanvas) or on the main thread.
 
 export interface Palette {
   background: string
@@ -8,41 +8,43 @@ export interface Palette {
 }
 
 export const PALETTES: Record<string, Palette> = {
-  default: { background: '#0b0705', dim: '#4a3320', bright: '#f2c46b' },
-  // One palette per pilot church (ids from the database seed).
-  '11111111-1111-1111-1111-111111111111': { background: '#0d0805', dim: '#5a3a14', bright: '#ffb84a' },
-  '22222222-2222-2222-2222-222222222222': { background: '#07100f', dim: '#1f4f4a', bright: '#6fe0c8' },
-  '33333333-3333-3333-3333-333333333333': { background: '#0c0713', dim: '#43296b', bright: '#c9a0ff' },
+  default: { background: '#050b14', dim: '#2a4560', bright: '#ffffff' },
+  // One tint per pilot church (ids from the database seed), always close to white.
+  '11111111-1111-1111-1111-111111111111': { background: '#0c0a08', dim: '#5a4d3c', bright: '#fff4e2' },
+  '22222222-2222-2222-2222-222222222222': { background: '#041214', dim: '#2a5a60', bright: '#e4fffa' },
+  '33333333-3333-3333-3333-333333333333': { background: '#0a0716', dim: '#4a3d6e', bright: '#f1e9ff' },
 }
 
 export const paletteFor = (churchId?: string | null): Palette =>
   (churchId && PALETTES[churchId]) || PALETTES.default
 
-export const RAMP = ' .:-=+*#%@'
 export const FONT_PX = 14
-export const CELL_W = 8
-export const CELL_H = 14
-// Upper bound of glyphs per frame. Huge viewports use bigger glyphs instead of more of them,
-// so the cost of a frame stays flat on an 8K screen or a zoomed-out browser.
-export const MAX_CELLS = 24_000
+export const MAX_FISH = 220
+export const MAX_BUBBLES = 120
+const MAX_DIM = 8192
 
 export interface Pointer { x: number; y: number }
 
-/** Brightness of one cell, always within 0..1. Plasma waves plus a ripple around the pointer. */
-export function fieldValue(col: number, row: number, t: number, pointer: Pointer | null, cw = CELL_W, ch = CELL_H): number {
-  let v = 0.5
-    + 0.18 * Math.sin(col * 0.11 + t * 0.9)
-    + 0.16 * Math.sin(row * 0.19 - t * 0.7)
-    + 0.14 * Math.sin((col + row) * 0.07 + t * 0.5)
-    + 0.12 * Math.sin(Math.hypot(col - 60, row - 20) * 0.16 - t * 1.1)
-  if (pointer) {
-    const d = Math.hypot(col * cw - pointer.x, row * ch - pointer.y) / cw
-    v += 0.55 * Math.exp(-(d * d) / 180) + 0.12 * Math.sin(d * 0.9 - t * 5) * Math.exp(-d / 14)
-  }
-  return v < 0 ? 0 : v > 1 ? 1 : v
+export interface Fish {
+  x: number
+  y: number
+  vx: number
+  vy: number
+  phase: number
+  big: boolean
 }
 
-export const rampIndex = (v: number): number => Math.min(RAMP.length - 1, Math.max(0, Math.floor(v * RAMP.length)))
+// Small seeded PRNG: the school starts the same way in every test.
+export function mulberry32(seed: number) {
+  let a = seed >>> 0
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0
+    let t = a
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
 
 const hexToRgb = (hex: string): [number, number, number] => {
   const m = /^#([0-9a-f]{6})$/i.exec(hex)
@@ -50,15 +52,65 @@ const hexToRgb = (hex: string): [number, number, number] => {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
 }
 
-/** One colour per ramp step, fading from `dim` to `bright`. */
+/** Three tones between `dim` and `bright`: far/slow, middle and near/fast creatures. */
 export function buildColors(p: Palette): string[] {
   const a = hexToRgb(p.dim)
   const b = hexToRgb(p.bright)
-  return Array.from({ length: RAMP.length }, (_, i) => {
-    const k = i / (RAMP.length - 1)
+  return [0.35, 0.7, 1].map((k) => {
     const c = a.map((x, j) => Math.round(x + (b[j] - x) * k))
     return `rgb(${c[0]},${c[1]},${c[2]})`
   })
+}
+
+const SPEED_MIN = 38
+const SPEED_MAX = 92
+const SIGHT = 110
+const SEPARATION = 26
+const FLEE_RADIUS = 150
+
+const clampNum = (n: number, lo: number, hi: number) => (n < lo ? lo : n > hi ? hi : n)
+
+/** Boids: separation, alignment, cohesion, a gentle wander and a fright reaction to the cursor. */
+export function stepSchool(fish: Fish[], dt: number, w: number, h: number, pointer: Pointer | null, t: number, speedScale = 1) {
+  const step = clampNum(Number.isFinite(dt) ? dt : 0, 0, 0.05)
+  if (step === 0 || w <= 0 || h <= 0) return
+  for (const f of fish) {
+    let ax = 0, ay = 0, sx = 0, sy = 0, cx = 0, cy = 0, n = 0
+    for (const o of fish) {
+      if (o === f) continue
+      const dx = o.x - f.x, dy = o.y - f.y
+      const d2 = dx * dx + dy * dy
+      if (d2 > SIGHT * SIGHT) continue
+      n++
+      ax += o.vx; ay += o.vy; cx += o.x; cy += o.y
+      if (d2 < SEPARATION * SEPARATION) { const d = Math.sqrt(d2) || 1; sx -= dx / d; sy -= dy / d }
+    }
+    let fx = Math.sin(t * 0.7 + f.phase) * 12, fy = Math.cos(t * 0.5 + f.phase * 1.7) * 8 // wander
+    if (n > 0) {
+      fx += (ax / n - f.vx) * 1.2 + (cx / n - f.x) * 0.35 + sx * 90
+      fy += (ay / n - f.vy) * 1.2 + (cy / n - f.y) * 0.35 + sy * 90
+    }
+    if (pointer) {
+      const dx = f.x - pointer.x, dy = f.y - pointer.y
+      const d = Math.hypot(dx, dy)
+      if (d < FLEE_RADIUS && d > 0.001) { const k = (1 - d / FLEE_RADIUS) * 520; fx += (dx / d) * k; fy += (dy / d) * k }
+    }
+    // Stay out of the very top and bottom edges so fish do not hug the borders.
+    if (f.y < 30) fy += 40
+    if (f.y > h - 30) fy -= 40
+    f.vx += fx * step
+    f.vy += fy * step
+    const speed = Math.hypot(f.vx, f.vy) || 1
+    const target = clampNum(speed, SPEED_MIN * speedScale * (f.big ? 0.8 : 1), SPEED_MAX * speedScale * (f.big ? 0.85 : 1))
+    f.vx = (f.vx / speed) * target
+    f.vy = (f.vy / speed) * target * 0.9
+    f.x += f.vx * step
+    f.y += f.vy * step
+    // Wrap horizontally (they swim off one side and come back on the other); bounce softly vertically.
+    if (f.x < -30) f.x = w + 30
+    else if (f.x > w + 30) f.x = -30
+    f.y = clampNum(f.y, 0, h)
+  }
 }
 
 // The 2D drawing surface subset the renderer needs: satisfied by both canvas context types.
@@ -71,21 +123,20 @@ export interface Surface {
   setTransform(a: number, b: number, c: number, d: number, e: number, f: number): void
 }
 
+const SMALL_R = ['><>', '>=>']
+const SMALL_L = ['<><', '<=<']
+const BIG_R = '><(((°>'
+const BIG_L = '<°)))><'
+
 export class AsciiRenderer {
-  private cols = 0
-  private rows = 0
-  private cellW = CELL_W
-  private cellH = CELL_H
-  private fontPx = FONT_PX
   private width = 0
   private height = 0
+  private fish: Fish[] = []
   private pointer: Pointer | null = null
   private palette: Palette = PALETTES.default
   private colors = buildColors(PALETTES.default)
-  // Cell positions grouped by ramp step, so the fill colour changes at most RAMP.length times a frame.
-  private buckets: Int32Array[] = []
-  private counts: Int32Array = new Int32Array(RAMP.length)
-
+  private last: number | null = null
+  private readonly rand = mulberry32(20261031)
   private readonly ctx: Surface
   private readonly reducedMotion: boolean
 
@@ -94,23 +145,26 @@ export class AsciiRenderer {
     this.reducedMotion = reducedMotion
   }
 
+  get fishCount() { return this.fish.length }
+  get school(): readonly Fish[] { return this.fish }
+
   resize(width: number, height: number, dpr = 1) {
     // Hostile or degenerate sizes (0, NaN, huge) must never crash or allocate without bound.
-    const w = Number.isFinite(width) ? Math.min(Math.max(Math.floor(width), 0), 8192) : 0
-    const h = Number.isFinite(height) ? Math.min(Math.max(Math.floor(height), 0), 8192) : 0
+    this.width = Number.isFinite(width) ? clampNum(Math.floor(width), 0, MAX_DIM) : 0
+    this.height = Number.isFinite(height) ? clampNum(Math.floor(height), 0, MAX_DIM) : 0
     const scale = Number.isFinite(dpr) && dpr > 0 ? Math.min(dpr, 2) : 1
-    this.width = w
-    this.height = h
-    const base = Math.ceil(w / CELL_W) * Math.ceil(h / CELL_H)
-    const grow = base > MAX_CELLS ? Math.sqrt(base / MAX_CELLS) : 1
-    this.cellW = CELL_W * grow
-    this.cellH = CELL_H * grow
-    this.fontPx = FONT_PX * grow
-    this.cols = Math.ceil(w / this.cellW)
-    this.rows = Math.ceil(h / this.cellH)
-    const cells = Math.max(this.cols * this.rows, 1)
-    this.buckets = RAMP.split('').map(() => new Int32Array(cells))
     this.ctx.setTransform(scale, 0, 0, scale, 0, 0)
+
+    const wanted = this.width * this.height === 0 ? 0 : clampNum(Math.round((this.width * this.height) / 9000), 30, MAX_FISH)
+    while (this.fish.length > wanted) this.fish.pop()
+    while (this.fish.length < wanted) {
+      const dir = this.rand() < 0.5 ? -1 : 1
+      this.fish.push({
+        x: this.rand() * this.width, y: this.rand() * this.height, vx: dir * (SPEED_MIN + this.rand() * 30),
+        vy: (this.rand() - 0.5) * 10, phase: this.rand() * 6.28, big: this.rand() < 0.14,
+      })
+    }
+    for (const f of this.fish) { f.x = clampNum(f.x, 0, this.width); f.y = clampNum(f.y, 0, this.height) }
   }
 
   setPointer(p: Pointer | null) {
@@ -122,36 +176,44 @@ export class AsciiRenderer {
     this.colors = buildColors(p)
   }
 
-  /** Draws one frame and returns how many glyphs were painted. */
+  /** Advances the school and draws one frame. Returns how many strings were painted. */
   draw(timeMs: number): number {
     const { ctx } = this
+    const now = Number.isFinite(timeMs) ? timeMs : 0
+    const dt = this.last === null ? 0 : (now - this.last) / 1000
+    this.last = now
+    const t = now / 1000
+    stepSchool(this.fish, dt, this.width, this.height, this.pointer, t, this.reducedMotion ? 0.3 : 1)
+
     ctx.fillStyle = this.palette.background
     ctx.fillRect(0, 0, this.width, this.height)
-    if (this.cols === 0 || this.rows === 0) return 0
+    if (this.width === 0 || this.height === 0) return 0
 
-    const t = (Number.isFinite(timeMs) ? timeMs : 0) / 1000 * (this.reducedMotion ? 0.15 : 1)
-    this.counts.fill(0)
-    for (let r = 0; r < this.rows; r++) {
-      for (let c = 0; c < this.cols; c++) {
-        const idx = rampIndex(fieldValue(c, r, t, this.pointer, this.cellW, this.cellH))
-        if (idx === 0) continue
-        this.buckets[idx][this.counts[idx]++] = r * this.cols + c
-      }
+    ctx.font = `${FONT_PX}px ui-monospace, Consolas, monospace`
+    ctx.textBaseline = 'middle'
+    let painted = 0
+
+    // Bubbles drifting up, each on its own deterministic path.
+    ctx.fillStyle = this.colors[0]
+    const bubbles = Math.min(MAX_BUBBLES, Math.floor((this.width * this.height) / 16000))
+    for (let i = 0; i < bubbles; i++) {
+      const a = Math.sin(i * 12.9898) * 43758.5453, b = Math.sin(i * 78.233) * 12345.6789
+      const rx = a - Math.floor(a), ry = b - Math.floor(b)
+      const speed = (7 + ry * 16) * (this.reducedMotion ? 0.3 : 1)
+      const y = this.height - ((t * speed + ry * this.height) % this.height)
+      ctx.fillText(ry > 0.7 ? 'o' : '.', rx * this.width + Math.sin(t * 0.8 + i) * 9, y)
+      painted++
     }
 
-    ctx.font = `${this.fontPx}px ui-monospace, Consolas, monospace`
-    ctx.textBaseline = 'top'
-    let painted = 0
-    for (let i = 1; i < RAMP.length; i++) {
-      if (this.counts[i] === 0) continue
-      ctx.fillStyle = this.colors[i]
-      const ch = RAMP[i]
-      const list = this.buckets[i]
-      for (let k = 0; k < this.counts[i]; k++) {
-        const cell = list[k]
-        ctx.fillText(ch, (cell % this.cols) * this.cellW, Math.floor(cell / this.cols) * this.cellH)
-        painted++
-      }
+    // Fish: far ones dim, fast ones bright. Tail frames alternate with time.
+    for (const f of this.fish) {
+      const right = f.vx >= 0
+      const frame = Math.floor(t * 3 + f.phase) & 1
+      const text = f.big ? (right ? BIG_R : BIG_L) : (right ? SMALL_R : SMALL_L)[frame]
+      const speed = Math.hypot(f.vx, f.vy)
+      ctx.fillStyle = this.colors[f.big ? 2 : speed > 70 ? 2 : speed > 52 ? 1 : 0]
+      ctx.fillText(text, f.x - (right ? text.length * 4 : 0), f.y)
+      painted++
     }
     return painted
   }

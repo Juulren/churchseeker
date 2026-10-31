@@ -1,10 +1,10 @@
-﻿import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import AsciiBackground from './components/ascii/AsciiBackground.tsx'
 import { publicApi } from './services/api.ts'
 import type { PublicChurch } from './services/types.ts'
 
 // three.js is heavy: the map and the detail view load on demand, after the first paint.
-const MeridaMap = lazy(() => import('./components/map3d/MeridaMap.tsx'))
+const RealMap = lazy(() => import('./components/map3d/RealMap.tsx'))
 const RpgView = lazy(() => import('./components/rpg-view/RpgView.tsx'))
 
 type View = 'map' | 'detail'
@@ -33,7 +33,7 @@ export default function App() {
     <>
       <AsciiBackground churchId={hoveredId ?? selectedId} />
 
-      <header className="pointer-events-none absolute left-4 top-3 z-10">
+      <header className="rpg-panel pointer-events-none absolute left-4 top-3 z-10 px-4 py-1">
         <h1 className="text-4xl tracking-widest" style={{ color: 'var(--accent)' }}>ChurchSeeker</h1>
         <p style={{ color: 'var(--ink-dim)' }}>Mérida, Yucatán</p>
       </header>
@@ -43,7 +43,7 @@ export default function App() {
           <RpgView church={selected} onBack={back} />
         ) : (
           churches && (
-            <MeridaMap churches={churches} selectedId={selectedId} hoveredId={hoveredId} onSelect={setSelectedId}
+            <RealMap churches={churches} selectedId={selectedId} hoveredId={hoveredId} onSelect={setSelectedId}
               onHover={setHoveredId} onArrive={enter} />
           )
         )}
