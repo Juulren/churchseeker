@@ -269,11 +269,12 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
 | **Fase Activa** | `Fase 5: Frontend administrativo` |
-| **Última Tarea Completada** | `5.1. Sign-in split con artPanel Asciify, recuperacion de contrasena, rutas y layout por rol; fondo de koi de letras; vitest 71 OK` |
+| **Última Tarea Completada** | `Fondo de koi descartado por decision del usuario (se elimino el motor ASCII, worker y pruebas); 5.1 completa; vitest 54 OK` |
 | **Siguiente Tarea Inmediata** | `5.2. Dashboard administrativo` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `UnitTests 154 OK + BreakTests 151 OK (dinero hostil, acceso Finance, archivos disfrazados, codices privados, abuso de reportes)` |
+
 
 
 
