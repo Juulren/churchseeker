@@ -1,10 +1,11 @@
-﻿import type { PublicBook, StaffBook } from '../../services/types.ts'
+import type { PublicBook, StaffBook } from '../../services/types.ts'
 
 export type ShelfBook = PublicBook & Partial<Pick<StaffBook, 'isPublic'>>
 
 export interface BookSlot {
   id: string
   title: string
+  author: string | null
   x: number
   /** Floor of the row this book stands on. */
   y: number
@@ -45,7 +46,7 @@ export function layoutShelf(books: ShelfBook[], perRow = MAX_PER_ROW): ShelfLayo
     if (current.length > 0 && (current.length >= perRow || rowWidth + w > MAX_ROW_WIDTH)) { rows.push([]); rowWidth = 0 }
     const h = hash(b.id)
     rows[rows.length - 1].push({
-      id: b.id, title: String(b.title ?? ''), x: rowWidth + w / 2, y: 0, w, h: 1.5 + (h % 6) * 0.1, d: 1.2,
+      id: b.id, title: String(b.title ?? ''), author: b.author ? String(b.author) : null, x: rowWidth + w / 2, y: 0, w, h: 1.5 + (h % 6) * 0.1, d: 1.2,
       tilt: h % 9 === 0 ? 0.12 : 0, color: safeColor(b.spineColor), isPublic: b.isPublic !== false,
     })
     rowWidth += w + GAP

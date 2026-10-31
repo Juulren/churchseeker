@@ -269,11 +269,12 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
 | **Fase Activa** | `Fase 4 (mejora de calidad visual pedida por el usuario) y luego Fase 5` |
-| **Última Tarea Completada** | `4.5. 25 pruebas E2E Playwright (Edge) + 50 vitest; usuario pidio dejar el low-poly y subir calidad (libros primero)` |
-| **Siguiente Tarea Inmediata** | `Calidad visual: libros realistas (cuero, oro, sombras), iglesias con materiales PBR; luego 5.1` |
+| **Última Tarea Completada** | `Calidad visual: libros de cuero con pan de oro, iglesias PBR (teja, piedra, cupula), rediseno moderno-RPG; vitest 59 OK` |
+| **Siguiente Tarea Inmediata** | `5.1. Sign-in (diseno split Asciify pedido por el usuario) y layout protegido` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `UnitTests 154 OK + BreakTests 151 OK (dinero hostil, acceso Finance, archivos disfrazados, codices privados, abuso de reportes)` |
+
 
 
 

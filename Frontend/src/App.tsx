@@ -34,8 +34,8 @@ export default function App() {
       <AsciiBackground churchId={hoveredId ?? selectedId} />
 
       <header className="rpg-panel pointer-events-none absolute left-4 top-3 z-10 max-w-[calc(100vw-2rem)] px-3 py-1 sm:px-4">
-        <h1 className="text-3xl tracking-wider sm:text-4xl sm:tracking-widest" style={{ color: 'var(--accent)' }}>ChurchSeeker</h1>
-        <p style={{ color: 'var(--ink-dim)' }}>Mérida, Yucatán</p>
+        <h1 className="text-2xl sm:text-3xl">ChurchSeeker</h1>
+        <p className="rpg-label">Mérida · Yucatán</p>
       </header>
 
       <Suspense fallback={<p className="absolute left-1/2 top-1/2 -translate-x-1/2" role="status">Cargando…</p>}>
