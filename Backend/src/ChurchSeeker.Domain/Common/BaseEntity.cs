@@ -33,4 +33,17 @@ public abstract class BaseEntity
             throw new DomainException($"{field} exceeds {maxLength} characters.");
         return trimmed;
     }
+
+    // Markup characters are rejected in plain-text fields: defence in depth against stored XSS.
+    protected static string RequirePlainText(string? value, string field, int maxLength)
+    {
+        var text = RequireText(value, field, maxLength);
+        if (text.AsSpan().IndexOfAny('<', '>') >= 0)
+            throw new DomainException($"{field} contains invalid characters.");
+        return text;
+    }
+
+    protected static string? OptionalPlainText(string? value, string field, int maxLength) =>
+        string.IsNullOrWhiteSpace(value) ? null : RequirePlainText(value, field, maxLength);
 }
+

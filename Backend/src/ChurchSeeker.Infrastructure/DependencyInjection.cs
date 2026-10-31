@@ -1,5 +1,8 @@
 ﻿using ChurchSeeker.Application.Auditing;
 using ChurchSeeker.Application.Auth;
+using ChurchSeeker.Application.Common;
+using ChurchSeeker.Application.Members;
+using ChurchSeeker.Infrastructure.Services;
 using ChurchSeeker.Infrastructure.Identity;
 using ChurchSeeker.Infrastructure.Persistence;
 using ChurchSeeker.Infrastructure.Security;
@@ -46,7 +49,10 @@ public static class DependencyInjection
         services.AddScoped<IEmailSender, LoggingEmailSender>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IAuditLogger, AuditLogger>();
+        services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+        services.AddScoped<IMemberService, MemberService>();
         return services;
     }
 }
+
 

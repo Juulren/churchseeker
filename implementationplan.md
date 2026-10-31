@@ -206,10 +206,10 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 - [x] **1.4. Break-Testing Fase 1 (bug #9 corregido):** Ejecutar pruebas de fuerza bruta en login, manipulación de firma JWT, escalada de privilegios entre roles y cruce de datos entre iglesias (IDOR).
 
 ### Fase 2: Módulos Operativos Core (RF-02, RF-03, RF-04, RF-05)
-- [ ] **2.1. RF-02 (Gestión de Miembros):**
-  - [ ] CRUD: Registrar nuevos miembros, consultar listado paginado y editar información personal (`Nombre`, `Teléfono`, `Correo`, `Fecha de ingreso`).
-  - [ ] Buscador por nombre y filtro por estado (`Activo` / `Inactivo`).
-  - [ ] Implementar desactivación lógica (`Soft Delete`) prohibiendo el borrado físico permanente.
+- [x] **2.1. RF-02 (Gestión de Miembros):**
+  - [x] CRUD: Registrar nuevos miembros, consultar listado paginado y editar información personal (`Nombre`, `Teléfono`, `Correo`, `Fecha de ingreso`).
+  - [x] Buscador por nombre y filtro por estado (`Activo` / `Inactivo`).
+  - [x] Implementar desactivación lógica (`Soft Delete`) prohibiendo el borrado físico permanente.
 - [ ] **2.2. RF-04 (Gestión de Eventos):**
   - [ ] Crear eventos religiosos y administrativos (`Título`, `Fecha`, `Hora`, `Lugar`, `Descripción`).
   - [ ] Asignar responsables, modificar o cancelar eventos y exponer endpoint para calendario público e interno.
@@ -269,11 +269,12 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
 | **Fase Activa** | `Fase 2: Módulos Operativos Core` |
-| **Última Tarea Completada** | `1.4. Break-tests Fase 1 (39 tests); Fase 1 completa` |
-| **Siguiente Tarea Inmediata** | `2.1. RF-02 Gestión de Miembros (CRUD, búsqueda, soft delete)` |
+| **Última Tarea Completada** | `2.1. RF-02 Miembros (CRUD, búsqueda, paginación, soft delete); 54 tests OK` |
+| **Siguiente Tarea Inmediata** | `2.2. RF-04 Eventos` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `UnitTests 37 OK + BreakTests 39 OK (fuerza bruta concurrente, JWT, roles, IDOR, fuzz de entrada)` |
+
 
 
 
