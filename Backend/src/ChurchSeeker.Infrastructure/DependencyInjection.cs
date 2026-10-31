@@ -1,4 +1,5 @@
 ﻿using ChurchSeeker.Application.Auditing;
+using ChurchSeeker.Application.Attendance;
 using ChurchSeeker.Application.Auth;
 using ChurchSeeker.Application.Common;
 using ChurchSeeker.Application.Events;
@@ -52,6 +53,7 @@ public static class DependencyInjection
         services.AddScoped<IAuditLogger, AuditLogger>();
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
         services.AddScoped<IMemberService, MemberService>();
+        services.AddScoped<IAttendanceService, AttendanceService>();
         services.AddScoped<PublicTenantScope>();
         services.AddScoped<EventService>();
         services.AddScoped<IEventService>(sp => sp.GetRequiredService<EventService>());
@@ -59,6 +61,7 @@ public static class DependencyInjection
         return services;
     }
 }
+
 
 
 
