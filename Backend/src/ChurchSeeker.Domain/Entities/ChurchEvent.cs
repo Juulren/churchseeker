@@ -16,22 +16,23 @@ public class ChurchEvent : TenantEntity, IAuditedEntity
     public bool IsPublic { get; private set; }
     public Guid? ResponsibleMemberId { get; private set; }
     public bool IsCancelled { get; private set; }
+    public Guid? MinistryId { get; private set; }
 
     private ChurchEvent() { }
 
     public ChurchEvent(Guid churchId, string title, string? description, DateOnly date, TimeOnly time,
-                       string location, EventKind kind, bool isPublic, Guid? responsibleMemberId)
-        : base(churchId) => Apply(title, description, date, time, location, kind, isPublic, responsibleMemberId);
+                       string location, EventKind kind, bool isPublic, Guid? responsibleMemberId, Guid? ministryId = null)
+        : base(churchId) => Apply(title, description, date, time, location, kind, isPublic, responsibleMemberId, ministryId);
 
     public void Update(string title, string? description, DateOnly date, TimeOnly time,
-                       string location, EventKind kind, bool isPublic, Guid? responsibleMemberId) =>
-        Apply(title, description, date, time, location, kind, isPublic, responsibleMemberId);
+                       string location, EventKind kind, bool isPublic, Guid? responsibleMemberId, Guid? ministryId = null) =>
+        Apply(title, description, date, time, location, kind, isPublic, responsibleMemberId, ministryId);
 
     public void Cancel() { IsCancelled = true; Touch(); }
     public void Restore() { IsCancelled = false; Touch(); }
 
     private void Apply(string title, string? description, DateOnly date, TimeOnly time,
-                       string location, EventKind kind, bool isPublic, Guid? responsibleMemberId)
+                       string location, EventKind kind, bool isPublic, Guid? responsibleMemberId, Guid? ministryId = null)
     {
         var t = RequirePlainText(title, nameof(Title), 200);
         var d = OptionalPlainText(description, nameof(Description), 4000);
@@ -39,9 +40,11 @@ public class ChurchEvent : TenantEntity, IAuditedEntity
         if (!Enum.IsDefined(kind)) throw new DomainException("Kind is invalid.");
         if (date.Year is < 2000 or > 2100) throw new DomainException("Date is out of range.");
         if (responsibleMemberId == Guid.Empty) throw new DomainException("ResponsibleMemberId is invalid.");
+        if (ministryId == Guid.Empty) throw new DomainException("MinistryId is invalid.");
 
         Title = t; Description = d; Location = l; Kind = kind;
-        Date = date; Time = time; IsPublic = isPublic; ResponsibleMemberId = responsibleMemberId;
+        Date = date; Time = time; IsPublic = isPublic; ResponsibleMemberId = responsibleMemberId; MinistryId = ministryId;
         Touch();
     }
 }
+
