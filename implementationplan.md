@@ -197,11 +197,11 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 
 ### Fase 1: Cimientos del Backend, Seguridad Base y RF-01 (Usuarios y Roles)
 - [x] **1.1. Dominio POO Base:** Crear `BaseEntity`, `TenantEntity` (`ChurchId`) y entidades de las 3 iglesias iniciales de Mérida (*Database Seeder* con coordenadas reales).
-- [ ] **1.2. RF-01 (Autenticación y Roles):**
-  - [ ] Registrar usuarios del sistema e implementar login/logout con correo y contraseña (`Argon2`/`BCrypt` + JWT + Cookie `HttpOnly`).
-  - [ ] Flujo seguro de recuperación y restablecimiento de contraseñas con tokens de un solo uso y expiración corta.
-  - [ ] Configurar los 5 roles: `Administrador`, `Pastor`, `Secretario`, `Tesorero` y `Coordinador`.
-  - [ ] Implementar guardias de autorización por rol y filtro global Multi-Tenant (`ChurchId`).
+- [x] **1.2. RF-01 (Autenticación y Roles):**
+  - [x] Registrar usuarios del sistema e implementar login/logout con correo y contraseña (`Argon2`/`BCrypt` + JWT + Cookie `HttpOnly`).
+  - [x] Flujo seguro de recuperación y restablecimiento de contraseñas con tokens de un solo uso y expiración corta.
+  - [x] Configurar los 5 roles: `Administrador`, `Pastor`, `Secretario`, `Tesorero` y `Coordinador`.
+  - [x] Implementar guardias de autorización por rol y filtro global Multi-Tenant (`ChurchId`).
 - [ ] **1.3. Seguridad Web Base:** Configurar *Rate Limiting*, CORS estricto, cabeceras de seguridad (CSP, HSTS, X-Frame-Options) y `AuditLog`.
 - [ ] **1.4. Break-Testing Fase 1:** Ejecutar pruebas de fuerza bruta en login, manipulación de firma JWT, escalada de privilegios entre roles y cruce de datos entre iglesias (IDOR).
 
@@ -269,11 +269,12 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
 | **Fase Activa** | `Fase 1: Cimientos del Backend` |
-| **Última Tarea Completada** | `1.1. Dominio POO base + seeder 3 iglesias (rama feat/rf-01-domain-base)` |
-| **Siguiente Tarea Inmediata** | `1.2. RF-01 Auth: Identity, JWT, refresh cookie, roles, filtro tenant` |
+| **Última Tarea Completada** | `1.2. RF-01 auth (JWT, refresh rotativo, lockout, reset, roles, filtro tenant); 28 tests OK` |
+| **Siguiente Tarea Inmediata** | `1.3. Rate limiting, CORS, cabeceras de seguridad, AuditLog` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
-| **Estado de Pruebas (Break-Tests)** | `Pendiente de inicialización de proyectos xUnit / Playwright` |
+| **Estado de Pruebas (Break-Tests)** | `28 pruebas en UnitTests (auth API, lockout, JWT manipulado, alg=none, reuse de refresh, tenant filter). BreakTests aun vacio (1.4)` |
+
 
 
 
