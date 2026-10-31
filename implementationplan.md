@@ -191,7 +191,7 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 ### Fase 0: Inicialización de GitHub y Entorno
 - [x] **0.1.** Inicializar repositorio local y vincular remoto a `https://github.com/Juulren/churchseeker.git`.
 - [x] **0.2.** Crear estructura de carpetas (`/Backend`, `/Frontend`, `/.github`), archivo `.gitignore` y plantillas de Issues/PRs.
-- [ ] **0.3.** Crear los *Issues* iniciales en GitHub para las Fases 1 a 5 y asociarlos a este plan.
+- [x] **0.3.** (issues #1-#5) Crear los *Issues* iniciales en GitHub para las Fases 1 a 5 y asociarlos a este plan.
 - [ ] **0.4.** Configurar la solución `.sln` en C# (.NET 8) con las 4 capas limpias + 2 proyectos de pruebas (`UnitTests` y `BreakTests`).
 - [ ] **0.5.** Inicializar proyecto Frontend (React + TypeScript + Vite + Three.js + GSAP + Tailwind).
 
@@ -269,8 +269,9 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
 | **Fase Activa** | `Fase 0: Inicialización de GitHub y Entorno` |
-| **Última Tarea Completada** | `0.2. Estructura de carpetas, .gitignore y plantillas` |
-| **Siguiente Tarea Inmediata** | `0.3. Crear Issues iniciales en GitHub` |
+| **Última Tarea Completada** | `0.3. Issues #1-#5 creados` |
+| **Siguiente Tarea Inmediata** | `0.4. Solución .sln .NET 8 con 4 capas + 2 proyectos de pruebas` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
-| **Último Commit / PR / Issue** | `Pendiente de primer commit inicial` |
+| **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
 | **Estado de Pruebas (Break-Tests)** | `Pendiente de inicialización de proyectos xUnit / Playwright` |
+
