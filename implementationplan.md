@@ -237,7 +237,7 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 - [x] **3.5. RF-09 (Reportes Exportables):**
   - [x] Generar reportes de: Miembros, Asistencia por evento, Participación por ministerio e Ingresos por periodo.
   - [x] Implementar exportación polimórfica a **PDF** y **Excel (`.xlsx`)**.
-- [ ] **3.6. Break-Testing Fase 3:** Intentar inyectar montos negativos en donaciones, acceder a reportes financieros con rol `Coordinador`/`Secretario`, y subir archivos `.exe` disfrazados de `.pdf` al estante de libros.
+- [x] **3.6. Break-Testing Fase 3:** Intentar inyectar montos negativos en donaciones, acceder a reportes financieros con rol `Coordinador`/`Secretario`, y subir archivos `.exe` disfrazados de `.pdf` al estante de libros.
 
 ### Fase 4: Frontend Inmersivo — Estética RPG, Mapa 3D de Mérida, ASCII y Estante de Libros
 - [ ] **4.1. Fondo Animado ASCII:** Construir `<AsciiBackground />` con shaders/canvas a 60 FPS sin bloqueo de UI.
@@ -268,12 +268,13 @@ Cada módulo deberá superar las siguientes baterías de pruebas antes de marcar
 | Parámetro de Control | Estado Actual |
 | :--- | :--- |
 | **Repositorio GitHub** | `https://github.com/Juulren/churchseeker.git` |
-| **Fase Activa** | `Fase 3: Finanzas, Comunicados, Configuración, Códices y Reportes` |
-| **Última Tarea Completada** | `3.5. RF-09 Reportes PDF/Excel (QuestPDF + ClosedXML, polimórfico, rate limit, anti formula-injection); 154+95 tests OK` |
-| **Siguiente Tarea Inmediata** | `3.6. Break-Testing Fase 3` |
+| **Fase Activa** | `Fase 4: Frontend Inmersivo (RPG, mapa 3D, ASCII, estante)` |
+| **Última Tarea Completada** | `3.6. Break-tests Fase 3 (151 break tests); Fase 3 completa, backend completo` |
+| **Siguiente Tarea Inmediata** | `4.1. Fondo ASCII <AsciiBackground />` |
 | **Rama Git Activa** | `main` (pendiente crear `develop`) |
 | **Último Commit / PR / Issue** | `90408ec / Issues #1-#5` |
-| **Estado de Pruebas (Break-Tests)** | `UnitTests 90 OK + BreakTests 95 OK (SQLi, XSS, fechas hostiles, borrado fisico, carreras, fuzz de queries, IDOR, rate limit publico)` |
+| **Estado de Pruebas (Break-Tests)** | `UnitTests 154 OK + BreakTests 151 OK (dinero hostil, acceso Finance, archivos disfrazados, codices privados, abuso de reportes)` |
+
 
 
 
