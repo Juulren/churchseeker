@@ -1,4 +1,4 @@
-﻿export interface Member { id: string; fullName: string; phone: string | null; email: string | null; joinDate: string; isActive: boolean }
+export interface Member { id: string; fullName: string; phone: string | null; email: string | null; joinDate: string; isActive: boolean }
 export interface MemberInput { fullName: string; phone: string | null; email: string | null; joinDate: string }
 
 export interface EventItem {
@@ -44,4 +44,6 @@ export interface MemberAttendanceRow { eventId: string; title: string; date: str
 
 export const DONATION_METHODS = ['', 'Efectivo', 'Transferencia', 'Cheque', 'Tarjeta', 'Otro']
 export const EVENT_KINDS = ['', 'Religioso', 'Administrativo']
+export interface ManagedUser { id: string; email: string; fullName: string; role: number; isActive: boolean; isSelf: boolean }
+
 export const ROLE_VALUES = { Administrador: 1, Pastor: 2, Secretario: 3, Tesorero: 4, Coordinador: 5 } as const

@@ -10,6 +10,7 @@ const Ministries = lazy(() => import('./pages/MinistriesPage.tsx'))
 const Donations = lazy(() => import('./pages/DonationsPage.tsx'))
 const Announcements = lazy(() => import('./pages/AnnouncementsPage.tsx'))
 const Reports = lazy(() => import('./pages/ReportsPage.tsx'))
+const Users = lazy(() => import('./pages/UsersPage.tsx'))
 const Settings = lazy(() => import('./pages/SettingsPage.tsx'))
 import { navigate, parseRoute, useHash } from '../../state/route.ts'
 
@@ -54,6 +55,7 @@ export default function AdminShell() {
             {active.path === 'donations' && <Donations />}
             {active.path === 'announcements' && <Announcements canEdit={management} />}
             {active.path === 'reports' && <Reports role={user.role} />}
+            {active.path === 'users' && <Users />}
             {active.path === 'settings' && <Settings />}
           </Suspense>
         )}

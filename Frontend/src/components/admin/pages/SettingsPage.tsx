@@ -1,8 +1,7 @@
-﻿import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { adminApi } from '../../../services/adminApi.ts'
-import { ROLE_VALUES, type ProfileInput } from '../../../services/adminTypes.ts'
+import { type ProfileInput } from '../../../services/adminTypes.ts'
 import { DAY_NAMES } from '../../rpg-view/format.ts'
-import { newPasswordError } from '../../auth/validators.ts'
 import { emptyToNull } from '../format.ts'
 import { messageOf, useAsync } from '../useAsync.ts'
 import { Check, Notice, SelectInput, TextInput } from '../ui.tsx'
@@ -113,44 +112,11 @@ function Books() {
   )
 }
 
-function Users() {
-  const [email, setEmail] = useState('')
-  const [name, setName] = useState('')
-  const [password, setPassword] = useState('')
-  const [role, setRole] = useState('3')
-  const [msg, setMsg] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
-  const [busy, setBusy] = useState(false)
-  const submit = async (e: FormEvent) => {
-    e.preventDefault()
-    const bad = newPasswordError(password)
-    if (!email.trim() || !name.trim()) { setMsg({ kind: 'error', text: 'Correo y nombre son obligatorios.' }); return }
-    if (bad) { setMsg({ kind: 'error', text: bad }); return }
-    setBusy(true); setMsg(null)
-    try {
-      await adminApi.users.create({ email: email.trim(), fullName: name.trim(), password, role: Number(role) })
-      setEmail(''); setName(''); setPassword(''); setMsg({ kind: 'ok', text: 'Usuario creado en tu iglesia.' })
-    } catch (x) { setMsg({ kind: 'error', text: messageOf(x) }) } finally { setBusy(false) }
-  }
-  return (
-    <form onSubmit={submit} className="grid gap-3" noValidate aria-label="Nuevo usuario">
-      <div className="form-grid">
-        <TextInput label="Correo" type="email" value={email} onChange={setEmail} />
-        <TextInput label="Nombre completo" value={name} onChange={setName} maxLength={200} />
-        <TextInput label="Contraseña inicial" type="password" value={password} onChange={setPassword} hint="10+ caracteres, mayúscula, minúscula, número y símbolo" />
-        <SelectInput label="Rol" value={role} onChange={setRole} options={Object.entries(ROLE_VALUES).map(([label, v]) => ({ value: String(v), label }))} />
-      </div>
-      {msg && <Notice kind={msg.kind}>{msg.text}</Notice>}
-      <div><button type="submit" className="rpg-button btn-primary" disabled={busy}>{busy ? 'Creando…' : 'Crear usuario'}</button></div>
-    </form>
-  )
-}
-
 export default function SettingsPage() {
   return (
     <div className="grid gap-8">
       <section><h3 className="rpg-title text-xl">Iglesia</h3><Profile /></section>
       <section><h3 className="rpg-title text-xl">Estante de códices</h3><Books /></section>
-      <section><h3 className="rpg-title text-xl">Personal con acceso</h3><Users /></section>
     </div>
   )
 }
