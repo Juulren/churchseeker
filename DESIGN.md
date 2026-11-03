@@ -43,7 +43,7 @@ Cormorant Garamond for titles and church names (weight 500 or more, never below 
 ## 5. Ornaments: SVG components that pair with Asciify
 A library of SVG parts drawn in code in a Gothic, Renaissance and sigil spirit, in the system's inks. Nothing external, so no licences.
 - **Parts:** pointed-arch frames, trefoil and seven-fold tracery, a rosette, corner marks, dividers, cartouches and plaques, drop capitals in Cinzel, a guilloche border, a ring, a lamp, a tree, a doorway, a path.
-- **Where:** empty states, the loading screen, the 404 (a path to an open doorway), section headers, the dashboard strip, the church-viewer frame, the book shelf.
+- **Where:** empty states, the loading screen, the screen for a failed load (a path to an open doorway), section headers, the dashboard strip, the church-viewer frame, the book shelf.
 - **Pairing with Asciify:**
   1. *Frames hold fields.* The login art panel and any other full-field surface are clipped to a pointed-arch or rosette shape from the library. Small components are not clipped.
   2. *Ornament as source.* An SVG ornament is rasterised once and fed to a glyph field (`morphField`) so a sigil can condense out of characters into lines and back.
@@ -65,7 +65,7 @@ A library of SVG parts drawn in code in a Gothic, Renaissance and sigil spirit, 
 | `scramble` on menu links, `pageDissolve` between modules | done: `scramble` plays on pointer hover over the admin menu links (real text stays, no replay on keyboard focus); `pageDissolve` carries one admin module out and the next in from the clicked link (plain swap without GL, with reduced motion or if the kit fails) |
 | `globe` | only if the map intro is approved (assumed no) |
 | `wordmark`, `tabs` | not used: `wordmark` draws large letters only; the admin menu is made of links the e2e specs rely on |
-| `fieldBackground` 404 | the 404 uses the ornament illustration instead |
+| `fieldBackground` 404 | done: the 404 draws the numerals in characters that scatter under the pointer and break apart and re-form when "Volver al mapa" is pressed; the message and the button are HTML (the lost-road ornament now belongs to the screen shown when the church list cannot load) |
 
 ## 7. Church renders rebuilt from scratch
 **Why the old ones feel simple:** they are one generic box-and-towers builder with three hand-set variations. More pixels or other colours cannot fix that; the geometry has to carry the real building.

@@ -9,16 +9,19 @@ test.beforeEach(async ({ page }) => {
 })
 
 test.describe('ornaments', () => {
-  test('an unknown address shows the lost path, and the link leads back to the map', async ({ page }) => {
+  test('an unknown address shows 404 in characters, and the link leads back to the map', async ({ page }) => {
     await page.goto('/#/este-camino-no-existe')
     await expect(page.getByRole('heading', { level: 1, name: 'Este camino no existe' })).toBeVisible()
-    await expect(page.locator('.ornament').first()).toHaveAttribute('aria-hidden', 'true')
+    // The numerals are decoration: the message and the button are the HTML around them.
+    await expect(page.locator('.notfound-art')).toHaveAttribute('aria-hidden', 'true')
     await page.getByRole('link', { name: 'Volver al mapa' }).click()
     await expect(page.getByRole('navigation', { name: 'Iglesias de Mérida' })).toBeVisible()
   })
 
   test('every ornament on a page is decoration: hidden, never focusable, never taking the pointer', async ({ page }) => {
-    await page.goto('/#/este-camino-no-existe')
+    // The screen shown when the list of churches cannot load carries the lost-road ornaments.
+    await page.route('**/api/public/churches', (r) => r.fulfill({ status: 502, body: 'Bad Gateway' }))
+    await page.goto('/')
     await expect(page.locator('.ornament').first()).toBeVisible()
     const bad = await page.evaluate(() => [...document.querySelectorAll('.ornament')].filter((e) => e.getAttribute('aria-hidden') !== 'true' || e.getAttribute('focusable') !== 'false' || getComputedStyle(e).pointerEvents !== 'none').length)
     expect(bad).toBe(0)
