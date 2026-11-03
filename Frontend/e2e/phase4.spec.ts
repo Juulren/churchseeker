@@ -19,6 +19,12 @@ function watch(page: Page) {
   return problems
 }
 
+// The map only becomes interactive once its tiles load, and the imagery server is external and its speed varies:
+// every test in this file gets a one-pixel stand-in instead, so none of them depends on the network.
+test.beforeEach(async ({ page }) => {
+  await page.route('https://server.arcgisonline.com/**', (r) => r.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') }))
+})
+
 const json = (route: Route, body: unknown, status = 200) =>
   route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
 
@@ -52,8 +58,6 @@ test.describe('map and navigation', () => {
 
   test('opening and leaving churches repeatedly does not leak WebGL contexts or memory', async ({ page }) => {
     const problems = watch(page)
-    // The map only becomes interactive once its tiles load; a stub keeps this test off the live Esri server, whose speed varies.
-    await page.route('https://server.arcgisonline.com/**', (r) => r.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') }))
     await page.goto('/')
     await expect(nav(page).getByRole('button')).toHaveCount(3)
     const heap = () => page.evaluate(() => (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize ?? 0)
