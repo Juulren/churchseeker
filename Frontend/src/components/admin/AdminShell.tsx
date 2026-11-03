@@ -3,6 +3,8 @@ import { authApi, session } from '../../services/auth.ts'
 import { allowedNav } from './nav.ts'
 import { Loading } from './ui.tsx'
 import { decodeOnce, useKit } from '../ascii/useKit.ts'
+import { ToastHost } from '../ascii/toast.tsx'
+import CommandPalette from './CommandPalette.tsx'
 
 const Dashboard = lazy(() => import('./pages/DashboardPage.tsx'))
 const Members = lazy(() => import('./pages/MembersPage.tsx'))
@@ -44,6 +46,7 @@ export default function AdminShell() {
           ))}
         </nav>
         <div className="mt-auto flex gap-2 md:flex-col">
+          <CommandPalette items={items} />
           <a href="#/" className="rpg-button text-center">Ver sitio público</a>
           <button className="rpg-button" onClick={async () => { await authApi.logout(); navigate('#/login') }}>Cerrar sesión</button>
         </div>
@@ -65,6 +68,7 @@ export default function AdminShell() {
           </Suspense>
         )}
       </main>
+      <ToastHost />
     </div>
   )
 }

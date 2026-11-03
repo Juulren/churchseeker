@@ -4,11 +4,18 @@ import { ROLE_VALUES, type ManagedUser } from '../../../services/adminTypes.ts'
 import { newPasswordError } from '../../auth/validators.ts'
 import { NAV } from '../nav.ts'
 import { messageOf, useAsync } from '../useAsync.ts'
-import { Check, Modal, Notice, SelectInput, TextInput } from '../ui.tsx'
+import { Check, Modal, Notice, SelectInput, StatusPill, TextInput } from '../ui.tsx'
+import { toast } from '../../ascii/toast.tsx'
 import type { Role } from '../../../services/auth.ts'
 
 const ROLE_OPTIONS = Object.entries(ROLE_VALUES).map(([label, v]) => ({ value: String(v), label }))
 const roleName = (n: number) => ROLE_OPTIONS.find((o) => o.value === String(n))?.label ?? String(n)
+
+// "Title: detail." becomes a short title and a detail line; a message without a colon is only a title.
+const splitToast = (text: string): [string, string | undefined] => {
+  const i = text.indexOf(': ')
+  return i < 0 ? [text.replace(/.$/, ''), undefined] : [text.slice(0, i), text.slice(i + 2)]
+}
 
 type Flash = { kind: 'ok' | 'error'; text: string } | null
 
@@ -84,7 +91,7 @@ export default function UsersPage() {
 
   const act = async (u: ManagedUser, run: () => Promise<unknown>, ok: string) => {
     setPending(u.id); setMsg(null)
-    try { await run(); setMsg({ kind: 'ok', text: ok }); list.reload() } catch (x) { setMsg({ kind: 'error', text: messageOf(x) }); list.reload() } finally { setPending(null) }
+    try { await run(); if (!toast(...splitToast(ok))) setMsg({ kind: 'ok', text: ok }); list.reload() } catch (x) { setMsg({ kind: 'error', text: messageOf(x) }); list.reload() } finally { setPending(null) }
   }
 
   return (
@@ -111,7 +118,7 @@ export default function UsersPage() {
                       {ROLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                   </td>
-                  <td>{u.isActive ? 'Activo' : 'Desactivado'}</td>
+                  <td><StatusPill active={u.isActive} on="Activo" off="Desactivado" /></td>
                   <td>
                     <div className="row-actions">
                       {u.isActive
@@ -128,7 +135,7 @@ export default function UsersPage() {
         </div>
       </section>
       <Permissions />
-      {creating && <NewUser onClose={() => setCreating(false)} onDone={() => { setCreating(false); setMsg({ kind: 'ok', text: 'Usuario creado en tu iglesia.' }); list.reload() }} />}
+      {creating && <NewUser onClose={() => setCreating(false)} onDone={() => { setCreating(false); if (!toast('Usuario creado en tu iglesia.')) setMsg({ kind: 'ok', text: 'Usuario creado en tu iglesia.' }); list.reload() }} />}
     </div>
   )
 }

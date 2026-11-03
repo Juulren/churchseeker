@@ -167,3 +167,21 @@ export function BarChart({ labels, values, title, format = (n: number) => String
     </figure>
   )
 }
+
+/** A status badge: a dot and a word. The word is always real text; the kit only animates the dot and the tint. */
+export function StatusPill({ active, on, off }: { active: boolean; on: string; off: string }) {
+  const el = useRef<HTMLSpanElement>(null)
+  useKit(el, (kit, node) => kit.pill(node, { live: active }), [active])
+  return <span ref={el} className="status-pill" data-tone={active ? 'green' : 'red'}><span data-dot aria-hidden="true" /><span>{active ? on : off}</span></span>
+}
+
+/** Placeholder lines drawn in characters while a list loads; the text for screen readers stays. */
+export function SkeletonLines({ rows = 5 }: { rows?: number }) {
+  const box = useRef<HTMLDivElement>(null)
+  useKit(box, (kit, el) => kit.skeleton(el, { shimmer: 1600 }))
+  return (
+    <div ref={box} role="status" aria-label="Cargando…">
+      {Array.from({ length: rows }, (_, i) => <div key={i} data-block="text" className="skeleton-block" />)}
+    </div>
+  )
+}

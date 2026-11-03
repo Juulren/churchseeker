@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { authApi, loginMessage } from '../../services/auth.ts'
 import { navigate } from '../../state/route.ts'
-import AsciiSpinner from './AsciiSpinner.tsx'
+import { useKit } from '../ascii/useKit.ts'
 import Field, { LockIcon, MailIcon } from './Field.tsx'
 import { treeOfLifeUrl } from './treeOfLife.ts'
 import { emailError, passwordError } from './validators.ts'
@@ -14,6 +14,7 @@ export default function SignIn() {
   const artSide = useRef<HTMLDivElement>(null)
   const brand = useRef<HTMLDivElement>(null)
   const button = useRef<HTMLButtonElement>(null)
+  const kitRef = useRef<typeof import('asciify-engine/kit') | null>(null)
   const art = useRef<ArtHandle | null>(null)
   const [mode, setMode] = useState<Mode>('signin')
   const [email, setEmail] = useState('')
@@ -47,11 +48,23 @@ export default function SignIn() {
       poster.remove()
     }
   }, [])
+  // One cursor trail for the page, kept off the form.
+  useKit(artSide, (kit) => kit.cursorTrail({ charset: ' .:-=+*#', life: 700, skip: '.sign-in-form' }))
+  // The button: a quiet beam of light on its border. Its loading state is mounted only while work runs (see run), so the label at rest is plain text.
+  useKit(button, (kit, el) => {
+    kitRef.current = kit
+    const b = kit.beam(el, { palette: 'mono', mode: 'pulse', hover: true })
+    return { destroy: () => { kitRef.current = null; b.destroy() } }
+  }, [mode])
   const run = async (work: () => Promise<void>) => {
     setBusy(true)
     art.current?.pulse?.(button.current ?? undefined, 1.8)
     art.current?.shimmer?.(true)
+    const loading = button.current && kitRef.current ? kitRef.current.buttonLoading(button.current) : null
+    loading?.start(mode === 'forgot' ? 'Enviando' : 'Entrando')
     try { await work() } finally {
+      loading?.reset()
+      loading?.destroy()
       art.current?.shimmer?.(false)
       art.current?.pulse?.(undefined, 0.6)
       setBusy(false)
@@ -111,8 +124,8 @@ export default function SignIn() {
                   onChange={setPassword} error={errors.password} icon={LockIcon} disabled={busy}
                   trailing={<button type="button" className="pill-toggle" onClick={() => setShow((s) => !s)} aria-pressed={show}>{show ? 'Ocultar' : 'Ver'}</button>} />
               )}
-              <button ref={button} type="submit" className="cta" disabled={busy} aria-busy={busy}>
-                {busy ? <><AsciiSpinner /> {mode === 'forgot' ? 'Enviando' : 'Entrando'}</> : mode === 'forgot' ? 'Enviar enlace' : 'Continuar'}
+              <button key={mode} ref={button} type="submit" className="cta" disabled={busy} aria-busy={busy}>
+                {mode === 'forgot' ? 'Enviar enlace' : 'Continuar'}
               </button>
             </>
           )}
