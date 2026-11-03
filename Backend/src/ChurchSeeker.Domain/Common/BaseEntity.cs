@@ -38,6 +38,9 @@ public abstract class BaseEntity
     protected static string RequirePlainText(string? value, string field, int maxLength)
     {
         var text = RequireText(value, field, maxLength);
+        // NUL and other control characters break PostgreSQL text columns and have no place in names or titles.
+        if (text.Any(c => char.IsControl(c) && c != 0x0A && c != 0x0D && c != 0x09))
+            throw new DomainException($"{field} contains invalid characters.");
         if (text.AsSpan().IndexOfAny('<', '>') >= 0)
             throw new DomainException($"{field} contains invalid characters.");
         return text;

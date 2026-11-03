@@ -20,12 +20,13 @@ public class AuthApiFactory : WebApplicationFactory<Program>
     protected virtual int ReportsLimit => 10000;
     public string StorageRoot { get; } = Path.Combine(Path.GetTempPath(), $"cs-store-{Guid.NewGuid():N}");
     private readonly string _dbFile = Path.Combine(Path.GetTempPath(), $"cs-test-{Guid.NewGuid():N}.db");
+    private readonly PgTestDb? _pg = PgTestDb.Server is null ? null : new PgTestDb();
 
     protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
         builder.UseSetting("Jwt:Key", "test-key-test-key-test-key-test-key-1234");
-        builder.UseSetting("ConnectionStrings:Default", $"Data Source={_dbFile}");
+        if (_pg is null) builder.UseSetting("ConnectionStrings:Default", $"Data Source={_dbFile}"); else { builder.UseSetting("Database:Provider", "Postgres"); builder.UseSetting("ConnectionStrings:Default", _pg.Connection); }
         builder.UseSetting("Database:AutoCreate", "true");
         // Development settings enable demo content; tests need an empty database.
         builder.UseSetting("Seed:Demo", "false");
@@ -42,6 +43,7 @@ public class AuthApiFactory : WebApplicationFactory<Program>
     {
         base.Dispose(disposing);
         Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        _pg?.Dispose();
         try { File.Delete(_dbFile); } catch { /* best effort */ }
         try { if (Directory.Exists(StorageRoot)) Directory.Delete(StorageRoot, true); } catch { /* best effort */ }
     }

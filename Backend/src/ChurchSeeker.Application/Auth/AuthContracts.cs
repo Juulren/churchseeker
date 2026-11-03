@@ -16,7 +16,7 @@ public record AuthTokens(
     DateTime RefreshExpiresAt,
     UserInfo User);
 
-public enum AuthError { None, InvalidCredentials, InvalidToken, Forbidden, Validation }
+public enum AuthError { None, InvalidCredentials, InvalidToken, Forbidden, Validation, NotFound, Conflict }
 
 public sealed record AuthResult<T>(T? Value, AuthError Error, IReadOnlyList<string> Messages)
 {

@@ -29,7 +29,7 @@ public sealed class AnnouncementService : IAnnouncementService, IPublicAnnouncem
 
     public async Task<Result<PagedResult<AnnouncementResponse>>> ListAsync(bool includeInactive, int page, int pageSize, CancellationToken ct = default)
     {
-        page = Math.Max(1, page);
+        page = Math.Clamp(page, 1, 100_000);
         pageSize = Math.Clamp(pageSize, 1, 100);
         var query = _repo.Query().AsNoTracking();
         if (!includeInactive) query = query.Where(a => a.IsActive);

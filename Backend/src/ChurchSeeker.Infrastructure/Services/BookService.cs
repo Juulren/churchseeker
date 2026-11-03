@@ -29,7 +29,7 @@ public sealed class BookService : IBookService, IPublicBookService
 
     public async Task<Result<PagedResult<BookResponse>>> ListAsync(bool includeInactive, int page, int pageSize, CancellationToken ct = default)
     {
-        page = Math.Max(1, page);
+        page = Math.Clamp(page, 1, 100_000);
         pageSize = Math.Clamp(pageSize, 1, 100);
         var query = _books.Query().AsNoTracking();
         if (!includeInactive) query = query.Where(b => b.IsActive);

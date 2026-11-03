@@ -33,3 +33,5 @@ Frontend/playwright-report/
 
 .agents/
 skills-lock.json
+
+.env

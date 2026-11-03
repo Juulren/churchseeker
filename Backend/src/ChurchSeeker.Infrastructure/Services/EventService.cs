@@ -35,7 +35,7 @@ public sealed class EventService : IEventService, IPublicEventService
         if (q.From is { } f && q.To is { } t && f > t)
             return Result<PagedResult<EventResponse>>.Fail(ErrorKind.Validation, "From must not be after To.");
 
-        var page = Math.Max(1, q.Page);
+        var page = Math.Clamp(q.Page, 1, 100_000);
         var size = Math.Clamp(q.PageSize, 1, 200);
         var query = _events.Query().AsNoTracking();
         if (q.From is { } from) query = query.Where(e => e.Date >= from);
