@@ -10,10 +10,30 @@ import { churchTop, typologyScale } from '../map3d/churchBuilder.ts'
 import { TYPOLOGY_META } from '../map3d/kit/typologies.ts'
 import { AUTHORED, authoredScale } from '../map3d/kit/registry.ts'
 import { hasWebGL } from '../map3d/webgl.ts'
+import { plaqueTexture, PLAQUE_H, PLAQUE_W } from '../map3d/plaque.ts'
 
 const grass = plasterMaterial('#6b6b6b')
 
 interface Props { id: string; name: string; modelUrl: string | null }
+
+/** The inscription at the foot of the church: its sigil and its name on a dark plaque. */
+function Plaque({ name, front }: { name: string; front: number }) {
+  const [map, setMap] = useState<THREE.CanvasTexture | null>(null)
+  useEffect(() => {
+    let alive = true
+    plaqueTexture(name).then((t) => { if (alive) setMap(t); else t?.dispose() }).catch(() => { /* no plaque */ })
+    return () => { alive = false }
+  }, [name])
+  // Freed only after the mesh has stopped using it (this cleanup runs once the next texture is committed).
+  useEffect(() => () => { map?.dispose() }, [map])
+  if (!map) return null
+  return (
+    <mesh position={[0.3, 0.34, Math.min(front + 0.5, 7)]} rotation={[-0.28, 0, 0]}>
+      <planeGeometry args={[PLAQUE_W, PLAQUE_H]} />
+      <meshBasicMaterial map={map} toneMapped={false} />
+    </mesh>
+  )
+}
 
 function Unavailable() {
   return <p className="p-4 text-center" role="status" style={{ color: 'var(--ink-dim)' }}>La vista 3D no está disponible en este dispositivo.</p>
@@ -81,6 +101,7 @@ function Stage({ id, name, modelUrl }: Props) {
           <meshStandardMaterial color="#2c2c2c" roughness={0.95} />
         </mesh>
         <ChurchModel modelUrl={modelUrl} style={style} onScan={setScan} />
+        <Plaque name={name} front={frame.front} />
         <FrontView front={frame.front} height={frame.height} width={frame.width} />
       </Canvas>
     </GraphicsBoundary>

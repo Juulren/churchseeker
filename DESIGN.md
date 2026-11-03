@@ -74,13 +74,13 @@ A library of SVG parts drawn in code in a Gothic, Renaissance and sigil spirit, 
 - **Tier 1, scans (exact).** The admin uploads a .glb scan (phone apps such as Polycam, Luma or Scaniverse produce them). Rules: at most 1.5 MB, at most 80,000 triangles, Draco or meshopt accepted; a short guide in Configuración explains how to optimise one. A scan is shown as scanned. This is the only way to be exactly faithful for any church, in any faith.
 - **Tier 2, authored models for the three pilot churches.** Built in code from a shared **facade kit** (orders and pilasters, round and pointed arches, niches, pediments, balustrades, bell gables, tiered towers with belfry openings, drums and domes with lanterns, buttresses, mouldings, rose windows) and checked against real photographs: free photos from Wikimedia Commons used as guides, not as textures, and any photos or plans supplied. Anything not verifiable is flagged as an interpretation in the code and on the church page.
 - **Tier 3, typologies for every other church.** Nave, rotunda, portico and courtyard from the same kit, at a fixed size. Importing the real footprint from OpenStreetMap (an optional admin action) was not built.
-- **Budgets so it loads anywhere:** at most 40,000 triangles per authored model for the viewer and 3,000 for the map (two levels of detail), baked ambient occlusion in vertex colours, one tiny tileable stone normal map, no per-model image downloads, at most 250 KB of code for the whole kit, and a low tier that drops to the map level of detail.
+- **Budgets so it loads anywhere:** at most 40,000 triangles per authored model for the viewer and 3,000 for the map (two levels of detail), baked ambient occlusion in vertex colours, one tiny tileable stone normal map, no per-model image downloads, at most 250 KB of code for the whole kit, and a low tier: the viewer builds the map level of detail on a weak device (little memory, two cores or fewer, or the data saver on).
 - **Seed check:** the cathedral's seed point is about 75 m from its real footprint (OpenStreetMap way 31296521, about 20.9671, -89.6225); the other two are unverified. The seed coordinates are corrected against the map.
-- **Look:** grey, matte and sculptural, soft light, baked occlusion, a dark plinth with an inscription (name and sigil). After the new geometry exists it is rendered in two or three finishes, the engraving in negative included, and the choice is made from real screenshots of the new models.
+- **Look:** grey, matte and sculptural, soft light, baked occlusion, a dark plinth with an inscription (name and sigil): in the viewer a plaque at the foot of the church carries the sigil and the name in Cinzel; on the map the plinth is plain and the sigil badge marker does that job. After the new geometry exists it is rendered in two or three finishes, the engraving in negative included, and the choice is made from real screenshots of the new models.
 - **The view:** a fixed close-up of the front, seen from low down and looking up (the line to the top of the facade rises at about 45 degrees), a little to one side. It never turns and cannot be dragged. Without WebGL the text fallback stays. (Planta and alzado drawings were built and then discarded at the owner's request.)
 
 ## 8. Books
-Greyscale only (the admin's chosen colour stays stored and is shown by its luminance), about 40% thinner, slightly varied heights. Details: spine bands, a stamped sigil seeded from the title, a tooled border, the title in Cinzel and a small ornament on the cover, drawn to canvas textures from the ornament library. A pointed-arch frame for the shelf; books lean and lift on hover. The PDF reader goes monochrome with the same frame.
+Greyscale only (the admin's chosen colour stays stored and is shown by its luminance), about 40% thinner, slightly varied heights. Details: spine bands, a stamped sigil seeded from the title, a tooled border, the title in Cinzel and a small lozenge ornament at the tail of the spine, drawn to canvas textures from the ornament library. A pointed-arch frame for the shelf; books lean and lift on hover. The PDF reader goes monochrome, with a guilloche band under its toolbar instead of the shelf's arch (an arch would cut the toolbar corners).
 
 ## 9. The map: satellite view, with colour
 - Satellite is the default: Esri World Imagery (no key; `arcgisonline.com` is already allowed by the CSP) with a labels layer on top (places and roads) so names stay readable, and a toggle to the street map. Full colour, no muting: the map is the one place with colour.
@@ -110,7 +110,7 @@ Done: A system, B login, C public view, D admin Asciify, the Asciify batch. The 
 - One Asciify surface (a full field) at a time, small components aside, paused off-screen, frame rate capped; Asciify code loads lazily; without WebGL or with reduced motion a still or plain markup shows and everything works.
 - **WebGL context budget** (the leak test caps canvases at 4): public map 1 (markers inside it). Opening a church unmounts the map, as the app does today, so the church view is 1 shared by stage, planta and alzado, plus 1 for the book shelf, plus 1 only while an Asciify surface is on: 3 at most. Login 1 (the art panel; the small components share the kit's budget); admin 0 to 2.
 - **No text over images.** Text never sits over an image, an ornament or an Asciify field. Church names over the satellite imagery sit on their own plate (section 9).
-- Geometry bounds, as tested: a model fits a 20 by 20 by 30 m box centred at the origin with its base at y = 0, stays inside its triangle budget, has no NaN, and where real dimensions are verified its size is within 15% of them.
+- Geometry bounds, as tested: a model fits a 72 by 72 by 45 m box (the cathedral is the largest) centred at the origin with its base at y = 0, stays inside its triangle budget, has no NaN, and where real dimensions are verified its size is within 15% of them.
 - Hatching, outlines and any engraving are done in the material (`onBeforeCompile`, `EdgesGeometry`), not with a post-process composer. The e2e checks that shaders compile and log no GL error; it never compares pixels.
 
 ## 12. Risks
@@ -124,14 +124,8 @@ Done: A system, B login, C public view, D admin Asciify, the Asciify batch. The 
 2. Globe intro before the map: assumed no.
 3. Per-church sigil: generated from the name (assumed) or designed by each church later.
 
-## 12. Known gaps (audit of this document against the code)
-Everything in section 10 is merged. A line-by-line audit found these places where the code is short of what this document describes. None is a regression; they are decisions to make or small jobs.
-- **Plinth inscription.** The map plinth is a plain grey disc and the viewer's is a dark disc; neither carries the name or sigil inscribed on it (the name is the page heading and the canvas label).
-- **Low tier on weak devices.** The `low` level of detail exists and the map uses it, but the viewer always uses `high`; nothing picks `low` from the device.
-- **Kit size budget.** The 250 KB limit for the facade kit has no test (the triangle budgets do).
-- **Geometry box.** The tests check authored models against a 72 by 72 by 45 m box; section 11 states a smaller one.
-- **Section headers.** Admin module titles are plain headings; only the dashboard strip, empty states and the 404 use ornaments.
-- **Books.** The PDF reader has no arch frame, and the cover has the sigil stamp but no separate small ornament.
-- **Outcomes.** Toasts now start with "Listo:" but have no icon or border of their own; field errors have the dashed border and icon but no underline; the bar chart has one hatch pattern because it has one series.
-- **Tests.** No test checks that ornaments are never behind text (only a CSS rule and the aria-hidden test). The Events and Reports pages do not use the empty-state illustration.
-- **Map imagery licence.** Esri World Imagery without a key needs a licence check before production.
+## 14. Gaps closed and gaps left
+An audit of this document against the code found gaps; they were closed in the same round except those listed below.
+- **Closed:** the viewer plaque (sigil and name), the device-based low tier, the 250 KB kit budget test, ornaments in admin module titles and the PDF reader, the "never behind text" placement test, toasts with a check and "Listo:", a solid underline on invalid fields, the paper texture in grey, and the geometry box stated as tested.
+- **By design, not gaps:** the map plinth stays plain (the badge marker carries the sigil and name there); the bar chart has one hatch pattern because it has one series; the Events and Reports pages have no empty lists to illustrate (a calendar and a report form); the PDF reader uses a guilloche band, not an arch.
+- **Left open:** the Esri World Imagery licence without a key needs a check before production, and the optional OpenStreetMap footprint import was not built.

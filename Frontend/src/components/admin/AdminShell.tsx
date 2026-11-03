@@ -6,6 +6,7 @@ import { Loading } from './ui.tsx'
 import { decodeOnce, useKit } from '../ascii/useKit.ts'
 import { ToastHost } from '../ascii/toast.tsx'
 import CommandPalette from './CommandPalette.tsx'
+import Ornament from '../ornament/Ornament.tsx'
 
 const Dashboard = lazy(() => import('./pages/DashboardPage.tsx'))
 const Members = lazy(() => import('./pages/MembersPage.tsx'))
@@ -95,7 +96,7 @@ export default function AdminShell() {
         </div>
       </aside>
       <main ref={main} className="rpg-panel min-h-0 min-w-0 flex-1 overflow-y-auto p-5">
-        {active ? <h2 ref={title} className="rpg-title mb-4">{active.label}</h2> : <p role="alert">No tienes acceso a este módulo.</p>}
+        {active ? <><h2 ref={title} className="rpg-title">{active.label}</h2><div className="mb-4 mt-1" aria-hidden="true"><Ornament name="divider" size={150} /></div></> : <p role="alert">No tienes acceso a este módulo.</p>}
         {active && (
           <Suspense fallback={<Loading />}>
             {active.path === 'dashboard' && <Dashboard />}

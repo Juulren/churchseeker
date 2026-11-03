@@ -4,10 +4,10 @@ import { useKit } from './useKit.ts'
 interface ToastInput { title: string; body?: string }
 const listeners = new Set<(t: ToastInput) => void>()
 
-/** Shows a short confirmation as a toast of characters. It starts with the word "Listo:" so the outcome never rides on colour alone. Returns false when no toast host is ready, so the caller can show its own message. */
+/** Shows a short confirmation as a toast of characters. It starts with a check and the word "Listo:" so the outcome never rides on colour alone. Returns false when no toast host is ready, so the caller can show its own message. */
 export function toast(title: string, body?: string): boolean {
   if (listeners.size === 0) return false
-  listeners.forEach((l) => l({ title: `Listo: ${title}`, body }))
+  listeners.forEach((l) => l({ title: `✓ Listo: ${title}`, body }))
   return true
 }
 
