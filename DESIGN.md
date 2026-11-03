@@ -62,7 +62,7 @@ A library of SVG parts drawn in code in a Gothic, Renaissance and sigil spirit, 
 | `toastStack`, `pill`, `skeleton` | done (users, members) |
 | `slideToConfirm` + `disintegrate`, `dropzone`, `commandPalette` | done (codex removal, logo, Ctrl+K) |
 | `morphField` | phase F (sigil morph) |
-| `scramble` on menu links, `pageDissolve` between modules | phase F, only if the e2e specs stay green (the links keep their real text) |
+| `scramble` on menu links, `pageDissolve` between modules | done: `scramble` plays on pointer hover over the admin menu links (real text stays, no replay on keyboard focus); `pageDissolve` carries one admin module out and the next in from the clicked link (plain swap without GL, with reduced motion or if the kit fails) |
 | `globe` | only if the map intro is approved (assumed no) |
 | `wordmark`, `tabs` | not used: `wordmark` draws large letters only; the admin menu is made of links the e2e specs rely on |
 | `fieldBackground` 404 | the 404 uses the ornament illustration instead |
@@ -95,7 +95,7 @@ Done: A system, B login, C public view, D admin Asciify, the Asciify batch. The 
 |---|---|---|
 | E. Monochrome | section 3: tokens, outcomes by words and shape, greys everywhere, ink mapping | contrast test with alpha compositing, full e2e |
 | M. Satellite map | section 9 without the markers: imagery, labels, toggle, atlas frame, restyled controls | phase4 e2e with stubbed tiles, screenshots |
-| F. Ornaments and Asciify pairing | section 5: SVG parts, arch-clipped fields, sigil morph, illustrations, 404, empty states, plus `scramble` and `pageDissolve` if the specs stay green | fold, aria-hidden and size tests, screenshots |
+| F. Ornaments and Asciify pairing | section 5: SVG parts, arch-clipped fields, sigil morph, illustrations, 404, empty states, plus `scramble` and `pageDissolve` (done in the admin area) | fold, aria-hidden and size tests, screenshots |
 | R1. Facade kit and the cathedral | the kit, the cathedral model, two detail levels, seed coordinates fixed | geometry bounds and triangle budget tests, screenshots against references |
 | R2. Jesús, Santa Lucía and the viewer | the other two models and the fixed low front view (done) | e2e, screenshots |
 | L. Books | section 8 (done: greys, slimmer, sigil stamps, arch frame) | bookshelf tests, screenshots |
