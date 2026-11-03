@@ -7,6 +7,7 @@ import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { MAX_PDF_BYTES, clampPage, looksLikePdf } from './pdfUtils.ts'
 import { readableOn, toGrey } from '../quality/grey.ts'
 import Sigil from '../sigil/Sigil.tsx'
+import Ornament from '../ornament/Ornament.tsx'
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl
 
@@ -85,6 +86,7 @@ export default function PdfReader({ title, spineColor, load, onClose }: Props) {
               <button ref={closeButton} className="rpg-button" onClick={onClose}>Cerrar (Esc)</button>
             </div>
           </div>
+          <div aria-hidden="true" className="flex justify-center py-1"><Ornament name="guilloche" size={240} /></div>
           <div className="min-h-0 flex-1 overflow-auto bg-[#e6e6e6] p-3 text-black">
             {error && <p role="alert" className="p-4">{error}</p>}
             {!error && !file && <p className="p-4">Abriendo el libro…</p>}

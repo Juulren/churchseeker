@@ -3,6 +3,7 @@ import { Box3 } from 'three'
 import type * as THREE from 'three'
 import { disposeObject } from './churchBuilder.ts'
 import { loadChurchObject } from './churchObject.ts'
+import { deviceDetail } from './deviceDetail.ts'
 import type { ChurchStyle } from './churchStyles.ts'
 
 interface Props {
@@ -19,7 +20,7 @@ export default function ChurchModel({ modelUrl, style, onScan }: Props) {
   useEffect(() => {
     let alive = true
     let loaded: THREE.Object3D | null = null
-    loadChurchObject({ modelUrl }, style).then((o) => {
+    loadChurchObject({ modelUrl }, style, deviceDetail()).then((o) => {
       if (!alive) { disposeObject(o); return }
       loaded = o
       setObject(o)
