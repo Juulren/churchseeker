@@ -38,7 +38,7 @@ Done and merged: the stone-and-ink design system (phase A), the login tree of li
 - **Test:** a unit test parses `index.css`, composites every alpha token over its background, and fails if a text pairing is under 4.5:1, a control border under 3:1, or a token has a hue (red, green and blue not equal).
 
 ## 4. Type (self-hosted, no CDN; the CSP stays strict)
-Cormorant Garamond for titles and church names (weight 500 or more, never below 1.25rem); Cinzel for small-caps labels (never below 0.8rem); Inter (variable) for reading; IBM Plex Mono for characters, loaded only with the lazy Asciify chunk (wait for `document.fonts.load()` before drawing to canvas). Latin subset, woff2, about 250 KB in total, never inlined (the CSP blocks `data:` fonts). No blackletter.
+Cormorant Garamond for titles and church names (weight 500 or more, never below 1.25rem); Cinzel for small-caps labels (never below 0.8rem); Inter (variable) for reading; IBM Plex Mono is installed but not loaded: the Asciify kit draws with its own monospace stack (a font is waited for with `document.fonts.load()` only where text is drawn to a canvas, as for the book spines). Latin subset, woff2, about 250 KB in total, never inlined (the CSP blocks `data:` fonts). No blackletter.
 
 ## 5. Ornaments: SVG components that pair with Asciify
 A library of SVG parts drawn in code in a Gothic, Renaissance and sigil spirit, in the system's inks. Nothing external, so no licences.
@@ -51,7 +51,7 @@ A library of SVG parts drawn in code in a Gothic, Renaissance and sigil spirit, 
   4. *Text pairs.* `decode` runs on the caption of an ornament; the real text stays in the DOM.
   5. One surface per page (`morphField` counts as that surface), and every ornament works without WebGL as plain SVG.
 - **Interaction:** strokes draw themselves in, rays turn slowly, tracery brightens on hover and focus; all of it stops under reduced motion.
-- **Decorative by default:** `aria-hidden`, never behind text, no pointer capture. Tests check the fold count of every ornament, that none is behind text, and the SVG weight: at most 6 KB per ornament and 40 KB gzipped for the whole library.
+- **Decorative by default:** `aria-hidden`, never behind text, no pointer capture. Tests check the fold count of every ornament, that none is behind text, and the SVG weight: at most 6 KB per ornament and 40 KB of SVG source for the whole library (measured as raw text, not gzipped).
 - A seed gives each church and each book its own variation.
 
 ## 6. Asciify components: status
@@ -73,7 +73,7 @@ A library of SVG parts drawn in code in a Gothic, Renaissance and sigil spirit, 
 **What the research found (and did not):** public sources for the three real churches are thin and partly contradictory. Reasonably reliable: the cathedral is Renaissance, 1561 to 1598, two towers, a crossing dome, about 67 by 31 m; Jesús (1618) has a cross plan, a hemispherical dome on a drum and two slender towers; Santa Lucía has a bell gable and no towers. Not verified: facade orders, niches, tower tiers, and the dimensions of the other two. Nothing unverified is invented. Fidelity works in three tiers:
 - **Tier 1, scans (exact).** The admin uploads a .glb scan (phone apps such as Polycam, Luma or Scaniverse produce them). Rules: at most 1.5 MB, at most 80,000 triangles, Draco or meshopt accepted; a short guide in Configuración explains how to optimise one. A scan is shown as scanned. This is the only way to be exactly faithful for any church, in any faith.
 - **Tier 2, authored models for the three pilot churches.** Built in code from a shared **facade kit** (orders and pilasters, round and pointed arches, niches, pediments, balustrades, bell gables, tiered towers with belfry openings, drums and domes with lanterns, buttresses, mouldings, rose windows) and checked against real photographs: free photos from Wikimedia Commons used as guides, not as textures, and any photos or plans supplied. Anything not verifiable is flagged as an interpretation in the code and on the church page.
-- **Tier 3, typologies for every other church.** Nave, rotunda, portico and courtyard from the same kit, with the real footprint from OpenStreetMap when one exists (an optional "import footprint" action for the admin).
+- **Tier 3, typologies for every other church.** Nave, rotunda, portico and courtyard from the same kit, at a fixed size. Importing the real footprint from OpenStreetMap (an optional admin action) was not built.
 - **Budgets so it loads anywhere:** at most 40,000 triangles per authored model for the viewer and 3,000 for the map (two levels of detail), baked ambient occlusion in vertex colours, one tiny tileable stone normal map, no per-model image downloads, at most 250 KB of code for the whole kit, and a low tier that drops to the map level of detail.
 - **Seed check:** the cathedral's seed point is about 75 m from its real footprint (OpenStreetMap way 31296521, about 20.9671, -89.6225); the other two are unverified. The seed coordinates are corrected against the map.
 - **Look:** grey, matte and sculptural, soft light, baked occlusion, a dark plinth with an inscription (name and sigil). After the new geometry exists it is rendered in two or three finishes, the engraving in negative included, and the choice is made from real screenshots of the new models.
@@ -86,7 +86,7 @@ Greyscale only (the admin's chosen colour stays stored and is shown by its lumin
 - Satellite is the default: Esri World Imagery (no key; `arcgisonline.com` is already allowed by the CSP) with a labels layer on top (places and roads) so names stay readable, and a toggle to the street map. Full colour, no muting: the map is the one place with colour.
 - Zoom limits follow the imagery's real resolution in Mérida; attribution stays.
 - A monochrome atlas frame (hairline rules, corner marks from the ornament library), a north arrow with one tick (no cross-shaped compass rose), controls restyled to the system.
-- Markers as a MapLibre custom layer inside the map's own WebGL context: a sigil badge on a plate with the name in Cinzel, and the church's low-detail model from zoom 15.5 (the names from zoom 15), so the three pilot churches show as models at the opening view.
+- Markers: a sigil badge on a plate with the name in Cinzel is an HTML marker over the map (no pointer events; below the model zoom the badge is what is clicked), and the church's low-detail model, drawn by a MapLibre custom layer inside the map's own WebGL context, from zoom 15.5 (the names from zoom 15), so the three pilot churches show as models at the opening view.
 - Selection, flight and arrival keep their logic and their e2e specs; tests keep tile requests stubbed so they never depend on the live server.
 
 ## 10. Phases (one PR each; advisor review before each merge)
@@ -123,3 +123,15 @@ Done: A system, B login, C public view, D admin Asciify, the Asciify batch. The 
 1. Photos, plans or scans of the three churches, even phone photos: they make the models far more faithful.
 2. Globe intro before the map: assumed no.
 3. Per-church sigil: generated from the name (assumed) or designed by each church later.
+
+## 12. Known gaps (audit of this document against the code)
+Everything in section 10 is merged. A line-by-line audit found these places where the code is short of what this document describes. None is a regression; they are decisions to make or small jobs.
+- **Plinth inscription.** The map plinth is a plain grey disc and the viewer's is a dark disc; neither carries the name or sigil inscribed on it (the name is the page heading and the canvas label).
+- **Low tier on weak devices.** The `low` level of detail exists and the map uses it, but the viewer always uses `high`; nothing picks `low` from the device.
+- **Kit size budget.** The 250 KB limit for the facade kit has no test (the triangle budgets do).
+- **Geometry box.** The tests check authored models against a 72 by 72 by 45 m box; section 11 states a smaller one.
+- **Section headers.** Admin module titles are plain headings; only the dashboard strip, empty states and the 404 use ornaments.
+- **Books.** The PDF reader has no arch frame, and the cover has the sigil stamp but no separate small ornament.
+- **Outcomes.** Toasts now start with "Listo:" but have no icon or border of their own; field errors have the dashed border and icon but no underline; the bar chart has one hatch pattern because it has one series.
+- **Tests.** No test checks that ornaments are never behind text (only a CSS rule and the aria-hidden test). The Events and Reports pages do not use the empty-state illustration.
+- **Map imagery licence.** Esri World Imagery without a key needs a licence check before production.
