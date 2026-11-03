@@ -12,8 +12,8 @@ export interface Authored {
   length: number
   /** Height of the tallest point, in metres. */
   height: number
-  /** Where the sizes come from: published figures, or interpreted from photographs. The church page says which. */
-  sizes: 'published' | 'interpreted'
+  /** Width of the facade, in metres. */
+  width: number
   /** Number of towers the real building has, so tests can hold the model to it. */
   towers: number
 }
@@ -22,9 +22,9 @@ export interface Authored {
 export const AUTHORED_SIZE = 8.5
 
 export const AUTHORED: Record<AuthoredKind, Authored> = {
-  cathedral: { build: buildCathedral, length: CATHEDRAL.length, height: CATHEDRAL.towerHeight, sizes: 'published', towers: 2 },
-  jesus: { build: buildJesus, length: JESUS.length, height: JESUS.height, sizes: 'interpreted', towers: 2 },
-  santalucia: { build: buildSantaLucia, length: SANTA_LUCIA.length, height: SANTA_LUCIA.height, sizes: 'interpreted', towers: 0 },
+  cathedral: { build: buildCathedral, length: CATHEDRAL.length, height: CATHEDRAL.towerHeight, width: CATHEDRAL.width, towers: 2 },
+  jesus: { build: buildJesus, length: JESUS.length, height: JESUS.height, width: JESUS.width, towers: 2 },
+  santalucia: { build: buildSantaLucia, length: SANTA_LUCIA.length, height: SANTA_LUCIA.height, width: SANTA_LUCIA.width, towers: 0 },
 }
 
 export const authoredScale = (kind: AuthoredKind) => AUTHORED_SIZE / AUTHORED[kind].length

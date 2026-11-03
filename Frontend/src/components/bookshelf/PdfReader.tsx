@@ -6,6 +6,7 @@ import 'react-pdf/dist/Page/TextLayer.css'
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { MAX_PDF_BYTES, clampPage, looksLikePdf } from './pdfUtils.ts'
 import { readableOn, toGrey } from '../quality/grey.ts'
+import Sigil from '../sigil/Sigil.tsx'
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl
 
@@ -110,7 +111,7 @@ export default function PdfReader({ title, spineColor, load, onClose }: Props) {
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-8 text-center"
             style={{ background: toGrey(spineColor), border: '6px solid ' + readableOn(spineColor), backfaceVisibility: 'hidden' }}>
             <span className="text-4xl" style={{ color: readableOn(spineColor) }}>{title}</span>
-            <span aria-hidden="true" style={{ color: readableOn(spineColor) }}>◈</span>
+            <span aria-hidden="true" style={{ color: readableOn(spineColor) }}><Sigil name={title} size={72} /></span>
           </div>
           <div className="absolute inset-0" style={{ background: '#cfcfcf', transform: 'rotateY(180deg)', backfaceVisibility: 'hidden' }} />
         </motion.div>

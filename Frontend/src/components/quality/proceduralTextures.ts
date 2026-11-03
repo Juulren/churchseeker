@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { mulberry32 } from './random.ts'
 import { desaturate, luma } from './grey.ts'
+import { sigilPath } from '../sigil/sigil.ts'
 
 // Procedural surface textures drawn on a canvas, so the app ships no image files and works offline.
 // Without a DOM (unit tests, server rendering) every function returns null and materials simply have no map.
@@ -218,7 +219,8 @@ export function fitTitle(measure: (text: string, px: number) => number, title: s
 
 /** The tooled spine of a bound book: leather, raised bands, gold rules and a gold-foil title. */
 export function spine(o: SpineOptions): THREE.CanvasTexture | null {
-  const W = 192
+  // The canvas keeps the book's proportions: a slim, tall book gets a narrower canvas, never a stretched one.
+  const W = Math.max(96, Math.min(192, Math.floor((1024 * o.width) / Math.max(o.height, 0.1))))
   const H = Math.round((W * o.height) / Math.max(o.width, 0.3))
   const s = surface(W, Math.min(H, 1024))
   if (!s) return null
@@ -252,10 +254,10 @@ export function spine(o: SpineOptions): THREE.CanvasTexture | null {
   g.rotate(Math.PI / 2)
   g.textAlign = 'center'
   g.textBaseline = 'middle'
-  const family = '"Palatino Linotype","Book Antiqua",Georgia,"Times New Roman",serif'
-  const measure = (t: string, px: number) => { g.font = `bold ${px}px ${family}`; return g.measureText(t).width }
-  const fit = fitTitle(measure, o.title, bottom - top - 24, 62)
-  g.font = `bold ${fit.px}px ${family}`
+  const family = '"Cinzel","Palatino Linotype","Book Antiqua",Georgia,serif'
+  const measure = (t: string, px: number) => { g.font = `600 ${px}px ${family}`; return g.measureText(t).width }
+  const fit = fitTitle(measure, o.title, bottom - top - 24, 56)
+  g.font = `600 ${fit.px}px ${family}`
   g.fillStyle = 'rgba(0,0,0,0.55)'
   g.fillText(fit.text, 2, 2)
   g.fillStyle = gold
@@ -273,9 +275,24 @@ export function spine(o: SpineOptions): THREE.CanvasTexture | null {
     g.fillText(a.text, 0, 0)
     g.restore()
   }
-  // Fleurons at head and tail.
-  g.fillStyle = gold; g.font = '28px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'
-  g.fillText('✠', W / 2, 0.2 * h); g.fillText('❖', W / 2, 0.8 * h + 0.1 * h)
+  // A tooled double border around the whole spine.
+  g.strokeStyle = gold; g.lineWidth = 2
+  g.strokeRect(5, 5, W - 10, h - 10)
+  g.lineWidth = 1
+  g.strokeRect(10, 10, W - 20, h - 20)
+  // The stamp at the head: a sigil seeded from the title (seven-fold, so it can never read as a cross), with its ring.
+  g.save()
+  // As wide as the spine allows, but never taller than the gap between the first band and the title panel.
+  const stamp = Math.max(14, Math.min(W * 0.56, 0.2 * h - 30)) / 100
+  g.translate(W / 2 - 50 * stamp, 0.2 * h - 50 * stamp)
+  g.scale(stamp, stamp)
+  g.strokeStyle = gold; g.lineWidth = 2.4 / stamp * 0.55; g.lineCap = 'round'
+  g.beginPath(); g.arc(50, 50, 47, 0, Math.PI * 2); g.stroke()
+  g.stroke(new Path2D(sigilPath(String(o.title ?? ''))))
+  g.restore()
+  // A small lozenge at the tail.
+  g.fillStyle = gold
+  g.beginPath(); g.moveTo(W / 2, 0.9 * h - 9); g.lineTo(W / 2 + 7, 0.9 * h); g.lineTo(W / 2, 0.9 * h + 9); g.lineTo(W / 2 - 7, 0.9 * h); g.closePath(); g.fill()
   const t = toTexture(c, false)
   return t
 }

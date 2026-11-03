@@ -37,7 +37,9 @@ export async function loadChurchObject(church: ChurchObjectInput, style: ChurchS
   if (isUploadedModel(church.modelUrl)) {
     try {
       const gltf = await loader.loadAsync(church.modelUrl)
-      return normalizeModel(gltf.scene)
+      const scan = normalizeModel(gltf.scene)
+      scan.userData.scan = true // the stage frames a scan from its real size, not from the style
+      return scan
     } catch {
       /* use the procedural model */
     }

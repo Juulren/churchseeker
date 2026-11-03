@@ -10,7 +10,7 @@ import { archPanel, bakeAO, box, kitMaterials, pediment, put, type Detail } from
 // Metres, facade toward +z, base on y = 0, centred on the origin.
 
 /** Interpreted sizes (no source gives them); the registry reads them from here. */
-export const SANTA_LUCIA = { length: 38.5, height: 18.5 }
+export const SANTA_LUCIA = { length: 38.5, height: 18.5, width: 13.4 }
 
 export function buildSantaLucia(detail: Detail = 'high'): THREE.Group {
   const hi = detail === 'high'

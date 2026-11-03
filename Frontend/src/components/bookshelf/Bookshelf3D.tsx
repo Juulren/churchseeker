@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Html, useCursor } from '@react-three/drei'
 import * as THREE from 'three'
@@ -60,7 +60,7 @@ function FitCamera({ width, rows }: { width: number; rows: number }) {
   const size = useThree((s) => s.size)
   useEffect(() => {
     const aspect = size.width / Math.max(size.height, 1)
-    const halfH = (rows * ROW_HEIGHT) / 2 + 0.3
+    const halfH = (rows * ROW_HEIGHT) / 2 + 0.8
     const halfW = width / 2 + 0.9
     const tan = Math.tan((camera.fov * Math.PI) / 360)
     const dist = Math.max(halfH / tan, halfW / (tan * aspect)) + 0.8
@@ -108,15 +108,40 @@ function Scene({ books, hoveredId, onHover, onOpen }: Props) {
   )
 }
 
+let clips = 0
+
+/** Spines are drawn on canvases with Cinzel, so the shelf is built once the font is in (or after a short wait). */
+function useTitleFont(): boolean {
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    let alive = true
+    Promise.race([document.fonts.load('600 56px Cinzel'), new Promise((r) => setTimeout(r, 1500))]).catch(() => undefined).then(() => { if (alive) setReady(true) })
+    return () => { alive = false }
+  }, [])
+  return ready
+}
+
 export default function Bookshelf3D(props: Props) {
   if (!hasWebGL()) return null
+  return <Shelf {...props} />
+}
+
+function Shelf(props: Props) {
+  const fontReady = useTitleFont()
+  const clipId = useMemo(() => 'shelf-arch-clip-' + ++clips, [])
   const rows = layoutShelf(props.books).rows
   const height = Math.min(640, Math.max(340, 330 + (rows - 1) * 190))
   return (
     <GraphicsBoundary fallback={null}>
-      <div style={{ height }} className="overflow-hidden" aria-hidden="true">
+      <div style={{ height, clipPath: 'url(#' + clipId + ')' }} className="shelf-arch overflow-hidden" aria-hidden="true">
+        <svg width="0" height="0" focusable="false" style={{ position: 'absolute' }}>
+          <defs><clipPath id={clipId} clipPathUnits="objectBoundingBox"><path d="M0 1V0.12C0 0.05 0.3 0.015 0.5 0C0.7 0.015 1 0.05 1 0.12V1Z" /></clipPath></defs>
+        </svg>
+        <svg className="shelf-arch-line" viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false" fill="none" stroke="currentColor">
+          <path d="M0.5 99.5V12C0.5 5 30 1.5 50 0.5C70 1.5 99.5 5 99.5 12V99.5" vectorEffect="non-scaling-stroke" strokeWidth="2" />
+        </svg>
         <Canvas shadows="soft" camera={{ fov: 35, position: [0, 1, 12] }} dpr={[1, 2]} gl={{ antialias: true, alpha: true }}>
-          <Scene {...props} />
+          {fontReady && <Scene {...props} />}
         </Canvas>
       </div>
     </GraphicsBoundary>
