@@ -230,3 +230,19 @@ select.input option { background: var(--stone); color: var(--ink); }
 .status-pill [data-dot] { width: 8px; height: 8px; border-radius: 50%; background: currentColor; display: inline-block; }
 .skeleton-block { height: 1.1rem; margin: 10px 0; border-radius: 4px; background: rgba(255, 255, 255, 0.06); }
 .dropzone { display: grid; gap: 8px; place-items: center; padding: 18px; min-height: 110px; border: 1px dashed var(--edge); border-radius: var(--radius); text-align: center; }
+
+/* ---- Map: an atlas frame around the one coloured thing in the project ---- */
+.atlas-frame { position: absolute; inset: 8px; pointer-events: none; border: 1px solid var(--rule-strong); border-radius: var(--radius); z-index: 5; }
+.atlas-frame::before, .atlas-frame::after { content: ""; position: absolute; width: 18px; height: 18px; border: 2px solid var(--accent); }
+.atlas-frame::before { top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
+.atlas-frame::after { bottom: -2px; right: -2px; border-left: 0; border-top: 0; }
+.map-switch { position: absolute; top: 122px; right: 10px; z-index: 6; display: grid; gap: 4px; }
+.map-switch .rpg-button { padding: 0.25rem 0.7rem; font-size: 0.85rem; background: var(--stone); }
+.north-arrow { position: absolute; top: 14px; right: 58px; z-index: 6; width: 28px; display: grid; justify-items: center; gap: 1px; pointer-events: none; font-family: var(--font-label); font-size: 0.8rem; color: var(--accent); text-shadow: 0 1px 3px #000; }
+.north-arrow i { width: 1px; height: 18px; background: var(--accent); box-shadow: 0 1px 3px #000; }
+.maplibregl-ctrl-group { background: var(--stone) !important; border: 1px solid var(--edge); border-radius: var(--radius) !important; box-shadow: none !important; }
+.maplibregl-ctrl-group button + button { border-top: 1px solid var(--rule) !important; }
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(1); }
+.maplibregl-ctrl-attrib { background: rgba(8, 8, 8, 0.8) !important; color: var(--ink-dim) !important; }
+.maplibregl-ctrl-attrib a { color: var(--ink) !important; }
+.map-switch .rpg-button[aria-pressed="true"] { background: var(--accent); color: var(--ground); border-color: var(--accent); }

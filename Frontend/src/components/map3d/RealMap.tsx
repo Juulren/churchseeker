@@ -6,6 +6,7 @@ import type { PublicChurch } from '../../services/types.ts'
 import { ChurchLayer } from './churchLayer.ts'
 import { centroid, validCoordinates } from './projection.ts'
 import { hasWebGL } from './webgl.ts'
+import { MAP_STYLE, visibilityFor, type BaseMode } from './mapStyle.ts'
 
 interface Props {
   churches: PublicChurch[]
@@ -20,23 +21,6 @@ interface Props {
 // Vite does not find MapLibre's worker by itself: give it the bundled file (served from our own origin).
 maplibregl.setWorkerUrl(workerUrl)
 
-// Esri "World Street Map" raster tiles: a street map in the same style as Google Maps (beige blocks, yellow
-// avenues, green parks) that needs no API key. For production, swap this style for Google Maps tiles or a paid
-// provider: the church layer does not depend on the base map.
-const STYLE: maplibregl.StyleSpecification = {
-  version: 8,
-  sources: {
-    base: {
-      type: 'raster',
-      tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}'],
-      tileSize: 256,
-      maxzoom: 19,
-      attribution: 'Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap contributors',
-    },
-  },
-  // Muted to match the stone-and-ink look: the beige and yellow of the tiles fade toward grey and the map sits darker.
-  layers: [{ id: 'base', type: 'raster', source: 'base', paint: { 'raster-saturation': -0.8, 'raster-brightness-max': 0.6, 'raster-brightness-min': 0.04, 'raster-contrast': 0.2 } }],
-}
 const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 const hit = (map: maplibregl.Map, c: PublicChurch, p: maplibregl.Point) => {
   const centre = map.project([c.longitude, c.latitude])
@@ -68,7 +52,7 @@ function Unavailable() {
   )
 }
 
-/** Real street map of Mérida with a 3D low-poly model standing on every church's coordinates. */
+/** Satellite view of Mérida (or its street map) with a 3D model standing on every church's coordinates. */
 export default function RealMap({ churches, selectedId, hoveredId, onSelect, onHover, onArrive }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
@@ -77,6 +61,9 @@ export default function RealMap({ churches, selectedId, hoveredId, onSelect, onH
   const latest = useRef({ churches, selectedId, onSelect, onHover, onArrive })
   latest.current = { churches, selectedId, onSelect, onHover, onArrive }
   const [ready, setReady] = useState(false)
+  const [base, setBase] = useState<BaseMode>('satellite')
+  const arrow = useRef<HTMLDivElement>(null)
+  const imageryFailures = useRef(0)
   const supported = hasWebGL()
 
   const valid = validCoordinates(churches.map((c) => ({ ...c, lat: c.latitude, lng: c.longitude })))
@@ -87,14 +74,15 @@ export default function RealMap({ churches, selectedId, hoveredId, onSelect, onH
     const el = container.current
     if (!el || !supported) return
     const map = new maplibregl.Map({
-      container: el, style: STYLE, center: [centre.lng, centre.lat], zoom: 15.6, pitch: 55, bearing: -15,
+      container: el, style: MAP_STYLE, center: [centre.lng, centre.lat], zoom: 15.6, pitch: 55, bearing: -15,
       maxPitch: 75, minZoom: 12, maxZoom: 19, attributionControl: { compact: true }, canvasContextAttributes: { antialias: true },
     })
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right')
     const layer = new ChurchLayer()
     mapRef.current = map
     layerRef.current = layer
-    map.on('load', () => { map.addLayer(layer); setReady(true) })
+    // As soon as the style (not every tile) is in: imagery needs many tiles and the churches should not wait for them.
+    map.once('style.load', () => { map.addLayer(layer); setReady(true) })
 
     let hovered: string | null = null
     const pick = (p: maplibregl.Point) =>
@@ -128,6 +116,26 @@ export default function RealMap({ churches, selectedId, hoveredId, onSelect, onH
   useEffect(() => { if (ready) layerRef.current?.setChurches(valid) }, [ready, key]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (ready) layerRef.current?.setHighlight(hoveredId, selectedId) }, [ready, hoveredId, selectedId])
 
+  // Satellite or street map. Switching only toggles layers; the church layer is untouched.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!ready || !map) return
+    for (const [id, v] of Object.entries(visibilityFor(base))) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', v)
+  }, [ready, base])
+
+  // The north arrow follows the camera; if the imagery keeps failing, fall back to the street map.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!ready || !map) return
+    // Written straight to the element: a state update on every frame of a turn would re-render the whole map component.
+    const turn = () => { if (arrow.current) arrow.current.style.transform = 'rotate(' + -map.getBearing() + 'deg)' }
+    turn()
+    const failed = (e: maplibregl.ErrorEvent & { sourceId?: string }) => { if (e.sourceId === 'imagery' && ++imageryFailures.current >= 8) setBase('street') }
+    map.on('rotate', turn)
+    map.on('error', failed)
+    return () => { map.off('rotate', turn); map.off('error', failed) }
+  }, [ready])
+
   // Label over the hovered or selected church.
   useEffect(() => {
     const map = mapRef.current
@@ -158,6 +166,12 @@ export default function RealMap({ churches, selectedId, hoveredId, onSelect, onH
   return (
     <div className="absolute inset-0">
       <div ref={container} className="h-full w-full" aria-label="Mapa de Mérida" />
+      <div className="atlas-frame" aria-hidden="true" />
+      <div className="map-switch" role="group" aria-label="Tipo de mapa">
+        <button type="button" className="rpg-button" aria-pressed={base === 'satellite'} onClick={() => { imageryFailures.current = 0; setBase('satellite') }}>Satélite</button>
+        <button type="button" className="rpg-button" aria-pressed={base === 'street'} onClick={() => setBase('street')}>Calles</button>
+      </div>
+      <div ref={arrow} className="north-arrow" aria-hidden="true"><span>N</span><i /></div>
     </div>
   )
 }
