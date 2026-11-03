@@ -3,6 +3,8 @@ import { motion } from 'framer-motion'
 import { publicApi } from '../../services/api.ts'
 import type { PublicChurch } from '../../services/types.ts'
 import Bookshelf from '../bookshelf/Bookshelf.tsx'
+import { useKit } from '../ascii/useKit.ts'
+import Sigil from '../sigil/Sigil.tsx'
 import ChurchStage from './ChurchStage.tsx'
 import { EventsPanel, InfoPanel, NewsPanel } from './Panels.tsx'
 import { useChurchData } from './useChurchData.ts'
@@ -19,6 +21,8 @@ export default function RpgView({ church, onBack }: Props) {
   const [readerOpen, setReaderOpen] = useState(false)
 
   useEffect(() => { heading.current?.focus() }, [church.id])
+  // The name condenses out of characters once; the real text stays in the DOM the whole time.
+  useKit(heading, (kit, el) => kit.decode(el, { duration: 900, settle: 'text' }), [church.id])
   useEffect(() => {
     // While a book is open, Esc closes the book (handled by the reader), not the whole view.
     if (readerOpen) return
@@ -50,7 +54,7 @@ export default function RpgView({ church, onBack }: Props) {
         <header className="flex flex-wrap items-start justify-between gap-2">
           <div>
             <h2 ref={heading} tabIndex={-1} className="text-3xl outline-none" style={{ color: 'var(--accent)' }}>{church.name}</h2>
-            <p style={{ color: 'var(--ink-dim)' }}>{church.denomination} · {church.patronSaint}</p>
+            <div className="mt-1 flex items-center gap-2" style={{ color: 'var(--ink-dim)' }}><Sigil name={church.name} size={26} /><span>{church.denomination} · {church.patronSaint}</span></div>
           </div>
           <button className="rpg-button" onClick={onBack}>← Volver al mapa (Esc)</button>
         </header>

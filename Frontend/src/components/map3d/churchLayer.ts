@@ -71,8 +71,8 @@ export class ChurchLayer implements CustomLayerInterface {
       const scene = new THREE.Scene()
       scene.environment = this.environment
       scene.environmentIntensity = 0.9
-      scene.add(new THREE.HemisphereLight('#fff1d0', '#6a5a48', 0.7))
-      const sun = new THREE.DirectionalLight('#ffe4b0', 1.8)
+      scene.add(new THREE.HemisphereLight('#f1f1f4', '#555a63', 0.7))
+      const sun = new THREE.DirectionalLight('#fff3dc', 1.8)
       sun.position.set(-30, 60, 40)
       scene.add(sun)
       const holder = new THREE.Group()

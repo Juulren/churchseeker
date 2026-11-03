@@ -89,7 +89,7 @@ export function NewsPanel({ section, loading }: { section: Section<PublicAnnounc
           <ul>
             {items.map((a) => (
               <li key={a.id} className="mb-3">
-                <strong>{a.isImportant && <span title="Importante" style={{ color: 'var(--accent)' }}>★ </span>}{a.title}</strong>
+                <strong>{a.isImportant && <span title="Importante" style={{ color: 'var(--accent)' }}>◈ </span>}{a.title}</strong>
                 <span style={dim}> · {formatShortDate(a.publishDate)}</span>
                 <p className="whitespace-pre-wrap">{a.body}</p>
               </li>

@@ -34,7 +34,8 @@ const STYLE: maplibregl.StyleSpecification = {
       attribution: 'Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap contributors',
     },
   },
-  layers: [{ id: 'base', type: 'raster', source: 'base' }],
+  // Muted to match the stone-and-ink look: the beige and yellow of the tiles fade toward grey and the map sits darker.
+  layers: [{ id: 'base', type: 'raster', source: 'base', paint: { 'raster-saturation': -0.8, 'raster-brightness-max': 0.6, 'raster-brightness-min': 0.04, 'raster-contrast': 0.2 } }],
 }
 const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 const hit = (map: maplibregl.Map, c: PublicChurch, p: maplibregl.Point) => {

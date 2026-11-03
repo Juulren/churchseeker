@@ -62,7 +62,7 @@ export default function AnnouncementsPage({ canEdit }: { canEdit: boolean }) {
           <thead><tr><th>Título</th><th>Publica</th><th>Vence</th><th>Visibilidad</th><th /></tr></thead>
           <tbody>
             {list.data?.items.map((a) => (
-              <tr key={a.id}><td>{a.isImportant && <span title="Importante">★ </span>}{a.title}</td><td>{a.publishDate}</td><td>{a.expiresOn ?? '—'}</td><td>{a.isPublic ? 'Público' : 'Interno'}</td>
+              <tr key={a.id}><td>{a.isImportant && <span title="Importante">◈ </span>}{a.title}</td><td>{a.publishDate}</td><td>{a.expiresOn ?? '—'}</td><td>{a.isPublic ? 'Público' : 'Interno'}</td>
                 <td>{canEdit && <div className="row-actions"><button className="rpg-button" onClick={() => setEditing(a)}>Editar</button><button className="rpg-button" onClick={() => remove(a)}>Eliminar</button></div>}</td></tr>
             ))}
             {list.data?.items.length === 0 && <tr><td colSpan={5} className="muted">No hay comunicados.</td></tr>}
