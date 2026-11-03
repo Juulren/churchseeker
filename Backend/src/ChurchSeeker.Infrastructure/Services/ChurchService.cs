@@ -51,14 +51,14 @@ public sealed class ChurchService : IChurchService, IPublicChurchService
         SetFileAsync(content, _opt.MaxImageBytes, FileValidator.ValidateImage, FileKind.Logo, (c, n) => c.SetLogo(n), ct);
 
     public Task<Result<ChurchProfileResponse>> SetModelAsync(byte[] content, CancellationToken ct = default) =>
-        SetFileAsync(content, _opt.MaxModelBytes, FileValidator.ValidateGlb, FileKind.Model, (c, n) => c.SetModel(n), ct);
+        SetFileAsync(content, _opt.MaxModelBytes, d => FileValidator.ValidateGlb(d, _opt.MaxModelTriangles), FileKind.Model, (c, n) => c.SetModel(n), ct);
 
     private async Task<Result<ChurchProfileResponse>> SetFileAsync(byte[] content, int max, Func<byte[], FileCheck> validate,
         FileKind kind, Action<Church, string> apply, CancellationToken ct)
     {
         if (!IsAdmin || _current.ChurchId is not { } id) return Result<ChurchProfileResponse>.Fail(ErrorKind.Forbidden);
         if (content.Length == 0 || content.Length > max)
-            return Result<ChurchProfileResponse>.Fail(ErrorKind.Validation, $"The file must be between 1 byte and {max / 1024 / 1024} MB.");
+            return Result<ChurchProfileResponse>.Fail(ErrorKind.Validation, $"The file must be between 1 byte and {max / 1048576.0:0.#} MB.");
         var check = validate(content);
         if (!check.Ok) return Result<ChurchProfileResponse>.Fail(ErrorKind.Validation, check.Error!);
 

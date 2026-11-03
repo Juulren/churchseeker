@@ -61,7 +61,7 @@ public class ChurchController : ApiControllerBase
 
     [HttpPost("model")]
     [Authorize(Policy = Policies.AdminOnly)]
-    [RequestSizeLimit(24 * 1024 * 1024)]
+    [RequestSizeLimit(2 * 1024 * 1024)]
     public async Task<IActionResult> UploadModel(IFormFile file, CancellationToken ct)
     {
         var bytes = await UploadReader.ReadCappedAsync(file, _opt.MaxModelBytes, ct);

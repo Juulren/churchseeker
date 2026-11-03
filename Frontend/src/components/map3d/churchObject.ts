@@ -1,5 +1,7 @@
 ﻿import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { buildChurch } from './churchBuilder.ts'
 import type { ChurchStyle } from './churchStyles.ts'
 
@@ -8,7 +10,9 @@ export const TARGET_SIZE = 8
 
 export interface ChurchObjectInput { modelUrl: string | null }
 
-const loader = new GLTFLoader()
+// Scans arrive compressed (Draco or meshopt, see modelRules.ts); the decoders are served from public/draco, not a CDN.
+const draco = new DRACOLoader().setDecoderPath(`${import.meta.env.BASE_URL}draco/`)
+const loader = new GLTFLoader().setDRACOLoader(draco).setMeshoptDecoder(MeshoptDecoder)
 
 /** True for uploaded models served by the API; the static default path in the seed is not a real file. */
 export const isUploadedModel = (url: string | null): url is string => !!url && /^\/api\/public\/churches\/[0-9a-f-]{36}\/model$/i.test(url)
