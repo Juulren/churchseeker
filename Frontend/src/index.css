@@ -247,6 +247,15 @@ select.input option { background: var(--stone); color: var(--ink); }
 .maplibregl-ctrl-attrib a { color: var(--ink) !important; }
 .map-switch .rpg-button[aria-pressed="true"] { background: var(--accent); color: var(--ground); border-color: var(--accent); }
 
+/* Church markers on the map: sigil badge on a plate, name from the zoom where it fits. */
+.church-marker { display: flex; flex-direction: column; align-items: center; gap: 2px; pointer-events: none; }
+.church-marker-plate .plate { fill: rgba(8, 8, 8, 0.82); stroke: var(--ink-dim); stroke-width: 3; }
+.church-marker-plate .rim { stroke: var(--ink-dim); stroke-width: 1; opacity: 0.6; }
+.church-marker-plate .mark { stroke: var(--ink); stroke-width: 3.2; }
+.church-marker.is-active .plate { stroke: var(--accent); stroke-width: 5; }
+.church-marker-name { display: none; font-family: var(--font-label); font-weight: 600; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; color: var(--ink); padding: 1px 8px; background: rgba(8, 8, 8, 0.72); border: 1px solid var(--edge); }
+.church-marker.named .church-marker-name { display: block; }
+
 /* ---- Ornaments: decorative SVG, never behind text, never taking the pointer ---- */
 .ornament { display: block; color: var(--ink-dim); pointer-events: none; transition: color var(--dur) var(--ease); }
 *:hover > .ornament, *:focus-within > .ornament { color: var(--ink); }

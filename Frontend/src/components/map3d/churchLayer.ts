@@ -4,6 +4,7 @@ import { disposeObject } from './churchBuilder.ts'
 import { makeEnvironment } from '../quality/materials.ts'
 import { loadChurchObject } from './churchObject.ts'
 import { styleFor } from './churchStyles.ts'
+import { MODEL_MIN_ZOOM } from './churchMarker.ts'
 import type { PublicChurch } from '../../services/types.ts'
 
 // A model unit is this many real metres: churches are drawn a little larger than life so they read on the map.
@@ -115,6 +116,8 @@ export class ChurchLayer implements CustomLayerInterface {
       renderer.setSize(canvas.width, canvas.height, false)
     }
     renderer.resetState()
+    // Far out the churches are the markers; the models stand up once the map is close enough to read them.
+    if (map.getZoom() < MODEL_MIN_ZOOM) return
     for (const it of this.items) {
       if (!it.object) continue
       it.scale = THREE.MathUtils.damp(it.scale, it.target, 8, dt)

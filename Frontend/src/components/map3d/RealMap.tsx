@@ -6,6 +6,7 @@ import type { PublicChurch } from '../../services/types.ts'
 import { ChurchLayer } from './churchLayer.ts'
 import { centroid, validCoordinates } from './projection.ts'
 import { hasWebGL } from './webgl.ts'
+import { markerElement, MODEL_MIN_ZOOM, NAME_MIN_ZOOM } from './churchMarker.ts'
 import { MAP_STYLE, visibilityFor, type BaseMode } from './mapStyle.ts'
 
 interface Props {
@@ -27,6 +28,8 @@ const hit = (map: maplibregl.Map, c: PublicChurch, p: maplibregl.Point) => {
   // Radius of the church footprint on screen (about 40 m), with a floor so it stays easy to hit when zoomed out.
   const east = map.project([c.longitude + 40 / (111_320 * Math.cos((c.latitude * Math.PI) / 180)), c.latitude])
   const radius = Math.max(28, Math.hypot(east.x - centre.x, east.y - centre.y))
+  // Far out there is no model: the badge under the point is what is clicked.
+  if (map.getZoom() < MODEL_MIN_ZOOM) return Math.hypot(centre.x - p.x, centre.y + 31 - p.y) <= 24
   return Math.hypot(centre.x - p.x, centre.y - p.y - radius * 0.4) <= radius
 }
 
@@ -58,6 +61,7 @@ export default function RealMap({ churches, selectedId, hoveredId, onSelect, onH
   const mapRef = useRef<maplibregl.Map | null>(null)
   const layerRef = useRef<ChurchLayer | null>(null)
   const labelRef = useRef<maplibregl.Marker | null>(null)
+  const markersRef = useRef<Map<string, HTMLElement>>(new Map())
   const latest = useRef({ churches, selectedId, onSelect, onHover, onArrive })
   latest.current = { churches, selectedId, onSelect, onHover, onArrive }
   const [ready, setReady] = useState(false)
@@ -67,7 +71,7 @@ export default function RealMap({ churches, selectedId, hoveredId, onSelect, onH
   const supported = hasWebGL()
 
   const valid = validCoordinates(churches.map((c) => ({ ...c, lat: c.latitude, lng: c.longitude })))
-  const key = valid.map((c) => `${c.id}:${c.modelUrl}`).join('|')
+  const key = valid.map((c) => `${c.id}:${c.modelUrl}:${c.name}:${c.lat}:${c.lng}`).join('|')
   const centre = centroid(valid)
 
   useEffect(() => {
@@ -104,6 +108,7 @@ export default function RealMap({ churches, selectedId, hoveredId, onSelect, onH
     return () => {
       labelRef.current?.remove()
       labelRef.current = null
+      markersRef.current.clear()
       map.remove()
       mapRef.current = null
       layerRef.current = null
@@ -115,6 +120,26 @@ export default function RealMap({ churches, selectedId, hoveredId, onSelect, onH
 
   useEffect(() => { if (ready) layerRef.current?.setChurches(valid) }, [ready, key]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (ready) layerRef.current?.setHighlight(hoveredId, selectedId) }, [ready, hoveredId, selectedId])
+
+  // A sigil badge on every church; the name joins it when the map is close enough.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!ready || !map) return
+    const made: maplibregl.Marker[] = []
+    markersRef.current.clear()
+    for (const c of valid) {
+      const el = markerElement(c.name)
+      markersRef.current.set(c.id, el)
+      made.push(new maplibregl.Marker({ element: el, anchor: 'top', offset: [0, 14] }).setLngLat([c.lng, c.lat]).addTo(map))
+    }
+    const names = () => { const on = map.getZoom() >= NAME_MIN_ZOOM; for (const el of markersRef.current.values()) el.classList.toggle('named', on) }
+    names()
+    map.on('zoom', names)
+    return () => { map.off('zoom', names); made.forEach((m) => m.remove()); markersRef.current.clear() }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, key])
+
+  useEffect(() => { for (const [id, el] of markersRef.current) el.classList.toggle('is-active', id === (hoveredId ?? selectedId)) }, [ready, key, hoveredId, selectedId])
 
   // Satellite or street map. Switching only toggles layers; the church layer is untouched.
   useEffect(() => {
@@ -144,7 +169,7 @@ export default function RealMap({ churches, selectedId, hoveredId, onSelect, onH
     labelRef.current = null
     const c = churches.find((x) => x.id === (hoveredId ?? selectedId))
     if (c && Number.isFinite(c.latitude) && Number.isFinite(c.longitude))
-      labelRef.current = new maplibregl.Marker({ element: label(c), anchor: 'bottom', offset: [0, -70] }).setLngLat([c.longitude, c.latitude]).addTo(map)
+      labelRef.current = new maplibregl.Marker({ element: label(c), anchor: 'bottom', offset: [0, map.getZoom() < MODEL_MIN_ZOOM ? -8 : -70] }).setLngLat([c.longitude, c.latitude]).addTo(map)
   }, [ready, hoveredId, selectedId, churches])
 
   // Cinematic camera: fly to the selected church, or back out to see them all.
