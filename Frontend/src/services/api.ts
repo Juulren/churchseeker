@@ -57,7 +57,9 @@ export function refreshSession(): Promise<boolean> {
 }
 
 async function errorOf(res: Response): Promise<ApiError> {
-  let message = `Error ${res.status}`
+  let message = res.status === 502 || res.status === 503 || res.status === 504
+    ? 'No se pudo conectar con el servidor. Comprueba que esté en marcha e inténtalo de nuevo.'
+    : `Error ${res.status}`
   try {
     const body = (await res.json()) as { title?: string; errors?: Record<string, string[]> | string[] }
     const errors = Array.isArray(body.errors) ? body.errors : Object.values(body.errors ?? {}).flat()
