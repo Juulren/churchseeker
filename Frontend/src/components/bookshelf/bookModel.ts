@@ -2,6 +2,7 @@
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { brassMaterial, darkMaterial, goldMaterial, leatherMaterial, paperMaterial, plainMaterial } from '../quality/materials.ts'
 import { spine } from '../quality/proceduralTextures.ts'
+import { toGrey } from '../quality/grey.ts'
 
 export interface BookSpec {
   w: number
@@ -46,7 +47,7 @@ export function buildBook(s: BookSpec): THREE.Group {
   const spineGeo = new THREE.CylinderGeometry(1, 1, h, 28, 1, true, -Math.PI / 2, Math.PI)
   const spineMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.5, metalness: 0.03, side: THREE.DoubleSide })
   const tex = spine({ title: s.title, author: s.author, color: s.color, width: w, height: h })
-  if (tex) { spineMat.map = tex; spineMat.bumpMap = tex; spineMat.bumpScale = 0.6 } else spineMat.color.set(s.color)
+  if (tex) { spineMat.map = tex; spineMat.bumpMap = tex; spineMat.bumpScale = 0.6 } else spineMat.color.set(toGrey(s.color))
   const spineMesh = mesh(spineGeo, spineMat, 0, 0, d / 2 - 0.01)
   spineMesh.scale.set(w / 2, 1, bulge)
   g.add(spineMesh)
@@ -60,7 +61,7 @@ export function buildBook(s: BookSpec): THREE.Group {
   }
 
   // Silk ribbon peeking out of the tail.
-  g.add(mesh(new THREE.BoxGeometry(0.045, 0.42, 0.012), plainMaterial('#8c1d2b', 0.5), w * 0.12, -h / 2 - 0.12, d / 2 - 0.35))
+  g.add(mesh(new THREE.BoxGeometry(0.045, 0.42, 0.012), plainMaterial('#8a8a8a', 0.5), w * 0.12, -h / 2 - 0.12, d / 2 - 0.35))
 
   // Gilt head: a thin gold line along the top edge of the page block.
   g.add(mesh(new THREE.BoxGeometry(w - board * 2, 0.006, d - 0.08), goldMaterial(), 0, h / 2 - 0.045, -0.02))

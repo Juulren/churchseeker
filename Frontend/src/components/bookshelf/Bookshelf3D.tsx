@@ -78,15 +78,15 @@ function Scene({ books, hoveredId, onHover, onOpen }: Props) {
   const shelfW = Math.max(width + 1.4, 4)
   const n = Math.max(rows, 1)
   const centreY = -((n - 1) * ROW_HEIGHT) / 2 + 1.1
-  const plank = woodMaterial('#8a5a34', [Math.max(2, Math.round(shelfW / 2)), 1])
-  const frame = woodMaterial('#5d3b21', [1, 2])
+  const plank = woodMaterial('#777777', [Math.max(2, Math.round(shelfW / 2)), 1])
+  const frame = woodMaterial('#4a4a4a', [1, 2])
   return (
     <>
       <LocalEnvironment />
-      <hemisphereLight args={['#fff6e4', '#3a2c20', 0.5]} />
-      <directionalLight position={[4, 9, 12]} intensity={2.1} color="#ffeccb" castShadow shadow-mapSize={[2048, 2048]}
+      <hemisphereLight args={['#f2f2f2', '#333333', 0.5]} />
+      <directionalLight position={[4, 9, 12]} intensity={2.1} color="#ffffff" castShadow shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-12} shadow-camera-right={12} shadow-camera-top={8} shadow-camera-bottom={-12} shadow-bias={-0.0004} />
-      <pointLight position={[-6, 3, 8]} intensity={18} color="#ffd9a0" />
+      <pointLight position={[-6, 3, 8]} intensity={18} color="#ffffff" />
       <FitCamera width={shelfW} rows={n} />
       {Array.from({ length: n }, (_, r) => (
         <mesh key={r} position={[0, -r * ROW_HEIGHT - 0.15, 0.1]} material={plank} castShadow receiveShadow>

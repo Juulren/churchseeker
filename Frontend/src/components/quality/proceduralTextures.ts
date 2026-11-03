@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { mulberry32 } from './random.ts'
+import { desaturate, luma } from './grey.ts'
 
 // Procedural surface textures drawn on a canvas, so the app ships no image files and works offline.
 // Without a DOM (unit tests, server rendering) every function returns null and materials simply have no map.
@@ -18,6 +19,7 @@ function surface(w: number, h: number): { c: HTMLCanvasElement; g: CanvasRenderi
 }
 
 function toTexture(c: HTMLCanvasElement, repeat = true): THREE.CanvasTexture {
+  desaturate(c) // monochrome project: every colour map is drawn in greys
   const t = new THREE.CanvasTexture(c)
   t.colorSpace = THREE.SRGBColorSpace
   if (repeat) t.wrapS = t.wrapT = THREE.RepeatWrapping
@@ -227,7 +229,9 @@ export function spine(o: SpineOptions): THREE.CanvasTexture | null {
   else { g.fillStyle = o.color; g.fillRect(0, 0, W, h) }
 
   const gold = g.createLinearGradient(0, 0, W, 0)
-  gold.addColorStop(0, '#8a6a1c'); gold.addColorStop(0.35, '#f3dc8a'); gold.addColorStop(0.55, '#c9a13a'); gold.addColorStop(1, '#7a5a14')
+  // The tooling is drawn in greys that always stand apart from the spine: dark on a light spine, light on a dark one.
+  if (luma(o.color) > 140) { gold.addColorStop(0, '#1c1c1c'); gold.addColorStop(0.35, '#3a3a3a'); gold.addColorStop(0.55, '#262626'); gold.addColorStop(1, '#111111') }
+  else { gold.addColorStop(0, '#b0b0b0'); gold.addColorStop(0.35, '#f2f2f2'); gold.addColorStop(0.55, '#d0d0d0'); gold.addColorStop(1, '#a0a0a0') }
 
   // Raised bands (hubs) with gold rules on each side.
   const bands = [0.1, 0.3, 0.7, 0.9]
