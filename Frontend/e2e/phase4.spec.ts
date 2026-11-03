@@ -5,7 +5,8 @@ const CATHEDRAL = '11111111-1111-1111-1111-111111111111'
 
 const nav = (page: Page) => page.getByRole('navigation', { name: 'Iglesias de Mérida' })
 const pick = (page: Page, name: RegExp) => nav(page).getByRole('button', { name })
-const detail = (page: Page, name: RegExp) => page.getByRole('heading', { level: 2, name })
+// The full church view, not the small summary card on the map (that one also has an h2 with the name while the camera is still flying).
+const detail = (page: Page, name: RegExp) => page.getByRole('banner').filter({ has: page.getByRole('heading', { level: 2, name }) })
 
 function watch(page: Page) {
   const problems: string[] = []
@@ -51,6 +52,8 @@ test.describe('map and navigation', () => {
 
   test('opening and leaving churches repeatedly does not leak WebGL contexts or memory', async ({ page }) => {
     const problems = watch(page)
+    // The map only becomes interactive once its tiles load; a stub keeps this test off the live Esri server, whose speed varies.
+    await page.route('https://server.arcgisonline.com/**', (r) => r.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') }))
     await page.goto('/')
     await expect(nav(page).getByRole('button')).toHaveCount(3)
     const heap = () => page.evaluate(() => (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize ?? 0)
