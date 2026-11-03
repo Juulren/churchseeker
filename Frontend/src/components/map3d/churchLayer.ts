@@ -110,10 +110,13 @@ export class ChurchLayer implements CustomLayerInterface {
     // The map canvas changes size (window resize, layout); three.js only knows the size it had when it was created.
     const canvas = map.getCanvas()
     if (canvas.width !== this.sizeW || canvas.height !== this.sizeH) {
-      this.sizeW = canvas.width
-      this.sizeH = canvas.height
+      // Read the map's size first: setPixelRatio() re-applies three.js's old size to the canvas, which would overwrite it.
+      const w = canvas.width
+      const h = canvas.height
+      this.sizeW = w
+      this.sizeH = h
       renderer.setPixelRatio(1)
-      renderer.setSize(canvas.width, canvas.height, false)
+      renderer.setSize(w, h, false)
     }
     renderer.resetState()
     // Far out the churches are the markers; the models stand up once the map is close enough to read them.

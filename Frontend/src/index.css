@@ -63,8 +63,9 @@ h2 { font-size: 2.1rem; }
 h4 { font-size: 1.3rem; }
 
 /* Stone surface with a hairline border and L-shaped corner marks, like the tracery of a window frame. */
+/* In a layer, so a Tailwind `absolute` on a panel wins: unlayered CSS beats every utility, which kept the header and the church list in the flow. */
+@layer components { .rpg-panel { position: relative; } }
 .rpg-panel {
-  position: relative;
   background: var(--panel);
   border: 1px solid var(--rule);
   border-radius: var(--radius);

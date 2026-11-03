@@ -37,11 +37,15 @@ export function PublicApp() {
   return (
     <>
 
-      <header className="rpg-panel pointer-events-none absolute left-4 top-3 z-10 max-w-[calc(100vw-2rem)] px-3 py-1 sm:px-4">
-        <h1 className="text-2xl sm:text-3xl">ChurchSeeker</h1>
-        <p className="rpg-label">Mérida · Yucatán</p>
+      {/* One row: the name on the left and, from sm up, the staff link on the right, centred on the same line. The map's own
+          controls sit in the corner, so the row stops short of them. */}
+      <header className="rpg-panel pointer-events-none absolute left-4 right-14 top-3 z-10 flex items-center justify-between gap-3 px-3 py-1 sm:px-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl">ChurchSeeker</h1>
+          <p className="rpg-label">Mérida · Yucatán</p>
+        </div>
+        <a href="#/login" className="rpg-button pointer-events-auto hidden whitespace-nowrap sm:inline-block">Acceso del personal</a>
       </header>
-      <a href="#/login" className="rpg-button absolute right-16 top-3 z-10 hidden sm:inline-block">Acceso del personal</a>
 
       <Suspense fallback={<p className="absolute left-1/2 top-1/2 -translate-x-1/2" role="status">Cargando…</p>}>
         {detail ? (
