@@ -33,7 +33,7 @@ export function normalizeModel(root: THREE.Object3D): THREE.Object3D {
  * The 3D object for a church: the .glb uploaded by its administrator when there is one (a faithful model made
  * by an artist), otherwise the procedural low-poly church. Any loading problem falls back to the procedural one.
  */
-export async function loadChurchObject(church: ChurchObjectInput, style: ChurchStyle): Promise<THREE.Object3D> {
+export async function loadChurchObject(church: ChurchObjectInput, style: ChurchStyle, detail: 'high' | 'low' = 'high'): Promise<THREE.Object3D> {
   if (isUploadedModel(church.modelUrl)) {
     try {
       const gltf = await loader.loadAsync(church.modelUrl)
@@ -42,5 +42,5 @@ export async function loadChurchObject(church: ChurchObjectInput, style: ChurchS
       /* use the procedural model */
     }
   }
-  return buildChurch(style)
+  return buildChurch(style, detail)
 }
