@@ -21,16 +21,6 @@ export function LoadingScreen({ label = 'Cargando…' }: { label?: string }) {
   )
 }
 
-/** The 404: a road running to an open doorway. */
-export function LostPath() {
-  return (
-    <div className="lost-path" aria-hidden="true">
-      <Ornament name="doorway" size={150} draw />
-      <Ornament name="road" size={230} draw />
-    </div>
-  )
-}
-
 /** A thin band of ornaments for the top of a page. */
 export function OrnamentStrip() {
   return (

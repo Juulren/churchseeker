@@ -67,8 +67,8 @@ cd Frontend && npm run e2e             # Playwright (levanta la API y el build; 
 
 - **Base de datos:** SQLite por defecto en desarrollo; PostgreSQL con migraciones EF (`Database:Provider=Postgres`), probado con toda la suite. Falta un entorno de producción administrado (copias de seguridad, TLS hacia la base).
 - **Usuarios:** cambiar el rol o desactivar a alguien invalida su sesión al instante (el token se revalida contra la base en cada solicitud y se revocan sus refresh tokens). Nadie puede cambiarse a sí mismo y siempre queda al menos un administrador activo. Los permisos por rol son fijos en el código; la matriz es de solo lectura.
-- **Mapa:** MapLibre con mosaicos Esri (sin API key). Para producción, cambiar a Google Maps u otro proveedor: la capa 3D de iglesias no depende de la base.
-- **Modelos 3D:** las iglesias se generan por código a partir de su estilo; un `.glb` subido por el administrador (RF-10) tiene prioridad. La fidelidad real requiere un modelo de cada iglesia.
+- **Mapa:** MapLibre con mosaicos Esri (sin API key). Para producción, cambiar a Google Maps u otro proveedor: los marcadores de iglesias son HTML y no dependen de la base.
+- **Grabados:** cada iglesia se muestra como un grabado de líneas SVG: tres láminas dibujadas a mano para las iglesias piloto y cuatro tipologías (nave, rotonda, pórtico, patio) variadas por id para las demás. Sin WebGL ni descargas. El endpoint de subida de `.glb` (RF-10) sigue en el backend pero ninguna pantalla lo usa ya; los libros siguen siendo 3D.
 - **Correo:** SMTP real con MailKit cuando `Email:Host` está definido; si no, solo se registra en el log. Falta elegir y probar un proveedor de producción.
 - **PDF:** el escaneo busca contenido activo por bytes; no detecta el que esté dentro de flujos comprimidos.
 - **QuestPDF** se usa con licencia Community.

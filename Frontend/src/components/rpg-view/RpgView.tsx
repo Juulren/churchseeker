@@ -4,7 +4,7 @@ import { publicApi } from '../../services/api.ts'
 import type { PublicChurch } from '../../services/types.ts'
 import Bookshelf from '../bookshelf/Bookshelf.tsx'
 import SigilMorph from '../sigil/SigilMorph.tsx'
-import ChurchStage from './ChurchStage.tsx'
+import EngravingStage from '../engraving/EngravingStage.tsx'
 import { EventsPanel, InfoPanel, NewsPanel } from './Panels.tsx'
 import { useChurchData } from './useChurchData.ts'
 
@@ -41,7 +41,7 @@ export default function RpgView({ church, onBack }: Props) {
     >
       <div className="flex min-h-0 min-w-0 flex-col gap-4">
         <div className="rpg-panel min-h-[200px] flex-1 overflow-hidden">
-          <ChurchStage id={church.id} name={church.name} modelUrl={church.modelUrl} />
+          <EngravingStage id={church.id} name={church.name} />
         </div>
         <div className="max-h-[45%] overflow-y-auto">
           <InfoPanel section={data?.profile} loading={loading} />

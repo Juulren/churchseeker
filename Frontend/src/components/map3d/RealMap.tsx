@@ -3,10 +3,9 @@ import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import type { PublicChurch } from '../../services/types.ts'
-import { ChurchLayer } from './churchLayer.ts'
 import { centroid, validCoordinates } from './projection.ts'
 import { hasWebGL } from './webgl.ts'
-import { markerElement, MODEL_MIN_ZOOM, NAME_MIN_ZOOM } from './churchMarker.ts'
+import { CARD_MIN_ZOOM, markerElement, NAME_MIN_ZOOM } from './churchMarker.ts'
 import { MAP_STYLE, visibilityFor, type BaseMode } from './mapStyle.ts'
 
 interface Props {
@@ -23,30 +22,6 @@ interface Props {
 maplibregl.setWorkerUrl(workerUrl)
 
 const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
-const hit = (map: maplibregl.Map, c: PublicChurch, p: maplibregl.Point) => {
-  const centre = map.project([c.longitude, c.latitude])
-  // Radius of the church footprint on screen (about 40 m), with a floor so it stays easy to hit when zoomed out.
-  const east = map.project([c.longitude + 40 / (111_320 * Math.cos((c.latitude * Math.PI) / 180)), c.latitude])
-  const radius = Math.max(28, Math.hypot(east.x - centre.x, east.y - centre.y))
-  // Far out there is no model: the badge under the point is what is clicked.
-  if (map.getZoom() < MODEL_MIN_ZOOM) return Math.hypot(centre.x - p.x, centre.y + 31 - p.y) <= 24
-  return Math.hypot(centre.x - p.x, centre.y - p.y - radius * 0.4) <= radius
-}
-
-function label(c: PublicChurch): HTMLElement {
-  const el = document.createElement('div')
-  el.className = 'rpg-panel whitespace-nowrap px-3 py-1 text-center'
-  el.style.cssText = 'pointer-events:none;font-size:16px'
-  const name = document.createElement('div')
-  name.style.color = 'var(--accent)'
-  name.textContent = c.name
-  const saint = document.createElement('div')
-  saint.style.cssText = 'color:var(--ink-dim);font-size:13px'
-  saint.textContent = c.patronSaint
-  el.append(name, saint)
-  return el
-}
-
 function Unavailable() {
   return (
     <div className="rpg-panel absolute left-1/2 top-1/2 max-w-sm -translate-x-1/2 -translate-y-1/2 p-4 text-center" role="status">
@@ -55,12 +30,10 @@ function Unavailable() {
   )
 }
 
-/** Satellite view of Mérida (or its street map) with a 3D model standing on every church's coordinates. */
+/** Satellite view of Mérida (or its street map) with the engraving of every church standing on its coordinates. */
 export default function RealMap({ churches, selectedId, hoveredId, onSelect, onHover, onArrive }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
-  const layerRef = useRef<ChurchLayer | null>(null)
-  const labelRef = useRef<maplibregl.Marker | null>(null)
   const markersRef = useRef<Map<string, HTMLElement>>(new Map())
   const latest = useRef({ churches, selectedId, onSelect, onHover, onArrive })
   latest.current = { churches, selectedId, onSelect, onHover, onArrive }
@@ -71,7 +44,7 @@ export default function RealMap({ churches, selectedId, hoveredId, onSelect, onH
   const supported = hasWebGL()
 
   const valid = validCoordinates(churches.map((c) => ({ ...c, lat: c.latitude, lng: c.longitude })))
-  const key = valid.map((c) => `${c.id}:${c.modelUrl}:${c.name}:${c.lat}:${c.lng}`).join('|')
+  const key = valid.map((c) => `${c.id}:${c.name}:${c.patronSaint}:${c.lat}:${c.lng}`).join('|')
   const centre = centroid(valid)
 
   useEffect(() => {
@@ -82,20 +55,10 @@ export default function RealMap({ churches, selectedId, hoveredId, onSelect, onH
       maxPitch: 75, minZoom: 12, maxZoom: 19, attributionControl: { compact: true }, canvasContextAttributes: { antialias: true },
     })
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right')
-    const layer = new ChurchLayer()
     mapRef.current = map
-    layerRef.current = layer
     // As soon as the style (not every tile) is in: imagery needs many tiles and the churches should not wait for them.
-    map.once('style.load', () => { map.addLayer(layer); setReady(true) })
+    map.once('style.load', () => setReady(true))
 
-    let hovered: string | null = null
-    const pick = (p: maplibregl.Point) =>
-      latest.current.churches.find((c) => Number.isFinite(c.latitude) && Number.isFinite(c.longitude) && hit(map, c, p))?.id ?? null
-    map.on('mousemove', (e) => {
-      const id = pick(e.point)
-      if (id !== hovered) { hovered = id; latest.current.onHover(id); map.getCanvas().style.cursor = id ? 'pointer' : '' }
-    })
-    map.on('click', (e) => { const id = pick(e.point); if (id) latest.current.onSelect(id) })
     // Camera arrival: only counts if the camera really is on the selected church (an interrupted flight does not).
     map.on('moveend', () => {
       const { churches: list, selectedId: id, onArrive: arrive } = latest.current
@@ -106,42 +69,41 @@ export default function RealMap({ churches, selectedId, hoveredId, onSelect, onH
     })
 
     return () => {
-      labelRef.current?.remove()
-      labelRef.current = null
       markersRef.current.clear()
       map.remove()
       mapRef.current = null
-      layerRef.current = null
       setReady(false)
     }
     // The map is created once; churches and selection are applied by the effects below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supported])
 
-  useEffect(() => { if (ready) layerRef.current?.setChurches(valid) }, [ready, key]) // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (ready) layerRef.current?.setHighlight(hoveredId, selectedId) }, [ready, hoveredId, selectedId])
-
-  // A sigil badge on every church; the name joins it when the map is close enough.
+  // A sigil badge on every church; the name joins it when the map is close enough and the engraving a little closer. The
+  // markers take the mouse (hover and click); the list of churches is the way in for the keyboard and screen readers.
   useEffect(() => {
     const map = mapRef.current
     if (!ready || !map) return
     const made: maplibregl.Marker[] = []
     markersRef.current.clear()
     for (const c of valid) {
-      const el = markerElement(c.name)
+      const el = markerElement(c, { onSelect: (id) => latest.current.onSelect(id), onHover: (id) => latest.current.onHover(id) })
       markersRef.current.set(c.id, el)
-      made.push(new maplibregl.Marker({ element: el, anchor: 'top', offset: [0, 14] }).setLngLat([c.lng, c.lat]).addTo(map))
+      made.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([c.lng, c.lat]).addTo(map))
     }
-    const names = () => { const on = map.getZoom() >= NAME_MIN_ZOOM; for (const el of markersRef.current.values()) el.classList.toggle('named', on) }
+    const names = () => {
+      const z = map.getZoom()
+      for (const el of markersRef.current.values()) { el.classList.toggle('named', z >= NAME_MIN_ZOOM); el.classList.toggle('carded', z >= CARD_MIN_ZOOM) }
+    }
     names()
     map.on('zoom', names)
-    return () => { map.off('zoom', names); made.forEach((m) => m.remove()); markersRef.current.clear() }
+    // A marker removed under the pointer never fires its leave, so the hover is cleared here.
+    return () => { map.off('zoom', names); made.forEach((m) => m.remove()); markersRef.current.clear(); latest.current.onHover(null) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, key])
 
   useEffect(() => { for (const [id, el] of markersRef.current) el.classList.toggle('is-active', id === (hoveredId ?? selectedId)) }, [ready, key, hoveredId, selectedId])
 
-  // Satellite or street map. Switching only toggles layers; the church layer is untouched.
+  // Satellite or street map. Switching only toggles layers.
   useEffect(() => {
     const map = mapRef.current
     if (!ready || !map) return
@@ -160,17 +122,6 @@ export default function RealMap({ churches, selectedId, hoveredId, onSelect, onH
     map.on('error', failed)
     return () => { map.off('rotate', turn); map.off('error', failed) }
   }, [ready])
-
-  // Label over the hovered or selected church.
-  useEffect(() => {
-    const map = mapRef.current
-    if (!ready || !map) return
-    labelRef.current?.remove()
-    labelRef.current = null
-    const c = churches.find((x) => x.id === (hoveredId ?? selectedId))
-    if (c && Number.isFinite(c.latitude) && Number.isFinite(c.longitude))
-      labelRef.current = new maplibregl.Marker({ element: label(c), anchor: 'bottom', offset: [0, map.getZoom() < MODEL_MIN_ZOOM ? -8 : -70] }).setLngLat([c.longitude, c.latitude]).addTo(map)
-  }, [ready, hoveredId, selectedId, churches])
 
   // Cinematic camera: fly to the selected church, or back out to see them all.
   useEffect(() => {

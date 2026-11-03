@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
-import { publicApi } from './services/api.ts'
+import { ApiError, publicApi } from './services/api.ts'
 import type { PublicChurch } from './services/types.ts'
 import Sigil from './components/sigil/Sigil.tsx'
 import ServerDown from './components/ornament/ServerDown.tsx'
@@ -13,6 +13,7 @@ type View = 'map' | 'detail'
 export function PublicApp() {
   const [churches, setChurches] = useState<PublicChurch[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [errorCode, setErrorCode] = useState('503')
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [view, setView] = useState<View>('map')
@@ -22,7 +23,12 @@ export function PublicApp() {
     const controller = new AbortController()
     publicApi.churches()
       .then((list) => { if (!controller.signal.aborted) setChurches(list) })
-      .catch((e: unknown) => { if (!controller.signal.aborted) setError(e instanceof Error ? e.message : 'Error desconocido') })
+      .catch((e: unknown) => {
+        if (controller.signal.aborted) return
+        // No answer (0) or a bad gateway reads as 503; any other status is shown as it is.
+        setErrorCode(e instanceof ApiError && e.status >= 400 && e.status < 600 && ![502, 504].includes(e.status) ? String(e.status) : '503')
+        setError(e instanceof Error ? e.message : 'Error desconocido')
+      })
     return () => controller.abort()
   }, [attempt])
 
@@ -32,7 +38,7 @@ export function PublicApp() {
   const detail = view === 'detail' && selected
 
   // Without the list of churches there is nothing to show: say so plainly and let the person try again.
-  if (error && !churches) return <ServerDown message={error} onRetry={() => { setError(null); setAttempt((n) => n + 1) }} />
+  if (error && !churches) return <ServerDown code={errorCode} message={error} onRetry={() => { setError(null); setAttempt((n) => n + 1) }} />
 
   return (
     <>
