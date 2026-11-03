@@ -30,7 +30,7 @@ describe('validators', () => {
 })
 
 describe('parseRoute', () => {
-  it('reads names, paths and params, and falls back to home', () => {
+  it('reads names, paths and params; an empty address is home and an unknown one is not found', () => {
     expect(parseRoute('').name).toBe('home')
     expect(parseRoute('#/').name).toBe('home')
     expect(parseRoute('#/login').name).toBe('login')
@@ -40,7 +40,7 @@ describe('parseRoute', () => {
     expect(r.params.get('email')).toBe('a@b.mx')
     expect(r.params.get('token')).toBe('t/k')
     for (const hostile of ['#/../../etc', '#/%E0%A4%A', '#/javascript:alert(1)', '#/admin/%00']) expect(() => parseRoute(hostile)).not.toThrow()
-    expect(parseRoute('#/unknown').name).toBe('home')
+    expect(parseRoute('#/unknown').name).toBe('notfound')
   })
 })
 

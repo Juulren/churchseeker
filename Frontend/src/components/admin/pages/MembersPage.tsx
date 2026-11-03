@@ -4,6 +4,7 @@ import type { Member } from '../../../services/adminTypes.ts'
 import { emptyToNull, todayIso } from '../format.ts'
 import { messageOf, useAsync } from '../useAsync.ts'
 import { Modal, Notice, Pager, SelectInput, SkeletonLines, TextInput } from '../ui.tsx'
+import { Empty } from '../../ornament/Illustrations.tsx'
 
 const PAGE = 15
 
@@ -81,7 +82,7 @@ export default function MembersPage() {
                 </div></td>
               </tr>
             ))}
-            {list.data && list.data.items.length === 0 && <tr><td colSpan={6} className="muted">No hay miembros con ese filtro.</td></tr>}
+            {list.data && list.data.items.length === 0 && <tr><td colSpan={6}><Empty>No hay miembros con ese filtro.</Empty></td></tr>}
           </tbody>
         </table>
       </div>

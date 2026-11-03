@@ -23,8 +23,18 @@ export default function AdminShell() {
   const user = useSyncExternalStore(session.subscribe, session.get, () => null)
   const route = parseRoute(useHash())
   const title = useRef<HTMLHeadingElement>(null)
+  const menu = useRef<HTMLElement>(null)
   // The module name condenses out of characters when you open it; the real text stays in the DOM.
   useKit(title, (kit, el) => decodeOnce(kit, el, 700), [route.path[1]])
+  // The menu links are real links with real text; on hover a scramble of letters plays over them and settles back.
+  useKit(menu, (kit, nav) => {
+    const links = [...nav.querySelectorAll<HTMLElement>('a')]
+    const handles = links.map((a) => ({ a, h: kit.decode(a, { scramble: true, trigger: 'manual', replayOnHover: false, settle: 'text', duration: 600, look: { cellSize: 3 } }) }))
+    const play = (e: Event) => handles.find((x) => x.a === e.currentTarget)?.h.replay()
+    // Pointer only: replaying on keyboard focus would rewrite the link text just as a screen reader reads its name.
+    for (const { a } of handles) a.addEventListener('pointerenter', play)
+    return { destroy: () => { for (const { a, h } of handles) { a.removeEventListener('pointerenter', play); h.destroy() } } }
+  }, [route.path[1], user?.role])
   if (!user) return null
   const items = allowedNav(user.role)
   const current = route.path[1] ?? 'dashboard'
@@ -39,7 +49,7 @@ export default function AdminShell() {
           <p className="rpg-label mt-1">{user.role}</p>
           <p className="mt-2 truncate text-sm" title={user.email}>{user.fullName}</p>
         </div>
-        <nav aria-label="Módulos" className="flex gap-2 overflow-x-auto md:flex-col">
+        <nav ref={menu} aria-label="Módulos" className="flex gap-2 overflow-x-auto md:flex-col">
           {items.map((i) => (
             <a key={i.path} href={`#/admin/${i.path}`} className="rpg-button whitespace-nowrap text-center" aria-pressed={i.path === current}
               aria-current={i.path === current ? 'page' : undefined}>{i.label}</a>

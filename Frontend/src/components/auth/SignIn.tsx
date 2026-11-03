@@ -103,7 +103,13 @@ export default function SignIn() {
 
   return (
     <main className="sign-in">
+      <svg width="0" height="0" aria-hidden="true" focusable="false" style={{ position: 'absolute' }}>
+        <defs><clipPath id="arch-clip" clipPathUnits="objectBoundingBox"><path d="M0 1V0.42C0 0.17 0.36 0.04 0.5 0C0.64 0.04 1 0.17 1 0.42V1Z" /></clipPath></defs>
+      </svg>
       <div ref={artSide} className="sign-in-art">
+        <svg className="art-frame" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true" focusable="false" fill="none" stroke="currentColor">
+          <path d="M1 139V58.8C1 23.4 36 5.6 50 1C64 5.6 99 23.4 99 58.8V139" vectorEffect="non-scaling-stroke" strokeWidth="2" />
+        </svg>
         <div ref={brand} className="sign-in-brand">
           <h1>ChurchSeeker</h1>
           <p className="rpg-label">Mérida · Yucatán</p>
