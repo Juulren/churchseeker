@@ -88,7 +88,7 @@ export function buildChurch(s: ChurchStyle): THREE.Group {
   const gold = goldMaterial()
 
   // Stepped plinth and forecourt.
-  add(g, new THREE.CylinderGeometry(Math.max(w, l) * 0.8, Math.max(w, l) * 0.84, 0.1, 40), plainMaterial('#cbbf9f', 0.95), 0, 0.05, 0.7)
+  add(g, new THREE.CylinderGeometry(Math.max(w, l) * 0.8, Math.max(w, l) * 0.84, 0.1, 40), plainMaterial('#a39f95', 0.95), 0, 0.05, 0.7)
   add(g, rbox(w + 1.1, 0.14, l + 1.1, 0.03), stone, 0, 0.17, 0)
   add(g, rbox(w + 0.7, 0.12, l + 0.7, 0.03), stone, 0, 0.3, 0)
   const base = 0.36

@@ -34,7 +34,7 @@ export default function DashboardPage() {
         <section aria-label="Avisos importantes">
           <h3 className="rpg-title text-xl">Avisos importantes</h3>
           <ul className="grid gap-1">
-            {notices.data?.items.filter((a) => a.isImportant && a.publishDate <= todayIso() && (!a.expiresOn || a.expiresOn >= todayIso())).slice(0, 5).map((a) => <li key={a.id}>★ {a.title}</li>)}
+            {notices.data?.items.filter((a) => a.isImportant && a.publishDate <= todayIso() && (!a.expiresOn || a.expiresOn >= todayIso())).slice(0, 5).map((a) => <li key={a.id}>◈ {a.title}</li>)}
             {notices.data && notices.data.items.filter((a) => a.isImportant).length === 0 && <li className="muted">No hay avisos importantes.</li>}
           </ul>
         </section>

@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { publicApi } from './services/api.ts'
 import type { PublicChurch } from './services/types.ts'
+import Sigil from './components/sigil/Sigil.tsx'
 
 // three.js is heavy: the map and the detail view load on demand, after the first paint.
 const RealMap = lazy(() => import('./components/map3d/RealMap.tsx'))
@@ -58,7 +59,7 @@ export function PublicApp() {
               {churches?.map((c) => (
                 <li key={c.id}>
                   <button
-                    className="rpg-button w-full text-left"
+                    className="rpg-button flex w-full items-center gap-2 text-left"
                     aria-pressed={c.id === selectedId}
                     onClick={() => setSelectedId(c.id)}
                     onMouseEnter={() => setHoveredId(c.id)}
@@ -66,7 +67,8 @@ export function PublicApp() {
                     onFocus={() => setHoveredId(c.id)}
                     onBlur={() => setHoveredId(null)}
                   >
-                    {c.name}
+                    <Sigil name={c.name} size={22} />
+                    <span>{c.name}</span>
                   </button>
                 </li>
               ))}
@@ -75,7 +77,7 @@ export function PublicApp() {
 
           {selected && (
             <aside className="rpg-panel absolute bottom-4 right-4 z-10 w-80 p-3" aria-live="polite">
-              <h2 className="text-2xl" style={{ color: 'var(--accent)' }}>{selected.name}</h2>
+              <h2 className="flex items-center gap-2 text-2xl" style={{ color: 'var(--accent)' }}><Sigil name={selected.name} size={34} />{selected.name}</h2>
               <p style={{ color: 'var(--ink-dim)' }}>{selected.denomination} · {selected.patronSaint}</p>
               <div className="mt-3 flex gap-2">
                 <button className="rpg-button" onClick={enter}>Entrar</button>
