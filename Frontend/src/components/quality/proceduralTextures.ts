@@ -90,16 +90,16 @@ export function leather(color: string): TexturePair | null {
   })
 }
 
-/** Page edges: cream paper with very fine parallel lines. */
+/** Page edges: pale grey paper with very fine parallel lines. */
 export function paper(): TexturePair | null {
   return memo('paper', () => {
     const s = surface(128, 128)
     if (!s) return null
     const rand = mulberry32(21)
-    s.g.fillStyle = '#eadfc2'
+    s.g.fillStyle = '#e2e2e2'
     s.g.fillRect(0, 0, 128, 128)
     for (let y = 0; y < 128; y += 2) {
-      s.g.fillStyle = `rgba(120,100,60,${0.1 + rand() * 0.22})`
+      s.g.fillStyle = `rgba(90,90,90,${0.1 + rand() * 0.22})`
       s.g.fillRect(0, y, 128, 1)
     }
     grain(s.g, 128, 128, 7, 3)
