@@ -8,6 +8,7 @@ import { Check, Loading, Modal, Notice, SelectInput, TextInput } from '../ui.tsx
 import SlideConfirm from '../../ascii/SlideConfirm.tsx'
 import { useKit } from '../../ascii/useKit.ts'
 import { Empty } from '../../ornament/Illustrations.tsx'
+import { modelProblem, OPTIMIZE_COMMAND } from '../../map3d/modelRules.ts'
 
 /** Drop zone for the logo: a ring of characters, drag a PNG, JPEG or WebP (2 MB) or pick one. */
 function LogoDrop({ onFile }: { onFile: (file: File) => void }) {
@@ -46,6 +47,8 @@ function Profile() {
   const upload = async (kind: 'logo' | 'model', file: File | undefined) => {
     if (!file) return
     setMsg(null)
+    const problem = kind === 'model' ? modelProblem(file) : null
+    if (problem) { setMsg({ kind: 'error', text: problem }); return }
     try { await adminApi.church.upload(kind, file); setMsg({ kind: 'ok', text: kind === 'logo' ? 'Logotipo actualizado.' : 'Modelo 3D actualizado.' }) } catch (x) { setMsg({ kind: 'error', text: messageOf(x) }) }
   }
   return (
@@ -74,7 +77,13 @@ function Profile() {
       </fieldset>
       <div className="form-grid">
         <LogoDrop onFile={(file) => upload('logo', file)} />
-        <label className="grid gap-1">Modelo 3D (.glb, 20 MB)<input className="input" type="file" accept=".glb,model/gltf-binary" onChange={(e) => upload('model', e.target.files?.[0])} /></label>
+        <label className="grid gap-1">Modelo 3D (.glb, máximo 1,5 MB y 80 000 triángulos)<input className="input" type="file" accept=".glb,model/gltf-binary" onChange={(e) => { upload('model', e.target.files?.[0]); e.target.value = '' }} /></label>
+        <details className="grid gap-1" style={{ gridColumn: '1 / -1' }}>
+          <summary className="rpg-label">Cómo aligerar un escaneo</summary>
+          <p>Un escaneo sin tratar suele pesar decenas de MB. Para que cargue en cualquier teléfono, el servidor solo acepta modelos de hasta 1,5 MB y 80 000 triángulos, con compresión Draco o meshopt. Con Node instalado, este comando lo reduce:</p>
+          <code className="block overflow-x-auto">{OPTIMIZE_COMMAND}</code>
+          <p>Si aún pesa demasiado, añade --simplify-ratio 0.5 (o un valor menor) al comando, o reduce las texturas.</p>
+        </details>
       </div>
       {msg && <Notice kind={msg.kind}>{msg.text}</Notice>}
       <div><button type="submit" className="rpg-button btn-primary" disabled={busy}>{busy ? 'Guardando…' : 'Guardar configuración'}</button></div>

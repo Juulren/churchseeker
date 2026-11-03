@@ -6,7 +6,8 @@ import LocalEnvironment from '../quality/LocalEnvironment.tsx'
 import { plasterMaterial } from '../quality/materials.ts'
 import GraphicsBoundary from '../map3d/GraphicsBoundary.tsx'
 import { styleFor, type ChurchStyle } from '../map3d/churchStyles.ts'
-import { churchTop } from '../map3d/churchBuilder.ts'
+import { churchTop, typologyScale } from '../map3d/churchBuilder.ts'
+import { TYPOLOGY_META } from '../map3d/kit/typologies.ts'
 import { AUTHORED, authoredScale } from '../map3d/kit/registry.ts'
 import { hasWebGL } from '../map3d/webgl.ts'
 
@@ -26,7 +27,9 @@ export function frameFromBox(box: THREE.Box3): { front: number; height: number; 
 
 export function frameOf(style: ChurchStyle): { front: number; height: number; width: number } {
   if (style.authored) { const a = AUTHORED[style.authored]; const k = authoredScale(style.authored); return { front: (a.length * k) / 2, height: a.height * k, width: a.width * k } }
-  return { front: style.length / 2, height: churchTop(style), width: style.width }
+  const meta = TYPOLOGY_META[style.typology]
+  const k = typologyScale(style)
+  return { front: (meta.length * k) / 2, height: churchTop(style), width: meta.width * k }
 }
 
 /**

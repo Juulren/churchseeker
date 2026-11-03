@@ -24,7 +24,9 @@ Thumbs.db
 *.db-shm
 *.db-wal
 
-storage/
+# Uploaded files at runtime (not the Storage source folders)
+/Backend/src/ChurchSeeker.WebAPI/storage/
+/Backend/tests/**/storage/
 
 .claude/
 
