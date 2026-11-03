@@ -1,10 +1,26 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { adminApi } from '../../../services/adminApi.ts'
 import { type ProfileInput } from '../../../services/adminTypes.ts'
 import { DAY_NAMES } from '../../rpg-view/format.ts'
 import { emptyToNull } from '../format.ts'
 import { messageOf, useAsync } from '../useAsync.ts'
-import { Check, Loading, Notice, SelectInput, TextInput } from '../ui.tsx'
+import { Check, Loading, Modal, Notice, SelectInput, TextInput } from '../ui.tsx'
+import SlideConfirm from '../../ascii/SlideConfirm.tsx'
+import { useKit } from '../../ascii/useKit.ts'
+
+/** Drop zone for the logo: a ring of characters, drag a PNG, JPEG or WebP (2 MB) or pick one. */
+function LogoDrop({ onFile }: { onFile: (file: File) => void }) {
+  const zone = useRef<HTMLDivElement>(null)
+  const send = useRef(onFile)
+  send.current = onFile
+  useKit(zone, (kit, el) => kit.dropzone(el, { maxBytes: 2 * 1024 * 1024, onImage: ({ file }) => { if (file) send.current(file) } }))
+  return (
+    <div ref={zone} className="dropzone" aria-label="Logotipo">
+      <span>Logotipo: arrastra una imagen (PNG, JPEG o WebP, 2 MB) o</span>
+      <button type="button" className="rpg-button" data-dropzone="pick">Elegir imagen</button>
+    </div>
+  )
+}
 
 function Profile() {
   const church = useAsync(() => adminApi.church.get(), [])
@@ -56,7 +72,7 @@ function Profile() {
         <div><button type="button" className="rpg-button" disabled={f.schedules.length >= 30} onClick={() => set('schedules', [...f.schedules, { day: 0, time: '09:00', description: '' }])}>Agregar horario</button></div>
       </fieldset>
       <div className="form-grid">
-        <label className="grid gap-1">Logotipo (PNG, JPEG o WebP, 2 MB)<input className="input" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => upload('logo', e.target.files?.[0])} /></label>
+        <LogoDrop onFile={(file) => upload('logo', file)} />
         <label className="grid gap-1">Modelo 3D (.glb, 20 MB)<input className="input" type="file" accept=".glb,model/gltf-binary" onChange={(e) => upload('model', e.target.files?.[0])} /></label>
       </div>
       {msg && <Notice kind={msg.kind}>{msg.text}</Notice>}
@@ -84,7 +100,18 @@ function Books() {
       setTitle(''); setAuthor(''); setFile(null); setMsg({ kind: 'ok', text: 'Códice subido.' }); books.reload()
     } catch (x) { setMsg({ kind: 'error', text: messageOf(x) }) } finally { setBusy(false) }
   }
-  const remove = async (id: string) => { try { await adminApi.books.remove(id); books.reload() } catch (x) { setMsg({ kind: 'error', text: messageOf(x) }) } }
+  const [removing, setRemoving] = useState<{ id: string; title: string } | null>(null)
+  // Slide to confirm, then the row breaks into characters before the codex is removed.
+  const remove = async (id: string) => {
+    setRemoving(null)
+    try {
+      // The server removes it first; only then does the row break into characters, so a failure never leaves a hidden row behind.
+      await adminApi.books.remove(id)
+      const row = document.querySelector<HTMLElement>('[data-book="' + id + '"]')
+      if (row) { try { const kit = await import('asciify-engine/kit'); await kit.disintegrate(row, { duration: 620 }) } catch { /* the row just goes */ } }
+      books.reload()
+    } catch (x) { setMsg({ kind: 'error', text: messageOf(x) }) }
+  }
   return (
     <div className="grid gap-4">
       <form onSubmit={submit} className="grid gap-3" noValidate aria-label="Subir códice">
@@ -103,11 +130,18 @@ function Books() {
         <table className="table">
           <thead><tr><th>Título</th><th>Autor</th><th>Visibilidad</th><th /></tr></thead>
           <tbody>
-            {books.data?.map((b) => <tr key={b.id}><td>{b.title}</td><td>{b.author ?? '—'}</td><td>{b.isPublic ? 'Público' : '🔒 Privado'}</td><td><div className="row-actions"><button className="rpg-button" onClick={() => remove(b.id)}>Quitar</button></div></td></tr>)}
+            {books.data?.map((b) => <tr key={b.id} data-book={b.id}><td>{b.title}</td><td>{b.author ?? '—'}</td><td>{b.isPublic ? 'Público' : '🔒 Privado'}</td><td><div className="row-actions"><button className="rpg-button" onClick={() => setRemoving({ id: b.id, title: b.title })}>Quitar</button></div></td></tr>)}
             {books.data?.length === 0 && <tr><td colSpan={4} className="muted">Aún no hay códices.</td></tr>}
           </tbody>
         </table>
       </div>
+      {removing && (
+        <Modal title="Quitar códice" onClose={() => setRemoving(null)}>
+          <p>Se quitará «{removing.title}» del estante.</p>
+          <SlideConfirm label="Desliza para quitar" doneLabel="Quitado" onConfirm={() => void remove(removing.id)} />
+          <div className="modal-actions"><button type="button" className="rpg-button" onClick={() => setRemoving(null)}>Cancelar</button></div>
+        </Modal>
+      )}
     </div>
   )
 }

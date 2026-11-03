@@ -3,7 +3,7 @@ import { adminApi } from '../../../services/adminApi.ts'
 import type { Member } from '../../../services/adminTypes.ts'
 import { emptyToNull, todayIso } from '../format.ts'
 import { messageOf, useAsync } from '../useAsync.ts'
-import { Loading, Modal, Notice, Pager, SelectInput, TextInput } from '../ui.tsx'
+import { Modal, Notice, Pager, SelectInput, SkeletonLines, TextInput } from '../ui.tsx'
 
 const PAGE = 15
 
@@ -85,7 +85,7 @@ export default function MembersPage() {
           </tbody>
         </table>
       </div>
-      {list.loading && !list.data && <Loading />}
+      {list.loading && !list.data && <SkeletonLines />}
       {list.data && <Pager page={page} pageSize={PAGE} total={list.data.total} onPage={setPage} />}
       {editing && <MemberForm member={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onDone={() => { setEditing(null); list.reload() }} />}
     </div>

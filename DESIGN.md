@@ -64,16 +64,15 @@ Asciify inks map to these: `--ascii-ink` = `--ink-dim`, `--ascii-ink-strong` = `
 ## Status of the Asciify components
 | Component | State |
 |---|---|
-| `artPanel` (login tree, cursor trail, pulse) | done |
-| `decode` (church name, admin module title) | done |
-| `statusOrb` (loading) | done |
-| `odometer` (dashboard figures) | done |
-| `blockChart` (dashboard charts) | done |
-| `buttonLoading`, `beam`, `cursorTrail` | not yet |
-| `toastStack`, `pill`, `tabs`, `skeleton` | not yet |
-| `slideToConfirm`, `disintegrate`, `dropzone` | not yet (the e2e specs click plain buttons) |
-| `commandPalette`, `pageDissolve`, `wordmark`, `scramble` | not yet |
-| `globe`, `fieldBackground` 404, `morphField` | not yet |
+| `artPanel`, `decode`, `statusOrb`, `odometer`, `blockChart` | done |
+| `cursorTrail` (login, kept off the form), `beam` (sign-in button), `buttonLoading` (sign-in, mounted only while work runs) | done |
+| `toastStack` (users page confirmations), `pill` (user status), `skeleton` (members list) | done |
+| `slideToConfirm` + `disintegrate` (removing a codex), `dropzone` (church logo) | done |
+| `commandPalette` (Ctrl+K in the admin) | done |
+| `wordmark` | not used: it draws large letters; at brand size it was unreadable |
+| `tabs`, `pageDissolve`, `scramble` | not yet (the admin menu is made of links the e2e specs rely on) |
+| `globe`, `morphField` | with the map and church-viewer redesign |
+| `fieldBackground` 404 | not done: the 404 page is being replaced by an art plate |
 
 ## Phases (one PR each, E2E kept green)
 - **A. System.** Tokens (with aliases for the old `--panel` and `--panel-edge` names), fonts, base classes (`rpg-panel`, buttons, inputs, tables, notices), Gothic frame and corner marks, Asciify ink mapping.
