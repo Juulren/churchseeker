@@ -113,7 +113,11 @@ test.describe('requirements across modules', () => {
     const h = await headers(request)
     const event = `Próximo ${stamp()}`
     const notice = `Aviso clave ${stamp()}`
-    await request.post(`${API}/api/events`, { headers: h, data: { title: event, date: iso(3), time: '18:00:00', location: 'Atrio', kind: 1, isPublic: true } })
+    // The dashboard lists only the six earliest events, and the dev database keeps what earlier runs created.
+    // Cancel this test's own leftovers and schedule the new event first thing today so it always makes the list.
+    const old = (await (await request.get(`${API}/api/events?from=${iso(0)}&to=${iso(30)}&pageSize=100`, { headers: h })).json()) as { items: { id: string; title: string }[] }
+    for (const e of old.items.filter((x) => x.title.startsWith('Próximo '))) await request.post(`${API}/api/events/${e.id}/cancel`, { headers: h })
+    await request.post(`${API}/api/events`, { headers: h, data: { title: event, date: iso(0), time: '00:00:00', location: 'Atrio', kind: 1, isPublic: true } })
     await request.post(`${API}/api/announcements`, { headers: h, data: { title: notice, body: 'Texto', publishDate: iso(-1), isImportant: true, isPublic: true } })
     await login(page)
     await expect(page.getByRole('region', { name: 'Próximos eventos' })).toContainText(event)
