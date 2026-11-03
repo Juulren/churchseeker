@@ -2,11 +2,9 @@ import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { darkMaterial, glassMaterial, goldMaterial, plainMaterial, plasterMaterial, tileMaterial, woodMaterial } from '../quality/materials.ts'
 import type { ChurchStyle } from './churchStyles.ts'
-import { buildCathedral, CATHEDRAL } from './kit/cathedral.ts'
+import { AUTHORED, authoredScale } from './kit/registry.ts'
 import type { Detail } from './kit/facadeKit.ts'
 
-/** Authored models are in metres; this brings the longest side (the cathedral, 68 m) to about 8.5 scene units. */
-const AUTHORED_SCALE = 8.5 / CATHEDRAL.length
 
 function add(parent: THREE.Object3D, geometry: THREE.BufferGeometry, material: THREE.Material, x = 0, y = 0, z = 0) {
   const m = new THREE.Mesh(geometry, material)
@@ -72,7 +70,7 @@ function belfry(parent: THREE.Object3D, x: number, z: number, size: number, heig
 
 /** Height of the tallest point of a church built from this style (used to place labels). */
 export function churchTop(s: ChurchStyle): number {
-  if (s.authored === 'cathedral') return CATHEDRAL.towerHeight * AUTHORED_SCALE
+  if (s.authored) return AUTHORED[s.authored].height * authoredScale(s.authored)
   const tw = Math.max(1.1, s.width * 0.3)
   return Math.max(s.height + s.width * 0.45, s.height * 1.9 + tw * 1.9)
 }
@@ -82,11 +80,11 @@ export function churchTop(s: ChurchStyle): number {
  * portal, buttresses, belfries with spires and a ribbed dome. Facade faces +z, base on y = 0, centred on the origin.
  */
 export function buildChurch(s: ChurchStyle, detail: Detail = 'high'): THREE.Group {
-  if (s.authored === 'cathedral') {
-    // Authored in metres: scaled once so it stands as tall as the generic churches around it.
+  if (s.authored) {
+    // Authored in metres: scaled once so its longest side matches the generic churches around it.
     const wrapper = new THREE.Group()
-    const model = buildCathedral(detail)
-    model.scale.setScalar(AUTHORED_SCALE)
+    const model = AUTHORED[s.authored].build(detail)
+    model.scale.setScalar(authoredScale(s.authored))
     wrapper.add(model)
     // The same low plinth the generic churches stand on, so every church reads the same on the map.
     add(wrapper, new THREE.CylinderGeometry(5.4, 5.6, 0.1, 40), plainMaterial('#a39f95', 0.95), 0, 0.05, 0.4)

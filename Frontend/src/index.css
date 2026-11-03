@@ -267,3 +267,8 @@ select.input option { background: var(--stone); color: var(--ink); }
   .sign-in-brand { left: 0; right: 0; top: auto; bottom: 26px; text-align: center; }
 }
 @media (max-width: 820px) { .art-frame { display: none; } }
+/* Planta and alzado: two small drawings, like the plates of a treatise. */
+.treatise { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.treatise-sheet { margin: 0; padding: 8px; border: 1px solid var(--rule); border-radius: var(--radius); color: var(--ink-dim); display: grid; gap: 4px; justify-items: center; }
+.treatise-sheet svg { width: 100%; max-height: 150px; }
+.treatise-note { grid-column: 1 / -1; margin: 0; font-size: 0.82rem; }
