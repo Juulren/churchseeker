@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { publicApi } from './services/api.ts'
 import type { PublicChurch } from './services/types.ts'
 import Sigil from './components/sigil/Sigil.tsx'
+import ServerDown from './components/ornament/ServerDown.tsx'
 
 // three.js is heavy: the map and the detail view load on demand, after the first paint.
 const RealMap = lazy(() => import('./components/map3d/RealMap.tsx'))
@@ -15,6 +16,7 @@ export function PublicApp() {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [view, setView] = useState<View>('map')
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -22,12 +24,15 @@ export function PublicApp() {
       .then((list) => { if (!controller.signal.aborted) setChurches(list) })
       .catch((e: unknown) => { if (!controller.signal.aborted) setError(e instanceof Error ? e.message : 'Error desconocido') })
     return () => controller.abort()
-  }, [])
+  }, [attempt])
 
   const selected = churches?.find((c) => c.id === selectedId) ?? null
   const enter = useCallback(() => setView('detail'), [])
   const back = useCallback(() => { setView('map'); setSelectedId(null) }, [])
   const detail = view === 'detail' && selected
+
+  // Without the list of churches there is nothing to show: say so plainly and let the person try again.
+  if (error && !churches) return <ServerDown message={error} onRetry={() => { setError(null); setAttempt((n) => n + 1) }} />
 
   return (
     <>

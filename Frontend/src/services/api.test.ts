@@ -41,7 +41,7 @@ describe('api client', () => {
 
   it('handles non-JSON error bodies', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('<html>boom</html>', { status: 502 })))
-    await expect(request('/x', {}, false)).rejects.toMatchObject({ status: 502, message: 'Error 502' })
+    await expect(request('/x', {}, false)).rejects.toMatchObject({ status: 502, message: expect.stringContaining('No se pudo conectar con el servidor') })
   })
 
   it('maps network failures to a friendly error', async () => {
