@@ -40,6 +40,7 @@ export const adminApi = {
   attendance: {
     get: (e: string) => get<T.EventAttendance>(`/api/events/${id(e)}/attendance`),
     record: (e: string, entries: { memberId: string; present: boolean }[]) => call<T.EventAttendance>(`/api/events/${id(e)}/attendance`, 'PUT', { entries }),
+    memberHistory: (member: string, page: number) => get<Paged<T.MemberAttendanceRow>>(`/api/members/${id(member)}/attendance${qs({ page, pageSize: 10 })}`),
     summary: (q: { from: string; to: string; period: 'Week' | 'Month' }) => get<T.SummaryRow[]>(`/api/attendance/summary${qs(q)}`),
   },
 
@@ -49,6 +50,7 @@ export const adminApi = {
     update: (m: string, d: { name: string; description: string | null; coordinatorUserId: string | null }) => call<T.Ministry>(`/api/ministries/${id(m)}`, 'PUT', d),
     setActive: (m: string, active: boolean) => call<T.Ministry>(`/api/ministries/${id(m)}/${active ? 'activate' : 'deactivate'}`, 'POST'),
     members: (m: string) => get<T.MinistryMember[]>(`/api/ministries/${id(m)}/members`),
+    events: (m: string, q: { from?: string; to?: string }) => get<T.EventItem[]>(`/api/ministries/${id(m)}/events${qs(q)}`),
     addMember: (m: string, member: string) => call<T.MinistryMember[]>(`/api/ministries/${id(m)}/members/${id(member)}`, 'PUT'),
     removeMember: (m: string, member: string) => call<T.MinistryMember[]>(`/api/ministries/${id(m)}/members/${id(member)}`, 'DELETE'),
   },
@@ -95,6 +97,7 @@ export const adminApi = {
   },
 
   users: {
+    list: (role?: number) => get<T.StaffUser[]>(`/api/auth/users${qs({ role })}`),
     create: (d: { email: string; fullName: string; password: string; role: number }) => call<{ id: string }>('/api/auth/users', 'POST', d),
   },
 

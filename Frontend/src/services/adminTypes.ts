@@ -39,6 +39,9 @@ export interface ProfileInput {
 
 export interface BookMeta { title: string; description: string | null; author: string | null; isPublic: boolean; spineColor: string; spineThickness: number }
 
+export interface StaffUser { id: string; email: string; fullName: string; role: number; churchId: string }
+export interface MemberAttendanceRow { eventId: string; title: string; date: string; present: boolean }
+
 export const DONATION_METHODS = ['', 'Efectivo', 'Transferencia', 'Cheque', 'Tarjeta', 'Otro']
 export const EVENT_KINDS = ['', 'Religioso', 'Administrativo']
 export const ROLE_VALUES = { Administrador: 1, Pastor: 2, Secretario: 3, Tesorero: 4, Coordinador: 5 } as const

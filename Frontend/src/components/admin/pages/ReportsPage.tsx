@@ -2,7 +2,7 @@
 import { adminApi, saveBlob } from '../../../services/adminApi.ts'
 import type { Role } from '../../../services/auth.ts'
 import { addDays, todayIso } from '../format.ts'
-import { messageOf } from '../useAsync.ts'
+import { messageOf, useAsync } from '../useAsync.ts'
 import { Notice, SelectInput, TextInput } from '../ui.tsx'
 
 type Kind = 'members' | 'attendance' | 'ministries' | 'income'
@@ -12,6 +12,8 @@ export default function ReportsPage({ role }: { role: Role }) {
   const [from, setFrom] = useState(addDays(todayIso(), -30))
   const [to, setTo] = useState(todayIso())
   const [active, setActive] = useState('')
+  const [eventId, setEventId] = useState('')
+  const events = useAsync(() => adminApi.events.list({ from: addDays(todayIso(), -120), to: todayIso(), pageSize: 200 }), [])
   const [busy, setBusy] = useState<Kind | null>(null)
   const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
 
@@ -27,7 +29,7 @@ export default function ReportsPage({ role }: { role: Role }) {
   const run = async (kind: Kind, needsRange?: boolean) => {
     setBusy(kind); setMessage(null)
     try {
-      const { blob, name } = await adminApi.reports.download(kind, { format, from: needsRange ? from : undefined, to: needsRange ? to : undefined, active: kind === 'members' ? active : undefined })
+      const { blob, name } = await adminApi.reports.download(kind, { format, from: needsRange && !(kind === 'attendance' && eventId) ? from : undefined, to: needsRange && !(kind === 'attendance' && eventId) ? to : undefined, eventId: kind === 'attendance' ? eventId : undefined, active: kind === 'members' ? active : undefined })
       saveBlob(blob, name)
       setMessage({ kind: 'ok', text: `Reporte generado: ${name}` })
     } catch (x) { setMessage({ kind: 'error', text: messageOf(x) }) } finally { setBusy(null) }
@@ -39,6 +41,7 @@ export default function ReportsPage({ role }: { role: Role }) {
         <div style={{ width: 150 }}><SelectInput label="Formato" value={format} onChange={setFormat} options={[{ value: 'Pdf', label: 'PDF' }, { value: 'Xlsx', label: 'Excel (.xlsx)' }]} /></div>
         <div style={{ width: 170 }}><TextInput label="Desde" type="date" value={from} onChange={setFrom} /></div>
         <div style={{ width: 170 }}><TextInput label="Hasta" type="date" value={to} onChange={setTo} /></div>
+        <div style={{ width: 260 }}><SelectInput label="Asistencia: un solo evento" value={eventId} onChange={setEventId} options={[{ value: '', label: 'Todos los del rango' }, ...(events.data?.items ?? []).map((e) => ({ value: e.id, label: `${e.date} · ${e.title}` }))]} /></div>
         <div style={{ width: 170 }}><SelectInput label="Miembros" value={active} onChange={setActive} options={[{ value: '', label: 'Todos' }, { value: 'true', label: 'Solo activos' }, { value: 'false', label: 'Solo inactivos' }]} /></div>
       </div>
       {message && <Notice kind={message.kind}>{message.text}</Notice>}
