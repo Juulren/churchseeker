@@ -3,8 +3,12 @@ import { createPortal } from 'react-dom'
 import { useKit } from '../ascii/useKit.ts'
 import { scaleBars } from './format.ts'
 
-export function Notice({ kind = 'error', children }: { kind?: 'error' | 'ok'; children: ReactNode }) {
-  return <p role={kind === 'error' ? 'alert' : 'status'} className={`notice notice-${kind}`}>{children}</p>
+const NOTICE = { ok: { word: 'Listo:', mark: '✓' }, warn: { word: 'Aviso:', mark: '!' }, error: { word: 'Error:', mark: '✕' } } as const
+
+/** An outcome: a word, an icon and a border of its own shape, so it never depends on colour. */
+export function Notice({ kind = 'error', children }: { kind?: 'error' | 'ok' | 'warn'; children: ReactNode }) {
+  const n = NOTICE[kind]
+  return <p role={kind === 'error' ? 'alert' : 'status'} className={`notice notice-${kind}`}><span className="notice-mark" aria-hidden="true">{n.mark}</span><span><strong>{n.word}</strong> {children}</span></p>
 }
 
 interface FieldProps { label: string; error?: string | null; children: (id: string) => ReactNode; hint?: string }
@@ -34,15 +38,16 @@ interface InputProps {
   maxLength?: number
   step?: string
   min?: string
+  max?: string
   hint?: string
   disabled?: boolean
 }
 
-export function TextInput({ label, value, onChange, type = 'text', error, required, maxLength = 256, step, min, hint, disabled }: InputProps) {
+export function TextInput({ label, value, onChange, type = 'text', error, required, maxLength = 256, step, min, max, hint, disabled }: InputProps) {
   return (
     <Labeled label={label} error={error} hint={hint}>
       {(id) => (
-        <input id={id} className="input" type={type} value={value} required={required} maxLength={maxLength} step={step} min={min} disabled={disabled}
+        <input id={id} className="input" type={type} value={value} required={required} maxLength={maxLength} step={step} min={min} max={max} disabled={disabled}
           aria-invalid={error ? true : undefined} onChange={(e) => onChange(e.target.value)} />
       )}
     </Labeled>
@@ -154,9 +159,13 @@ export function BarChart({ labels, values, title, format = (n: number) => String
     <figure className="chart">
       <div ref={plot} className="chart-plot" data-ascii={ascii || undefined} aria-hidden="true" style={{ width: `min(100%, ${Math.max(labels.length, 1) * 84}px)` }} />
       <svg className={ascii ? 'sr-only' : undefined} viewBox={`0 0 ${Math.max(labels.length, 1) * w} 120`} role="img" aria-label={`${title}: ${labels.map((l, i) => `${l} ${format(values[i] ?? 0)}`).join(', ')}`} preserveAspectRatio="none">
+        <defs>
+          <pattern id="bar-hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="var(--accent)" /><line x1="0" y1="0" x2="0" y2="4" stroke="var(--ground)" strokeWidth="1.4" /></pattern>
+        </defs>
         {bars.map((b, i) => (
           <g key={i}>
-            <rect x={i * w + 6} y={100 - b * 90} width={w - 12} height={Math.max(b * 90, values[i] > 0 ? 2 : 0)} rx="3" style={{ fill: 'var(--accent)' }}>
+            <text x={i * w + w / 2} y={Math.max(100 - b * 90 - 3, 9)} textAnchor="middle" fontSize="8" style={{ fill: 'var(--ink)' }}>{format(values[i] ?? 0)}</text>
+            <rect x={i * w + 6} y={100 - b * 90} width={w - 12} height={Math.max(b * 90, values[i] > 0 ? 2 : 0)} rx="3" style={{ fill: 'url(#bar-hatch)', stroke: 'var(--accent)', strokeWidth: 1 }}>
               <title>{`${labels[i]}: ${format(values[i] ?? 0)}`}</title>
             </rect>
             <text x={i * w + w / 2} y={115} textAnchor="middle" fontSize="9" style={{ fill: 'var(--ink-dim)' }}>{labels[i]}</text>
@@ -168,10 +177,13 @@ export function BarChart({ labels, values, title, format = (n: number) => String
   )
 }
 
+// The kit tints pills by tone; here both tones are greys, so the badge carries no hue (the word says which it is).
+const GREY_TONES = { light: { green: [60, 60, 60], red: [110, 110, 110] }, dark: { green: [230, 230, 230], red: [160, 160, 160] } } as never
+
 /** A status badge: a dot and a word. The word is always real text; the kit only animates the dot and the tint. */
 export function StatusPill({ active, on, off }: { active: boolean; on: string; off: string }) {
   const el = useRef<HTMLSpanElement>(null)
-  useKit(el, (kit, node) => kit.pill(node, { live: active }), [active])
+  useKit(el, (kit, node) => kit.pill(node, { live: active, tones: GREY_TONES }), [active])
   return <span ref={el} className="status-pill" data-tone={active ? 'green' : 'red'}><span data-dot aria-hidden="true" /><span>{active ? on : off}</span></span>
 }
 

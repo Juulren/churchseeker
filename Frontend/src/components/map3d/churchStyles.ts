@@ -1,3 +1,5 @@
+import { toGrey } from '../quality/grey.ts'
+
 export interface ChurchStyle {
   wall: string
   roof: string
@@ -31,11 +33,13 @@ function hash(text: string): number {
   return h >>> 0
 }
 
+const greyStyle = (s: ChurchStyle): ChurchStyle => ({ ...s, wall: toGrey(s.wall), roof: toGrey(s.roof), trim: toGrey(s.trim) })
+
 export function styleFor(church: { id: string }): ChurchStyle {
   const known = KNOWN[church.id]
-  if (known) return known
+  if (known) return greyStyle(known)
   const h = hash(church.id)
-  return {
+  return greyStyle({
     wall: WALLS[h % WALLS.length],
     roof: ROOFS[(h >>> 3) % ROOFS.length],
     trim: TRIMS[(h >>> 6) % TRIMS.length],
@@ -45,5 +49,5 @@ export function styleFor(church: { id: string }): ChurchStyle {
     length: 5.5 + ((h >>> 14) % 3),
     width: 3.4 + ((h >>> 17) % 3) * 0.5,
     height: 2.6 + ((h >>> 20) % 3) * 0.3,
-  }
+  })
 }

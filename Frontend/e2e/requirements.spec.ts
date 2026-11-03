@@ -118,6 +118,9 @@ test.describe('requirements across modules', () => {
     const old = (await (await request.get(`${API}/api/events?from=${iso(0)}&to=${iso(30)}&pageSize=100`, { headers: h })).json()) as { items: { id: string; title: string }[] }
     for (const e of old.items.filter((x) => x.title.startsWith('Próximo '))) await request.post(`${API}/api/events/${e.id}/cancel`, { headers: h })
     await request.post(`${API}/api/events`, { headers: h, data: { title: event, date: iso(0), time: '00:00:00', location: 'Atrio', kind: 1, isPublic: true } })
+    // The dashboard lists only the first five important notices, so remove this test's own leftovers from earlier runs.
+    const oldNotices = (await (await request.get(`${API}/api/announcements?pageSize=100`, { headers: h })).json()) as { items: { id: string; title: string }[] }
+    for (const n of oldNotices.items.filter((x) => x.title.startsWith('Aviso clave '))) await request.delete(`${API}/api/announcements/${n.id}`, { headers: h })
     await request.post(`${API}/api/announcements`, { headers: h, data: { title: notice, body: 'Texto', publishDate: iso(-1), isImportant: true, isPublic: true } })
     await login(page)
     await expect(page.getByRole('region', { name: 'Próximos eventos' })).toContainText(event)

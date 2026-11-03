@@ -34,7 +34,7 @@ function hash(text: string): number {
 }
 
 const safeThickness = (t: number) => (Number.isFinite(t) ? Math.min(10, Math.max(1, Math.round(t))) : 5)
-const safeColor = (c: string) => (typeof c === 'string' && HEX.test(c) ? c : '#5b3a29')
+const safeColor = (c: string) => (typeof c === 'string' && HEX.test(c) ? c : '#555555')
 
 /** Thick-spined books side by side, wrapping to a new shelf row when a row is full. Pure and deterministic. */
 export function layoutShelf(books: ShelfBook[], perRow = MAX_PER_ROW): ShelfLayout {

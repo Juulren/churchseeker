@@ -5,6 +5,7 @@ import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/TextLayer.css'
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { MAX_PDF_BYTES, clampPage, looksLikePdf } from './pdfUtils.ts'
+import { readableOn, toGrey } from '../quality/grey.ts'
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl
 
@@ -83,7 +84,7 @@ export default function PdfReader({ title, spineColor, load, onClose }: Props) {
               <button ref={closeButton} className="rpg-button" onClick={onClose}>Cerrar (Esc)</button>
             </div>
           </div>
-          <div className="min-h-0 flex-1 overflow-auto bg-[#e9e2d0] p-3 text-black">
+          <div className="min-h-0 flex-1 overflow-auto bg-[#e6e6e6] p-3 text-black">
             {error && <p role="alert" className="p-4">{error}</p>}
             {!error && !file && <p className="p-4">Abriendo el libro…</p>}
             {file && !error && (
@@ -107,11 +108,11 @@ export default function PdfReader({ title, spineColor, load, onClose }: Props) {
           transition={{ duration: swing, ease: 'easeInOut', opacity: { duration: swing, times: [0, 0.85, 1] } }}
         >
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-8 text-center"
-            style={{ background: spineColor, border: '6px solid #f4f6f9', backfaceVisibility: 'hidden' }}>
-            <span className="text-4xl" style={{ color: '#f4e9d0', textShadow: '2px 2px 0 rgba(0,0,0,0.5)' }}>{title}</span>
-            <span style={{ color: '#f4f6f9' }}>✠</span>
+            style={{ background: toGrey(spineColor), border: '6px solid ' + readableOn(spineColor), backfaceVisibility: 'hidden' }}>
+            <span className="text-4xl" style={{ color: readableOn(spineColor) }}>{title}</span>
+            <span aria-hidden="true" style={{ color: readableOn(spineColor) }}>◈</span>
           </div>
-          <div className="absolute inset-0" style={{ background: '#d9cba3', transform: 'rotateY(180deg)', backfaceVisibility: 'hidden' }} />
+          <div className="absolute inset-0" style={{ background: '#cfcfcf', transform: 'rotateY(180deg)', backfaceVisibility: 'hidden' }} />
         </motion.div>
       </div>
     </div>,

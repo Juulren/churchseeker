@@ -85,7 +85,8 @@ function Books() {
   const books = useAsync(() => adminApi.books.list(), [])
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
-  const [color, setColor] = useState('#5b3a29')
+  const [tone, setTone] = useState('85')
+  const color = '#' + Number(tone).toString(16).padStart(2, '0').repeat(3)
   const [thick, setThick] = useState('5')
   const [isPublic, setPublic] = useState(true)
   const [file, setFile] = useState<File | null>(null)
@@ -118,7 +119,7 @@ function Books() {
         <div className="form-grid">
           <TextInput label="Título" value={title} onChange={setTitle} maxLength={200} />
           <TextInput label="Autor" value={author} onChange={setAuthor} maxLength={150} />
-          <TextInput label="Color del lomo" type="color" value={color} onChange={setColor} />
+          <TextInput label="Tono del lomo (de oscuro a claro)" type="range" min="20" max="235" step="5" value={tone} onChange={setTone} />
           <TextInput label="Grosor del lomo (1 a 10)" type="number" min="1" step="1" value={thick} onChange={setThick} />
         </div>
         <label className="grid gap-1">Archivo PDF (máx. 25 MB; sin scripts ni archivos incrustados)<input className="input" type="file" accept="application/pdf,.pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></label>

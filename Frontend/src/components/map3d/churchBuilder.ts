@@ -83,7 +83,7 @@ export function buildChurch(s: ChurchStyle): THREE.Group {
   const wall = plasterMaterial(s.wall)
   const stone = plasterMaterial(s.trim, true)
   const roof = tileMaterial(s.roof)
-  const door = woodMaterial('#4a2f1c', [1, 1])
+  const door = woodMaterial('#3a3a3a', [1, 1])
   const glass = glassMaterial()
   const gold = goldMaterial()
 

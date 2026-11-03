@@ -7,7 +7,7 @@ import GraphicsBoundary from '../map3d/GraphicsBoundary.tsx'
 import { styleFor } from '../map3d/churchStyles.ts'
 import { hasWebGL } from '../map3d/webgl.ts'
 
-const grass = plasterMaterial('#5f7f45')
+const grass = plasterMaterial('#6b6b6b')
 
 interface Props { id: string; name: string; modelUrl: string | null }
 
@@ -24,15 +24,15 @@ export default function ChurchStage({ id, name, modelUrl }: Props) {
       <Canvas shadows="soft" camera={{ position: [10, 6.5, 13], fov: 38 }} dpr={[1, 2]} gl={{ antialias: true, alpha: true }}
         aria-label={`Modelo 3D de ${name}`}>
         <LocalEnvironment intensity={0.8} />
-        <hemisphereLight args={['#fff1d8', '#3a4a2c', 0.55]} />
-        <directionalLight position={[8, 14, 10]} intensity={2.4} color="#ffe9c4" castShadow shadow-mapSize={[2048, 2048]}
+        <hemisphereLight args={['#f2f2f2', '#3a3a3a', 0.55]} />
+        <directionalLight position={[8, 14, 10]} intensity={2.4} color="#ffffff" castShadow shadow-mapSize={[2048, 2048]}
           shadow-camera-left={-12} shadow-camera-right={12} shadow-camera-top={12} shadow-camera-bottom={-12} shadow-bias={-0.0005} />
         <mesh position={[0, -0.3, 0]} receiveShadow material={grass}>
           <cylinderGeometry args={[9, 9.4, 0.6, 64]} />
         </mesh>
         <mesh position={[0, -0.28, 0]}>
           <cylinderGeometry args={[9.4, 9.8, 0.4, 64]} />
-          <meshStandardMaterial color="#3d2a1b" roughness={0.95} />
+          <meshStandardMaterial color="#2c2c2c" roughness={0.95} />
         </mesh>
         <ChurchModel modelUrl={modelUrl} style={style} />
         <OrbitControls autoRotate autoRotateSpeed={1.1} enablePan={false} enableDamping minDistance={9} maxDistance={26}
