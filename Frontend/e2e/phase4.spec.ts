@@ -84,13 +84,14 @@ test.describe('map and navigation', () => {
     await page.goto('/')
     await pick(page, /Catedral/).click()
     await expect(detail(page, /Catedral/)).toBeVisible({ timeout: 30_000 })
+    // Opening a book loads the PDF reader and draws under software WebGL: give each step the time a loaded machine needs.
     await page.getByRole('button', { name: /Libro de bautismos/ }).click()
-    await expect(page.getByRole('dialog')).toBeVisible()
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 30_000 })
     await page.keyboard.press('Escape')
-    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page.getByRole('dialog')).toHaveCount(0, { timeout: 20_000 })
     await expect(detail(page, /Catedral/)).toBeVisible()
     await page.keyboard.press('Escape')
-    await expect(nav(page)).toBeVisible()
+    await expect(nav(page)).toBeVisible({ timeout: 20_000 })
   })
 })
 

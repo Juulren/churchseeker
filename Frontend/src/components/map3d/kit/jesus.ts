@@ -10,7 +10,7 @@ import { archPanel, archRing, bakeAO, box, finial, frustum, kitMaterials, put, r
 // top of the facade. Metres, facade toward +z, base on y = 0, centred on the origin.
 
 /** Interpreted sizes (no source gives them); the registry reads them from here. */
-export const JESUS = { length: 46, height: 27.5 }
+export const JESUS = { length: 46, height: 27.5, width: 24.8 }
 
 export function buildJesus(detail: Detail = 'high'): THREE.Group {
   const hi = detail === 'high'

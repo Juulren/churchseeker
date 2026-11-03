@@ -1,6 +1,6 @@
 ﻿import { describe, expect, it } from 'vitest'
 import { clampPage, looksLikePdf } from './pdfUtils.ts'
-import { MAX_PER_ROW, ROW_HEIGHT, layoutShelf, type ShelfBook } from './shelfLayout.ts'
+import { MAX_PER_ROW, ROW_HEIGHT, SPINE_GREYS, layoutShelf, quantizeGrey, type ShelfBook } from './shelfLayout.ts'
 
 const book = (i: number, thickness = 5, extra: Partial<ShelfBook> = {}): ShelfBook =>
   ({ id: `id-${i}`, title: `Libro ${i}`, description: null, author: null, spineColor: '#6b3f2a', spineThickness: thickness, ...extra })
@@ -37,8 +37,8 @@ describe('layoutShelf', () => {
     expect(layout.slots).toHaveLength(many.length)
   })
 
-  it('wraps by width too when the books are fat', () => {
-    expect(layoutShelf(Array.from({ length: 14 }, (_, i) => book(i, 10))).rows).toBeGreaterThan(1)
+  it('wraps to a new row when the shelf is full of fat books', () => {
+    expect(layoutShelf(Array.from({ length: MAX_PER_ROW + 1 }, (_, i) => book(i, 10))).rows).toBeGreaterThan(1)
   })
 
   it('is deterministic', () => {
@@ -61,7 +61,7 @@ describe('layoutShelf', () => {
     expect(slots).toHaveLength(hostile.length)
     for (const s of slots) {
       expect(Number.isFinite(s.x) && Number.isFinite(s.w) && Number.isFinite(s.h)).toBe(true)
-      expect(s.w).toBeGreaterThan(0.3)
+      expect(s.w).toBeGreaterThanOrEqual(0.2)
       expect(s.w).toBeLessThan(1.1)
       expect(s.color).toMatch(/^#[0-9a-f]{6}$/i)
       expect(typeof s.title).toBe('string')
@@ -89,5 +89,22 @@ describe('pdf helpers', () => {
     expect(clampPage(Infinity, 10)).toBe(1)
     expect(clampPage(2.9, 10)).toBe(2)
     expect(clampPage(3, 0)).toBe(1)
+  })
+})
+
+describe('book look', () => {
+  it('draws every spine in one of a few greys, whatever colour was stored', () => {
+    const { slots } = layoutShelf(['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#123456', '#fedcba', 'nonsense'].map((c, i) => book(i, 5, { spineColor: c })))
+    for (const s of slots) expect(SPINE_GREYS).toContain(s.color)
+  })
+
+  it('keeps the order of brightness: a light colour never gets a darker grey than a dark one', () => {
+    expect(SPINE_GREYS.indexOf(quantizeGrey('#f0f0f0') as never)).toBeGreaterThan(SPINE_GREYS.indexOf(quantizeGrey('#101010') as never))
+  })
+
+  it('makes the books slim: no spine wider than 0.65 units and none thinner than 0.2', () => {
+    const { slots } = layoutShelf([book(1, 1), book(2, 10)])
+    expect(slots[0].w).toBeGreaterThanOrEqual(0.2)
+    expect(slots[1].w).toBeLessThanOrEqual(0.65)
   })
 })

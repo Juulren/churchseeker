@@ -1,4 +1,5 @@
 import type { PublicBook, StaffBook } from '../../services/types.ts'
+import { luma } from '../quality/grey.ts'
 
 export type ShelfBook = PublicBook & Partial<Pick<StaffBook, 'isPublic'>>
 
@@ -34,14 +35,18 @@ function hash(text: string): number {
 }
 
 const safeThickness = (t: number) => (Number.isFinite(t) ? Math.min(10, Math.max(1, Math.round(t))) : 5)
-const safeColor = (c: string) => (typeof c === 'string' && HEX.test(c) ? c : '#555555')
+// Books are drawn in a handful of greys, from near-black leather to pale vellum: the stored colour only picks the step.
+export const SPINE_GREYS = ['#2e2e2e', '#454545', '#5c5c5c', '#757575', '#9a9a9a'] as const
+export const quantizeGrey = (c: string): string => SPINE_GREYS[Math.min(SPINE_GREYS.length - 1, Math.floor((luma(c) / 256) * SPINE_GREYS.length))]
+const safeColor = (c: string) => (typeof c === 'string' && HEX.test(c) ? quantizeGrey(c) : '#5c5c5c')
 
 /** Thick-spined books side by side, wrapping to a new shelf row when a row is full. Pure and deterministic. */
 export function layoutShelf(books: ShelfBook[], perRow = MAX_PER_ROW): ShelfLayout {
   const rows: BookSlot[][] = [[]]
   let rowWidth = 0
   for (const b of books) {
-    const w = 0.28 + safeThickness(b.spineThickness) * 0.075
+    // About 40% slimmer than before: 0.2 to 0.65 units from the thinnest to the thickest.
+    const w = 0.2 + safeThickness(b.spineThickness) * 0.045
     const current = rows[rows.length - 1]
     if (current.length > 0 && (current.length >= perRow || rowWidth + w > MAX_ROW_WIDTH)) { rows.push([]); rowWidth = 0 }
     const h = hash(b.id)

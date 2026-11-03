@@ -77,7 +77,7 @@ A library of SVG parts drawn in code in a Gothic, Renaissance and sigil spirit, 
 - **Budgets so it loads anywhere:** at most 40,000 triangles per authored model for the viewer and 3,000 for the map (two levels of detail), baked ambient occlusion in vertex colours, one tiny tileable stone normal map, no per-model image downloads, at most 250 KB of code for the whole kit, and a low tier that drops to the map level of detail.
 - **Seed check:** the cathedral's seed point is about 75 m from its real footprint (OpenStreetMap way 31296521, about 20.9671, -89.6225); the other two are unverified. The seed coordinates are corrected against the map.
 - **Look:** grey, matte and sculptural, soft light, baked occlusion, a dark plinth with an inscription (name and sigil). After the new geometry exists it is rendered in two or three finishes, the engraving in negative included, and the choice is made from real screenshots of the new models.
-- **Viewer extras:** planta and alzado as small line drawings from the same model, sharing one WebGL canvas through scissor views; slow orbit and drag; reduced motion stops the turning; without WebGL the text fallback stays.
+- **The view:** a fixed close-up of the front, seen from low down and looking up (the line to the top of the facade rises at about 45 degrees), a little to one side. It never turns and cannot be dragged. Without WebGL the text fallback stays. (Planta and alzado drawings were built and then discarded at the owner's request.)
 
 ## 8. Books
 Greyscale only (the admin's chosen colour stays stored and is shown by its luminance), about 40% thinner, slightly varied heights. Details: spine bands, a stamped sigil seeded from the title, a tooled border, the title in Cinzel and a small ornament on the cover, drawn to canvas textures from the ornament library. A pointed-arch frame for the shelf; books lean and lift on hover. The PDF reader goes monochrome with the same frame.
@@ -97,8 +97,8 @@ Done: A system, B login, C public view, D admin Asciify, the Asciify batch. The 
 | M. Satellite map | section 9 without the markers: imagery, labels, toggle, atlas frame, restyled controls | phase4 e2e with stubbed tiles, screenshots |
 | F. Ornaments and Asciify pairing | section 5: SVG parts, arch-clipped fields, sigil morph, illustrations, 404, empty states, plus `scramble` and `pageDissolve` if the specs stay green | fold, aria-hidden and size tests, screenshots |
 | R1. Facade kit and the cathedral | the kit, the cathedral model, two detail levels, seed coordinates fixed | geometry bounds and triangle budget tests, screenshots against references |
-| R2. Jesús, Santa Lucía and the viewer | the other two models, the viewer, plinth, planta and alzado, the finish chosen from screenshots | e2e, screenshots |
-| L. Books | section 8 | bookshelf tests, screenshots |
+| R2. Jesús, Santa Lucía and the viewer | the other two models and the fixed low front view (done) | e2e, screenshots |
+| L. Books | section 8 (done: greys, slimmer, sigil stamps, arch frame) | bookshelf tests, screenshots |
 | S. Scans and typologies | tier 1 rules and guide, tier 3 typologies, optional OSM footprint | upload tests, budget tests |
 | H. Map markers | sigil badges, low-detail models, labels | phase4 e2e |
 

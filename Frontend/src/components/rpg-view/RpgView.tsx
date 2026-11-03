@@ -1,11 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { publicApi } from '../../services/api.ts'
 import type { PublicChurch } from '../../services/types.ts'
 import Bookshelf from '../bookshelf/Bookshelf.tsx'
 import SigilMorph from '../sigil/SigilMorph.tsx'
-import Treatise from './Treatise.tsx'
-import { styleFor } from '../map3d/churchStyles.ts'
 import ChurchStage from './ChurchStage.tsx'
 import { EventsPanel, InfoPanel, NewsPanel } from './Panels.tsx'
 import { useChurchData } from './useChurchData.ts'
@@ -20,7 +18,6 @@ export default function RpgView({ church, onBack }: Props) {
   const { data, loading } = useChurchData(church.id)
   const heading = useRef<HTMLHeadingElement>(null)
   const [readerOpen, setReaderOpen] = useState(false)
-  const style = useMemo(() => styleFor({ id: church.id }), [church.id])
 
   useEffect(() => { heading.current?.focus() }, [church.id])
   // The sigil next to the name is this view's one Asciify surface, so the name itself is plain text.
@@ -62,7 +59,6 @@ export default function RpgView({ church, onBack }: Props) {
           </div>
           <button className="rpg-button" onClick={onBack}>← Volver al mapa (Esc)</button>
         </header>
-        <Treatise style={style} modelUrl={church.modelUrl} />
         <EventsPanel section={data?.events} loading={loading} />
         <NewsPanel section={data?.announcements} loading={loading} />
         <Bookshelf section={data?.books} loading={loading} fetchFile={fetchFile} onReaderChange={setReaderOpen} />
