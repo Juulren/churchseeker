@@ -15,6 +15,10 @@ function EventForm({ event, date, canEdit, onDone, onClose }: { event: EventItem
   const [location, setLocation] = useState(event?.location ?? '')
   const [kind, setKind] = useState(String(event?.kind ?? 1))
   const [isPublic, setPublic] = useState(event?.isPublic ?? true)
+  const [responsible, setResponsible] = useState(event?.responsibleMemberId ?? '')
+  const [ministry, setMinistry] = useState(event?.ministryId ?? '')
+  const members = useAsync(() => adminApi.members.list({ active: true, pageSize: 100 }), [])
+  const ministries = useAsync(() => adminApi.ministries.list(), [])
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -25,7 +29,7 @@ function EventForm({ event, date, canEdit, onDone, onClose }: { event: EventItem
   const submit = (e: FormEvent) => {
     e.preventDefault()
     if (!title.trim() || !location.trim()) { setError('Título y lugar son obligatorios.'); return }
-    const input = { title: title.trim(), description: emptyToNull(description), date: d, time: `${time}:00`, location: location.trim(), kind: Number(kind), isPublic, responsibleMemberId: event?.responsibleMemberId ?? null, ministryId: event?.ministryId ?? null }
+    const input = { title: title.trim(), description: emptyToNull(description), date: d, time: `${time}:00`, location: location.trim(), kind: Number(kind), isPublic, responsibleMemberId: responsible || null, ministryId: ministry || null }
     void run(() => (event ? adminApi.events.update(event.id, input) : adminApi.events.create(input)))
   }
 
@@ -39,6 +43,10 @@ function EventForm({ event, date, canEdit, onDone, onClose }: { event: EventItem
             <TextInput label="Fecha" type="date" value={d} onChange={setD} />
             <TextInput label="Hora" type="time" value={time} onChange={setTime} />
             <SelectInput label="Tipo" value={kind} onChange={setKind} options={[1, 2].map((k) => ({ value: String(k), label: EVENT_KINDS[k] }))} />
+            <SelectInput label="Responsable" value={responsible} onChange={setResponsible}
+              options={[{ value: '', label: 'Sin responsable' }, ...(members.data?.items ?? []).map((m) => ({ value: m.id, label: m.fullName }))]} />
+            <SelectInput label="Ministerio" value={ministry} onChange={setMinistry}
+              options={[{ value: '', label: 'Ninguno' }, ...(ministries.data ?? []).filter((m) => m.isActive).map((m) => ({ value: m.id, label: m.name }))]} />
           </div>
           <TextArea label="Descripción" value={description} onChange={setDescription} />
           <Check label="Visible en el calendario público" checked={isPublic} onChange={setPublic} />

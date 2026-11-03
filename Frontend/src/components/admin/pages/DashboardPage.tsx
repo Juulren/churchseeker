@@ -1,10 +1,12 @@
 ﻿import { adminApi } from '../../../services/adminApi.ts'
-import { formatMoney, MONTHS } from '../format.ts'
+import { addDays, formatMoney, MONTHS, todayIso } from '../format.ts'
 import { useAsync } from '../useAsync.ts'
 import { BarChart, Notice } from '../ui.tsx'
 
 export default function DashboardPage() {
   const { data, error, loading } = useAsync(() => adminApi.dashboard(), [])
+  const upcoming = useAsync(() => adminApi.events.list({ from: todayIso(), to: addDays(todayIso(), 30), pageSize: 6 }), [])
+  const notices = useAsync(() => adminApi.announcements.list({ pageSize: 30 }), [])
   if (loading && !data) return <p role="status" className="muted">Cargando…</p>
   if (error || !data) return <Notice>{error ?? 'Sin datos.'}</Notice>
   const { kpis, attendanceByWeek, income } = data
@@ -21,6 +23,22 @@ export default function DashboardPage() {
           ? <p className="muted">Aún no hay asistencia registrada en las últimas 8 semanas.</p>
           : <BarChart title="Presentes por semana (inicio de semana)" labels={attendanceByWeek.map((r) => r.periodStart.slice(5))} values={attendanceByWeek.map((r) => r.present)} />}
       </section>
+      <div className="grid gap-6 md:grid-cols-2">
+        <section aria-label="Próximos eventos">
+          <h3 className="rpg-title text-xl">Próximos eventos</h3>
+          <ul className="grid gap-1">
+            {upcoming.data?.items.filter((e) => !e.isCancelled).map((e) => <li key={e.id}><span className="muted">{e.date} · {e.time.slice(0, 5)}</span> {e.title}</li>)}
+            {upcoming.data && upcoming.data.items.filter((e) => !e.isCancelled).length === 0 && <li className="muted">No hay eventos en los próximos 30 días.</li>}
+          </ul>
+        </section>
+        <section aria-label="Avisos importantes">
+          <h3 className="rpg-title text-xl">Avisos importantes</h3>
+          <ul className="grid gap-1">
+            {notices.data?.items.filter((a) => a.isImportant && a.publishDate <= todayIso() && (!a.expiresOn || a.expiresOn >= todayIso())).slice(0, 5).map((a) => <li key={a.id}>★ {a.title}</li>)}
+            {notices.data && notices.data.items.filter((a) => a.isImportant).length === 0 && <li className="muted">No hay avisos importantes.</li>}
+          </ul>
+        </section>
+      </div>
       {/* The server only sends `income` to Tesorero and Administrador: for everybody else this section does not exist. */}
       {income && (
         <section aria-label="Ingresos">

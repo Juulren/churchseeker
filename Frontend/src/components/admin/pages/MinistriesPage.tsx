@@ -1,13 +1,15 @@
 ﻿import { useState, type FormEvent } from 'react'
 import { adminApi } from '../../../services/adminApi.ts'
 import type { Ministry } from '../../../services/adminTypes.ts'
-import { emptyToNull } from '../format.ts'
+import { addDays, emptyToNull, todayIso } from '../format.ts'
 import { messageOf, useAsync } from '../useAsync.ts'
 import { Modal, Notice, SelectInput, TextArea, TextInput } from '../ui.tsx'
 
 function MinistryForm({ ministry, onDone, onClose }: { ministry: Ministry | null; onDone: () => void; onClose: () => void }) {
   const [name, setName] = useState(ministry?.name ?? '')
   const [description, setDescription] = useState(ministry?.description ?? '')
+  const [coordinator, setCoordinator] = useState(ministry?.coordinatorUserId ?? '')
+  const coordinators = useAsync(() => adminApi.users.list(5), [])
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const submit = async (e: FormEvent) => {
@@ -15,7 +17,7 @@ function MinistryForm({ ministry, onDone, onClose }: { ministry: Ministry | null
     if (!name.trim()) { setError('El nombre es obligatorio.'); return }
     setBusy(true); setError(null)
     try {
-      const input = { name: name.trim(), description: emptyToNull(description), coordinatorUserId: ministry?.coordinatorUserId ?? null }
+      const input = { name: name.trim(), description: emptyToNull(description), coordinatorUserId: coordinator || null }
       if (ministry) await adminApi.ministries.update(ministry.id, input); else await adminApi.ministries.create(input)
       onDone()
     } catch (x) { setError(messageOf(x)) } finally { setBusy(false) }
@@ -25,6 +27,8 @@ function MinistryForm({ ministry, onDone, onClose }: { ministry: Ministry | null
       <form onSubmit={submit} className="grid gap-3" noValidate>
         <TextInput label="Nombre" value={name} onChange={setName} maxLength={150} />
         <TextArea label="Descripción" value={description} onChange={setDescription} maxLength={1000} />
+        <SelectInput label="Coordinador" value={coordinator} onChange={setCoordinator}
+          options={[{ value: '', label: 'Sin coordinador' }, ...(coordinators.data ?? []).map((u) => ({ value: u.id, label: u.fullName }))]} />
         {error && <Notice>{error}</Notice>}
         <div className="modal-actions">
           <button type="button" className="rpg-button" onClick={onClose}>Cancelar</button>
@@ -39,6 +43,7 @@ function Roster({ ministry, canManage }: { ministry: Ministry; canManage: boolea
   const roster = useAsync(() => adminApi.ministries.members(ministry.id), [ministry.id])
   const members = useAsync(() => adminApi.members.list({ active: true, pageSize: 100 }), [])
   const [add, setAdd] = useState('')
+  const activities = useAsync(() => adminApi.ministries.events(ministry.id, { from: todayIso(), to: addDays(todayIso(), 180) }), [ministry.id])
   const [error, setError] = useState<string | null>(null)
   const inRoster = new Set((roster.data ?? []).map((m) => m.memberId))
   const act = async (work: () => Promise<unknown>) => { setError(null); try { await work(); roster.reload() } catch (x) { setError(messageOf(x)) } }
@@ -61,6 +66,12 @@ function Roster({ ministry, canManage }: { ministry: Ministry; canManage: boolea
             {canManage && <button className="rpg-button" onClick={() => act(() => adminApi.ministries.removeMember(ministry.id, m.memberId))} aria-label={`Quitar a ${m.fullName}`}>Quitar</button>}</li>
         ))}
         {roster.data?.length === 0 && <li className="muted">Sin integrantes todavía.</li>}
+      </ul>
+      <h4 className="mb-2 mt-5">Actividades programadas (próximos 180 días)</h4>
+      <ul className="grid gap-1">
+        {activities.data?.map((e) => <li key={e.id} style={e.isCancelled ? { opacity: 0.55, textDecoration: 'line-through' } : undefined}>{e.date} · {e.time.slice(0, 5)} · {e.title}</li>)}
+        {activities.data?.length === 0 && <li className="muted">Sin actividades. Asigna este ministerio a un evento desde Eventos.</li>}
+        {activities.error && <li><Notice>{activities.error}</Notice></li>}
       </ul>
     </div>
   )

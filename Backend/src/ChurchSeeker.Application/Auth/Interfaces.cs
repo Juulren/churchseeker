@@ -10,6 +10,8 @@ public interface IAuthService
     Task ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken ct = default);
     Task<AuthResult<bool>> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken ct = default);
     Task<AuthResult<UserInfo>> RegisterUserAsync(RegisterUserRequest request, CancellationToken ct = default);
+    // Active staff of the caller's own church, optionally of one role (e.g. to pick a ministry coordinator).
+    Task<AuthResult<IReadOnlyList<UserInfo>>> ListUsersAsync(UserRole? role, CancellationToken ct = default);
 }
 
 public interface ICurrentUser

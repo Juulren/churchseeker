@@ -1,4 +1,5 @@
 ﻿using ChurchSeeker.Application.Auth;
+using ChurchSeeker.Domain.Enums;
 using ChurchSeeker.WebAPI.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -63,6 +64,11 @@ public class AuthController : ControllerBase
     [Authorize(Policy = Policies.AdminOnly)]
     public async Task<IActionResult> RegisterUser(RegisterUserRequest request, CancellationToken ct) =>
         Map(await _auth.RegisterUserAsync(request, ct), u => StatusCode(StatusCodes.Status201Created, u));
+
+    [HttpGet("users")]
+    [Authorize(Policy = Policies.Management)]
+    public async Task<IActionResult> ListUsers([FromQuery] UserRole? role, CancellationToken ct) =>
+        Map(await _auth.ListUsersAsync(role, ct), u => Ok(u));
 
     [HttpGet("me")]
     [Authorize]

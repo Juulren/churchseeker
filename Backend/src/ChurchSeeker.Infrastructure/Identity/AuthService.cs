@@ -169,6 +169,25 @@ public sealed class AuthService : IAuthService
         return AuthResult<UserInfo>.Ok(new UserInfo(user.Id, email, name, request.Role, churchId));
     }
 
+    public async Task<AuthResult<IReadOnlyList<UserInfo>>> ListUsersAsync(UserRole? role, CancellationToken ct = default)
+    {
+        if (_current.Role is not (UserRole.Administrador or UserRole.Pastor or UserRole.Secretario) || _current.ChurchId is not { } churchId)
+            return AuthResult<IReadOnlyList<UserInfo>>.Fail(AuthError.Forbidden);
+
+        // Identity users are not covered by the tenant filter: the church is always checked explicitly.
+        var candidates = role is { } wanted && Enum.IsDefined(wanted)
+            ? (await _users.GetUsersInRoleAsync(wanted.ToString())).Where(u => u.ChurchId == churchId && u.IsActive).ToList()
+            : await _users.Users.Where(u => u.ChurchId == churchId && u.IsActive).OrderBy(u => u.FullName).Take(200).ToListAsync(ct);
+
+        var result = new List<UserInfo>();
+        foreach (var u in candidates.OrderBy(u => u.FullName).Take(200))
+        {
+            var parsed = (await _users.GetRolesAsync(u)).Select(r => Enum.TryParse<UserRole>(r, out var p) ? p : (UserRole?)null).FirstOrDefault(r => r is not null);
+            if (parsed is not null) result.Add(new UserInfo(u.Id, u.Email!, u.FullName, parsed.Value, u.ChurchId));
+        }
+        return AuthResult<IReadOnlyList<UserInfo>>.Ok(result);
+    }
+
     // Concurrent requests update the same user row (failed-count, stamp). Identity uses optimistic
     // concurrency, so reload and retry: dropping an update would let parallel guesses outrun the lockout.
     // UserManager reports a conflict as a failed result and leaves the stale entity tracked,

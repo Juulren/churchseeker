@@ -2,7 +2,40 @@ import { useEffect, useState } from 'react'
 import { adminApi } from '../../../services/adminApi.ts'
 import { addDays, todayIso } from '../format.ts'
 import { messageOf, useAsync } from '../useAsync.ts'
-import { Notice, SelectInput } from '../ui.tsx'
+import { Notice, Pager, SelectInput } from '../ui.tsx'
+
+function MemberHistory() {
+  const members = useAsync(() => adminApi.members.list({ pageSize: 100 }), [])
+  const [member, setMember] = useState('')
+  const [page, setPage] = useState(1)
+  const history = useAsync(async () => (member ? adminApi.attendance.memberHistory(member, page) : null), [member, page])
+  return (
+    <section>
+      <h3 className="rpg-title text-xl">Historial por miembro</h3>
+      <div className="toolbar">
+        <div style={{ flex: '1 1 260px' }}>
+          <SelectInput label="Miembro" value={member} onChange={(v) => { setMember(v); setPage(1) }}
+            options={[{ value: '', label: 'Elige un miembro…' }, ...(members.data?.items ?? []).map((m) => ({ value: m.id, label: m.fullName }))]} />
+        </div>
+      </div>
+      {history.error && <Notice>{history.error}</Notice>}
+      {history.data && (
+        <>
+          <div className="table-wrap">
+            <table className="table">
+              <thead><tr><th>Fecha</th><th>Evento</th><th>Asistencia</th></tr></thead>
+              <tbody>
+                {history.data.items.map((r) => <tr key={r.eventId}><td>{r.date}</td><td>{r.title}</td><td>{r.present ? 'Presente' : <span className="muted">Ausente</span>}</td></tr>)}
+                {history.data.items.length === 0 && <tr><td colSpan={3} className="muted">Sin asistencia registrada.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+          <Pager page={page} pageSize={10} total={history.data.total} onPage={setPage} />
+        </>
+      )}
+    </section>
+  )
+}
 
 export default function AttendancePage() {
   const today = todayIso()
@@ -79,6 +112,7 @@ export default function AttendancePage() {
           </table>
         </div>
       </section>
+      <MemberHistory />
     </div>
   )
 }
