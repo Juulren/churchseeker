@@ -3,15 +3,13 @@ import { authApi, loginMessage } from '../../services/auth.ts'
 import { navigate } from '../../state/route.ts'
 import AsciiSpinner from './AsciiSpinner.tsx'
 import Field, { LockIcon, MailIcon } from './Field.tsx'
-import { startLiveChurch, type LiveChurch } from './churchPortrait.ts'
+import { treeOfLifeUrl } from './treeOfLife.ts'
 import { emailError, passwordError } from './validators.ts'
 
-const CATHEDRAL = '11111111-1111-1111-1111-111111111111'
 type Mode = 'signin' | 'forgot' | 'sent'
-// The live art is a video in characters: it has no pulse or shimmer, so those calls are optional.
-interface ArtHandle { pulse?: (from?: HTMLElement, strength?: number) => void; shimmer?: (on: boolean) => void; destroy: () => void }
+interface ArtHandle { pulse?: (from?: Element | { x: number; y: number }, strength?: number) => void; shimmer?: (on: boolean) => void; destroy: () => void }
 
-/** Split sign-in: the church in characters that trail under the cursor, and the form on the right. */
+/** Split sign-in: a tree of life in characters that trail under the cursor, and the form on the right. */
 export default function SignIn() {
   const artSide = useRef<HTMLDivElement>(null)
   const brand = useRef<HTMLDivElement>(null)
@@ -28,22 +26,24 @@ export default function SignIn() {
     const el = artSide.current
     if (!el) return
     let alive = true
-    let live: LiveChurch | null = null
+    const poster = new Image()
+    poster.alt = ''
+    poster.src = treeOfLifeUrl()
+    poster.className = 'sign-in-poster'
+    el.prepend(poster)
     ;(async () => {
-      const [{ asciiVideo }, church] = await Promise.all([import('asciify-engine/kit'), startLiveChurch(CATHEDRAL)])
-      if (!church) return
-      if (!alive) { church.stop(); return }
-      live = church
-      el.appendChild(church.video)
-      church.video.style.display = 'none'
-      art.current = asciiVideo(el, { src: church.video, autoplay: true, label: 'Catedral de San Ildefonso girando, en caracteres' }) as unknown as ArtHandle
+      const { artPanel } = await import('asciify-engine/kit')
+      if (!alive) return
+      // The characters take over from the poster; without WebGL the poster stays and the form works the same.
+      art.current = artPanel(el, { image: poster, clear: brand.current ?? false, focus: { x: 0.5, y: 0.5 } }) as unknown as ArtHandle
+      // The tree wakes once: a ring of light rises from its base.
+      art.current.pulse?.({ x: el.getBoundingClientRect().left + el.clientWidth / 2, y: el.getBoundingClientRect().bottom - 40 }, 2.2)
     })().catch(() => { /* the form works without the art */ })
     return () => {
       alive = false
       art.current?.destroy()
       art.current = null
-      live?.stop()
-      live?.video.remove()
+      poster.remove()
     }
   }, [])
   const run = async (work: () => Promise<void>) => {
