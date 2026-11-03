@@ -90,7 +90,7 @@ public sealed class AttendanceService : IAttendanceService
         if (!await _members.Query().AsNoTracking().AnyAsync(m => m.Id == memberId, ct))
             return Result<PagedResult<MemberAttendanceRow>>.Fail(ErrorKind.NotFound);
 
-        page = Math.Max(1, page);
+        page = Math.Clamp(page, 1, 100_000);
         pageSize = Math.Clamp(pageSize, 1, 100);
         var query = from a in _attendance.Query().AsNoTracking()
                     where a.MemberId == memberId

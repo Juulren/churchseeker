@@ -49,7 +49,7 @@ public sealed class DonationService : IDonationService
         if (q.Method is { } m && !Enum.IsDefined(m))
             return Result<DonationPage>.Fail(ErrorKind.Validation, "Method is invalid.");
 
-        var page = Math.Max(1, q.Page);
+        var page = Math.Clamp(q.Page, 1, 100_000);
         var size = Math.Clamp(q.PageSize, 1, 100);
         var query = _donations.Query().AsNoTracking();
         if (!q.IncludeVoided) query = query.Where(d => d.IsActive);

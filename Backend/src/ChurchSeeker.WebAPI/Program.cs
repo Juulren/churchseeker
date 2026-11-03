@@ -37,6 +37,21 @@ builder.Services
     .AddJwtBearer(o =>
     {
         o.MapInboundClaims = false;
+        // A valid signature is not enough: the user must still exist, be active and still hold the role in the token.
+        // That makes a deactivation or a role change effective immediately, not after the 15-minute token expires.
+        o.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async ctx =>
+            {
+                var sub = ctx.Principal?.FindFirst("sub")?.Value;
+                var role = ctx.Principal?.FindFirst("role")?.Value;
+                var church = ctx.Principal?.FindFirst("church_id")?.Value;
+                var users = ctx.HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<ChurchSeeker.Infrastructure.Identity.ApplicationUser>>();
+                var user = Guid.TryParse(sub, out _) ? await users.FindByIdAsync(sub!) : null;
+                if (user is null || !user.IsActive || user.ChurchId.ToString() != church || string.IsNullOrEmpty(role) || !await users.IsInRoleAsync(user, role))
+                    ctx.Fail("The session is no longer valid.");
+            }
+        };
         o.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,

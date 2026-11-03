@@ -1,4 +1,4 @@
-﻿import { request } from './api.ts'
+import { request } from './api.ts'
 import type * as T from './adminTypes.ts'
 import type { ChurchProfile, Paged, StaffBook } from './types.ts'
 
@@ -99,6 +99,13 @@ export const adminApi = {
   users: {
     list: (role?: number) => get<T.StaffUser[]>(`/api/auth/users${qs({ role })}`),
     create: (d: { email: string; fullName: string; password: string; role: number }) => call<{ id: string }>('/api/auth/users', 'POST', d),
+  },
+
+  staff: {
+    list: (includeInactive = true) => get<T.ManagedUser[]>('/api/staff' + qs({ includeInactive })),
+    setRole: (u: string, role: number) => call<T.ManagedUser>('/api/staff/' + id(u) + '/role', 'PUT', { role }),
+    setActive: (u: string, active: boolean) => call<T.ManagedUser>('/api/staff/' + id(u) + (active ? '/activate' : '/deactivate'), 'POST'),
+    sendReset: async (u: string) => { await request('/api/staff/' + id(u) + '/send-reset', send('POST')) },
   },
 
   reports: {

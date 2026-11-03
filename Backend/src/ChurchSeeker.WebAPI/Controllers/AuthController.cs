@@ -87,6 +87,8 @@ public class AuthController : ControllerBase
         AuthError.InvalidCredentials => Problem("Invalid credentials.", statusCode: StatusCodes.Status401Unauthorized),
         AuthError.InvalidToken => Problem("Invalid or expired token.", statusCode: StatusCodes.Status401Unauthorized),
         AuthError.Forbidden => Problem("Forbidden.", statusCode: StatusCodes.Status403Forbidden),
+        AuthError.NotFound => NotFound(),
+        AuthError.Conflict => Problem(string.Join(" ", result.Messages), statusCode: StatusCodes.Status409Conflict),
         _ => BadRequest(new ValidationProblemDetails(new Dictionary<string, string[]> { ["errors"] = result.Messages.ToArray() }))
     };
 

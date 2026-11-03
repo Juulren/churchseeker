@@ -23,7 +23,7 @@ public sealed class MemberService : IMemberService
 
     public async Task<Result<PagedResult<MemberResponse>>> ListAsync(MemberQuery q, CancellationToken ct = default)
     {
-        var page = Math.Max(1, q.Page);
+        var page = Math.Clamp(q.Page, 1, 100_000);
         var size = Math.Clamp(q.PageSize, 1, 100);
         var query = _repo.Query().AsNoTracking();
 
@@ -31,13 +31,15 @@ public sealed class MemberService : IMemberService
             query = query.Where(m => m.IsActive == active);
 
         var search = q.Search?.Trim();
+        if (search is not null && search.Any(char.IsControl))
+            return Result<PagedResult<MemberResponse>>.Fail(ErrorKind.Validation, "Search contains invalid characters.");
         if (!string.IsNullOrEmpty(search))
         {
             if (search.Length > MaxSearchLength)
                 return Result<PagedResult<MemberResponse>>.Fail(ErrorKind.Validation, "Search is too long.");
             // Parameterised LIKE with wildcards in user input escaped so they match literally.
             var escaped = search.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
-            query = query.Where(m => EF.Functions.Like(m.FullName, $"%{escaped}%", "\\"));
+            query = query.Where(m => EF.Functions.Like(m.FullName.ToLower(), $"%{escaped.ToLower()}%", "\\"));
         }
 
         var total = await query.CountAsync(ct);

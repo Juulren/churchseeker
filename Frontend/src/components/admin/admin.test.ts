@@ -84,6 +84,11 @@ describe('role navigation', () => {
     expect(labels('Coordinador')).toContain('ministries')
   })
 
+  it('limits user administration to the Administrador', () => {
+    expect(labels('Administrador')).toContain('users')
+    for (const r of ['Pastor', 'Secretario', 'Tesorero', 'Coordinador'] as const) expect(labels(r)).not.toContain('users')
+  })
+
   it('every role at least sees the dashboard', () => {
     for (const r of ['Administrador', 'Pastor', 'Secretario', 'Tesorero', 'Coordinador'] as const) expect(labels(r)).toContain('dashboard')
   })

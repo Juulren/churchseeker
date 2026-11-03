@@ -22,6 +22,7 @@ public class BreakFactory : WebApplicationFactory<Program>
     public const string AdminPassword = "Adm1n!Passw0rd#";
     public string StorageRoot { get; } = Path.Combine(Path.GetTempPath(), $"cs-store-{Guid.NewGuid():N}");
     private readonly string _dbFile = Path.Combine(Path.GetTempPath(), $"cs-break-{Guid.NewGuid():N}.db");
+    private readonly PgTestDb? _pg = PgTestDb.Server is null ? null : new PgTestDb();
 
     protected virtual int AuthLimit => 100000;
 
@@ -29,7 +30,7 @@ public class BreakFactory : WebApplicationFactory<Program>
     {
         builder.UseEnvironment("Development");
         builder.UseSetting("Jwt:Key", JwtKey);
-        builder.UseSetting("ConnectionStrings:Default", $"Data Source={_dbFile}");
+        if (_pg is null) builder.UseSetting("ConnectionStrings:Default", $"Data Source={_dbFile}"); else { builder.UseSetting("Database:Provider", "Postgres"); builder.UseSetting("ConnectionStrings:Default", _pg.Connection); }
         builder.UseSetting("Database:AutoCreate", "true");
         // Development settings enable demo content; tests need an empty database.
         builder.UseSetting("Seed:Demo", "false");
@@ -45,6 +46,7 @@ public class BreakFactory : WebApplicationFactory<Program>
     {
         base.Dispose(disposing);
         Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        _pg?.Dispose();
         try { File.Delete(_dbFile); } catch { /* best effort */ }
         try { if (Directory.Exists(StorageRoot)) Directory.Delete(StorageRoot, true); } catch { /* best effort */ }
     }

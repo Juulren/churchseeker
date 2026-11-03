@@ -14,6 +14,7 @@ export const NAV: NavItem[] = [
   { path: 'donations', label: 'Donaciones', roles: ['Administrador', 'Tesorero'] },
   { path: 'announcements', label: 'Comunicados', roles: ALL },
   { path: 'reports', label: 'Reportes', roles: ['Administrador', 'Pastor', 'Secretario', 'Tesorero'] },
+  { path: 'users', label: 'Usuarios', roles: ['Administrador'] },
   { path: 'settings', label: 'Configuración', roles: ['Administrador'] },
 ]
 

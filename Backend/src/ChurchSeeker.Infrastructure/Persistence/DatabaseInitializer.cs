@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ChurchSeeker.Domain.Enums;
 using ChurchSeeker.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -12,7 +13,12 @@ public static class DatabaseInitializer
     {
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        if (config.GetValue("Database:AutoCreate", false))
+        if (db.Database.IsNpgsql())
+        {
+            // PostgreSQL always goes through migrations, never EnsureCreated.
+            if (config.GetValue("Database:Migrate", true)) await db.Database.MigrateAsync();
+        }
+        else if (config.GetValue("Database:AutoCreate", false))
             await db.Database.EnsureCreatedAsync();
 
         var roles = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();

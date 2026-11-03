@@ -15,6 +15,7 @@ using ChurchSeeker.Application.Events;
 using ChurchSeeker.Application.Ministries;
 using ChurchSeeker.Application.Members;
 using ChurchSeeker.Infrastructure.Services;
+using ChurchSeeker.Infrastructure.Email;
 using ChurchSeeker.Infrastructure.Identity;
 using ChurchSeeker.Infrastructure.Persistence;
 using ChurchSeeker.Infrastructure.Security;
@@ -34,8 +35,21 @@ public static class DependencyInjection
             throw new InvalidOperationException("Jwt:Key must be at least 32 bytes. Set it via environment or user-secrets.");
         services.Configure<JwtOptions>(config.GetSection(JwtOptions.Section));
 
+        // SQLite for quick local runs and tests; PostgreSQL (migrations) for real deployments.
+        var provider = config["Database:Provider"] ?? "Sqlite";
+        var connection = config.GetConnectionString("Default");
         services.AddDbContext<AppDbContext>(o =>
-            o.UseSqlite(config.GetConnectionString("Default") ?? "Data Source=churchseeker.db"));
+        {
+            if (provider.Equals("Postgres", StringComparison.OrdinalIgnoreCase))
+                o.UseNpgsql(connection ?? throw new InvalidOperationException("ConnectionStrings:Default is required for PostgreSQL."));
+            else
+                o.UseSqlite(connection ?? "Data Source=churchseeker.db");
+        });
+
+        services.Configure<EmailOptions>(config.GetSection(EmailOptions.Section));
+        // A real SMTP server when Email:Host is set; otherwise the development stub that only logs.
+        if (!string.IsNullOrWhiteSpace(config["Email:Host"])) services.AddScoped<IEmailSender, SmtpEmailSender>();
+        else services.AddScoped<IEmailSender, LoggingEmailSender>();
 
         services.AddDataProtection();
         services.AddIdentityCore<ApplicationUser>(o =>
@@ -58,8 +72,8 @@ public static class DependencyInjection
 
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<ITokenService, TokenService>();
-        services.AddScoped<IEmailSender, LoggingEmailSender>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IUserAdminService, UserAdminService>();
         services.AddScoped<IAuditLogger, AuditLogger>();
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
         services.AddScoped<IMemberService, MemberService>();

@@ -1,0 +1,30 @@
+# Local development services. Run: docker compose up -d
+# Credentials below are for local development only; override them with a .env file (see .env.example).
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: churchseeker
+      POSTGRES_USER: churchseeker
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-churchseeker_dev}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U churchseeker -d churchseeker"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Catches every email the API sends (password reset links). Web UI: http://localhost:8025
+  mail:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+
+volumes:
+  pgdata:
