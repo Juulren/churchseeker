@@ -4,6 +4,7 @@ import type { Announcement } from '../../../services/adminTypes.ts'
 import { emptyToNull, todayIso } from '../format.ts'
 import { messageOf, useAsync } from '../useAsync.ts'
 import { Check, Modal, Notice, Pager, TextArea, TextInput } from '../ui.tsx'
+import { Empty } from '../../ornament/Illustrations.tsx'
 
 const PAGE = 10
 
@@ -65,7 +66,7 @@ export default function AnnouncementsPage({ canEdit }: { canEdit: boolean }) {
               <tr key={a.id}><td>{a.isImportant && <span title="Importante">◈ </span>}{a.title}</td><td>{a.publishDate}</td><td>{a.expiresOn ?? '—'}</td><td>{a.isPublic ? 'Público' : 'Interno'}</td>
                 <td>{canEdit && <div className="row-actions"><button className="rpg-button" onClick={() => setEditing(a)}>Editar</button><button className="rpg-button" onClick={() => remove(a)}>Eliminar</button></div>}</td></tr>
             ))}
-            {list.data?.items.length === 0 && <tr><td colSpan={5} className="muted">No hay comunicados.</td></tr>}
+            {list.data?.items.length === 0 && <tr><td colSpan={5}><Empty>No hay comunicados.</Empty></td></tr>}
           </tbody>
         </table>
       </div>

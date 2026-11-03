@@ -3,8 +3,7 @@ import { motion } from 'framer-motion'
 import { publicApi } from '../../services/api.ts'
 import type { PublicChurch } from '../../services/types.ts'
 import Bookshelf from '../bookshelf/Bookshelf.tsx'
-import { decodeOnce, useKit } from '../ascii/useKit.ts'
-import Sigil from '../sigil/Sigil.tsx'
+import SigilMorph from '../sigil/SigilMorph.tsx'
 import ChurchStage from './ChurchStage.tsx'
 import { EventsPanel, InfoPanel, NewsPanel } from './Panels.tsx'
 import { useChurchData } from './useChurchData.ts'
@@ -21,8 +20,7 @@ export default function RpgView({ church, onBack }: Props) {
   const [readerOpen, setReaderOpen] = useState(false)
 
   useEffect(() => { heading.current?.focus() }, [church.id])
-  // The name condenses out of characters once; the real text stays in the DOM the whole time.
-  useKit(heading, (kit, el) => decodeOnce(kit, el, 900), [church.id])
+  // The sigil next to the name is this view's one Asciify surface, so the name itself is plain text.
   useEffect(() => {
     // While a book is open, Esc closes the book (handled by the reader), not the whole view.
     if (readerOpen) return
@@ -52,9 +50,12 @@ export default function RpgView({ church, onBack }: Props) {
 
       <div className="rpg-panel flex min-h-0 min-w-0 flex-col gap-6 overflow-y-auto p-4">
         <header className="flex flex-wrap items-start justify-between gap-2">
-          <div>
+          <div className="flex items-center gap-4">
+            <SigilMorph name={church.name} size={116} />
+            <div>
             <h2 ref={heading} tabIndex={-1} className="text-3xl outline-none" style={{ color: 'var(--accent)' }}>{church.name}</h2>
-            <div className="mt-1 flex items-center gap-2" style={{ color: 'var(--ink-dim)' }}><Sigil name={church.name} size={26} /><span>{church.denomination} · {church.patronSaint}</span></div>
+            <div className="mt-1" style={{ color: 'var(--ink-dim)' }}>{church.denomination} · {church.patronSaint}</div>
+            </div>
           </div>
           <button className="rpg-button" onClick={onBack}>← Volver al mapa (Esc)</button>
         </header>

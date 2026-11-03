@@ -2,6 +2,7 @@
 import { addDays, formatMoney, MONTHS, todayIso } from '../format.ts'
 import { useAsync } from '../useAsync.ts'
 import { BarChart, Loading, Notice, Odometer } from '../ui.tsx'
+import { Empty, OrnamentStrip } from '../../ornament/Illustrations.tsx'
 
 export default function DashboardPage() {
   const { data, error, loading } = useAsync(() => adminApi.dashboard(), [])
@@ -20,11 +21,12 @@ export default function DashboardPage() {
   ]
   return (
     <div className="grid gap-6">
+      <OrnamentStrip />
       <div className="kpis">{cards.map(([label, value]) => <div key={label} className="kpi"><span className="rpg-label">{label}</span><Odometer value={value} /></div>)}</div>
       <section>
         <h3 className="rpg-title text-xl">Asistencia por semana</h3>
         {attendanceByWeek.length === 0
-          ? <p className="muted">Aún no hay asistencia registrada en las últimas 8 semanas.</p>
+          ? <Empty>Aún no hay asistencia registrada en las últimas 8 semanas.</Empty>
           : <BarChart title="Presentes por semana (inicio de semana)" labels={attendanceByWeek.map((r) => r.periodStart.slice(5))} values={attendanceByWeek.map((r) => r.present)} />}
       </section>
       <div className="grid gap-6 md:grid-cols-2">

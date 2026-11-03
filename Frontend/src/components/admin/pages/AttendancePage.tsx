@@ -3,6 +3,7 @@ import { adminApi } from '../../../services/adminApi.ts'
 import { addDays, todayIso } from '../format.ts'
 import { messageOf, useAsync } from '../useAsync.ts'
 import { Notice, Pager, SelectInput } from '../ui.tsx'
+import { Empty } from '../../ornament/Illustrations.tsx'
 
 function MemberHistory() {
   const members = useAsync(() => adminApi.members.list({ pageSize: 100 }), [])
@@ -26,7 +27,7 @@ function MemberHistory() {
               <thead><tr><th>Fecha</th><th>Evento</th><th>Asistencia</th></tr></thead>
               <tbody>
                 {history.data.items.map((r) => <tr key={r.eventId}><td>{r.date}</td><td>{r.title}</td><td>{r.present ? 'Presente' : <span className="muted">Ausente</span>}</td></tr>)}
-                {history.data.items.length === 0 && <tr><td colSpan={3} className="muted">Sin asistencia registrada.</td></tr>}
+                {history.data.items.length === 0 && <tr><td colSpan={3}><Empty>Sin asistencia registrada.</Empty></td></tr>}
               </tbody>
             </table>
           </div>
@@ -90,7 +91,7 @@ export default function AttendancePage() {
                   <tr key={m.id}><td>{m.fullName}</td>
                     <td><label className="check"><input type="checkbox" checked={marks[m.id] === true} onChange={(e) => setMarks((s) => ({ ...s, [m.id]: e.target.checked }))} aria-label={`Presente: ${m.fullName}`} /></label></td></tr>
                 ))}
-                {people.length === 0 && <tr><td colSpan={2} className="muted">No hay miembros activos.</td></tr>}
+                {people.length === 0 && <tr><td colSpan={2}><Empty>No hay miembros activos.</Empty></td></tr>}
               </tbody>
             </table>
           </div>
@@ -107,7 +108,7 @@ export default function AttendancePage() {
             <thead><tr><th>Inicio</th><th className="num">Eventos</th><th className="num">Presentes</th><th className="num">Ausentes</th><th className="num">Miembros distintos</th></tr></thead>
             <tbody>
               {summary.data?.map((r) => <tr key={r.periodStart}><td>{r.periodStart}</td><td className="num">{r.events}</td><td className="num">{r.present}</td><td className="num">{r.absent}</td><td className="num">{r.distinctMembersPresent}</td></tr>)}
-              {summary.data?.length === 0 && <tr><td colSpan={5} className="muted">Sin datos en el periodo.</td></tr>}
+              {summary.data?.length === 0 && <tr><td colSpan={5}><Empty>Sin datos en el periodo.</Empty></td></tr>}
             </tbody>
           </table>
         </div>

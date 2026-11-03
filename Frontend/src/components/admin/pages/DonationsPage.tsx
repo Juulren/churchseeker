@@ -4,6 +4,7 @@ import { DONATION_METHODS } from '../../../services/adminTypes.ts'
 import { formatMoney, MONTHS, todayIso } from '../format.ts'
 import { messageOf, useAsync } from '../useAsync.ts'
 import { BarChart, Check, Notice, Pager, SelectInput, TextInput } from '../ui.tsx'
+import { Empty } from '../../ornament/Illustrations.tsx'
 
 const PAGE = 15
 
@@ -93,7 +94,7 @@ export default function DonationsPage() {
                   <td>{d.isVoided ? <span className="muted">Anulada</span> : <div className="row-actions"><button className="rpg-button" onClick={() => voidIt(d.id)}>Anular</button></div>}</td>
                 </tr>
               ))}
-              {list.data?.items.length === 0 && <tr><td colSpan={6} className="muted">No hay aportaciones en este filtro.</td></tr>}
+              {list.data?.items.length === 0 && <tr><td colSpan={6}><Empty>No hay aportaciones en este filtro.</Empty></td></tr>}
             </tbody>
           </table>
         </div>

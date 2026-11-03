@@ -7,6 +7,7 @@ import { messageOf, useAsync } from '../useAsync.ts'
 import { Check, Loading, Modal, Notice, SelectInput, TextInput } from '../ui.tsx'
 import SlideConfirm from '../../ascii/SlideConfirm.tsx'
 import { useKit } from '../../ascii/useKit.ts'
+import { Empty } from '../../ornament/Illustrations.tsx'
 
 /** Drop zone for the logo: a ring of characters, drag a PNG, JPEG or WebP (2 MB) or pick one. */
 function LogoDrop({ onFile }: { onFile: (file: File) => void }) {
@@ -132,7 +133,7 @@ function Books() {
           <thead><tr><th>Título</th><th>Autor</th><th>Visibilidad</th><th /></tr></thead>
           <tbody>
             {books.data?.map((b) => <tr key={b.id} data-book={b.id}><td>{b.title}</td><td>{b.author ?? '—'}</td><td>{b.isPublic ? 'Público' : '🔒 Privado'}</td><td><div className="row-actions"><button className="rpg-button" onClick={() => setRemoving({ id: b.id, title: b.title })}>Quitar</button></div></td></tr>)}
-            {books.data?.length === 0 && <tr><td colSpan={4} className="muted">Aún no hay códices.</td></tr>}
+            {books.data?.length === 0 && <tr><td colSpan={4}><Empty>Aún no hay códices.</Empty></td></tr>}
           </tbody>
         </table>
       </div>

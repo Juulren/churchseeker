@@ -4,6 +4,7 @@ import type { Ministry } from '../../../services/adminTypes.ts'
 import { addDays, emptyToNull, todayIso } from '../format.ts'
 import { messageOf, useAsync } from '../useAsync.ts'
 import { Modal, Notice, SelectInput, TextArea, TextInput } from '../ui.tsx'
+import { Empty } from '../../ornament/Illustrations.tsx'
 
 function MinistryForm({ ministry, onDone, onClose }: { ministry: Ministry | null; onDone: () => void; onClose: () => void }) {
   const [name, setName] = useState(ministry?.name ?? '')
@@ -102,7 +103,7 @@ export default function MinistriesPage({ isManagement }: { isManagement: boolean
                       <button className="rpg-button" onClick={() => toggle(m)}>{m.isActive ? 'Desactivar' : 'Activar'}</button></>}
                   </div></td></tr>
               ))}
-              {list.data?.length === 0 && <tr><td colSpan={5} className="muted">No hay ministerios.</td></tr>}
+              {list.data?.length === 0 && <tr><td colSpan={5}><Empty>No hay ministerios.</Empty></td></tr>}
             </tbody>
           </table>
         </div>

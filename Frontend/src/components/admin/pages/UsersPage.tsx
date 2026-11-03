@@ -7,6 +7,7 @@ import { messageOf, useAsync } from '../useAsync.ts'
 import { Check, Modal, Notice, SelectInput, StatusPill, TextInput } from '../ui.tsx'
 import { toast } from '../../ascii/toast.tsx'
 import type { Role } from '../../../services/auth.ts'
+import { Empty } from '../../ornament/Illustrations.tsx'
 
 const ROLE_OPTIONS = Object.entries(ROLE_VALUES).map(([label, v]) => ({ value: String(v), label }))
 const roleName = (n: number) => ROLE_OPTIONS.find((o) => o.value === String(n))?.label ?? String(n)
@@ -129,7 +130,7 @@ export default function UsersPage() {
                   </td>
                 </tr>
               ))}
-              {list.data?.length === 0 && <tr><td colSpan={5} className="muted">Aún no hay usuarios.</td></tr>}
+              {list.data?.length === 0 && <tr><td colSpan={5}><Empty>Aún no hay usuarios.</Empty></td></tr>}
             </tbody>
           </table>
         </div>
