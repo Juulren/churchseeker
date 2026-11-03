@@ -1,4 +1,4 @@
-# ChurchSeeker design direction (draft for approval)
+# ChurchSeeker design direction (implemented: phases A to D)
 
 Goal: a Renaissance, sigil and Gothic look that is also modern and material, with Asciify characters as the living material. Symbols stay open to interpretation so any religion can recognise itself in them.
 

@@ -1,13 +1,13 @@
 ﻿import { adminApi } from '../../../services/adminApi.ts'
 import { addDays, formatMoney, MONTHS, todayIso } from '../format.ts'
 import { useAsync } from '../useAsync.ts'
-import { BarChart, Notice } from '../ui.tsx'
+import { BarChart, Loading, Notice, Odometer } from '../ui.tsx'
 
 export default function DashboardPage() {
   const { data, error, loading } = useAsync(() => adminApi.dashboard(), [])
   const upcoming = useAsync(() => adminApi.events.list({ from: todayIso(), to: addDays(todayIso(), 30), pageSize: 6 }), [])
   const notices = useAsync(() => adminApi.announcements.list({ pageSize: 30 }), [])
-  if (loading && !data) return <p role="status" className="muted">Cargando…</p>
+  if (loading && !data) return <Loading />
   if (error || !data) return <Notice>{error ?? 'Sin datos.'}</Notice>
   const { kpis, attendanceByWeek, income } = data
   const cards: [string, number][] = [
@@ -16,7 +16,7 @@ export default function DashboardPage() {
   ]
   return (
     <div className="grid gap-6">
-      <div className="kpis">{cards.map(([label, value]) => <div key={label} className="kpi"><span className="rpg-label">{label}</span><strong>{value}</strong></div>)}</div>
+      <div className="kpis">{cards.map(([label, value]) => <div key={label} className="kpi"><span className="rpg-label">{label}</span><Odometer value={value} /></div>)}</div>
       <section>
         <h3 className="rpg-title text-xl">Asistencia por semana</h3>
         {attendanceByWeek.length === 0
@@ -44,8 +44,8 @@ export default function DashboardPage() {
         <section aria-label="Ingresos">
           <h3 className="rpg-title text-xl">Ingresos {income.year}</h3>
           <div className="kpis">
-            <div className="kpi"><span className="rpg-label">Este mes</span><strong>{formatMoney(income.monthToDate)}</strong></div>
-            <div className="kpi"><span className="rpg-label">En el año</span><strong>{formatMoney(income.yearToDate)}</strong></div>
+            <div className="kpi"><span className="rpg-label">Este mes</span><Odometer value={income.monthToDate} format={formatMoney} /></div>
+            <div className="kpi"><span className="rpg-label">En el año</span><Odometer value={income.yearToDate} format={formatMoney} /></div>
           </div>
           <BarChart title="Ingresos por mes" labels={income.monthly.map((m) => MONTHS[m.month - 1].slice(0, 3))} values={income.monthly.map((m) => m.total)} format={formatMoney} />
         </section>

@@ -1,6 +1,8 @@
-import { lazy, Suspense, useSyncExternalStore } from 'react'
+import { lazy, Suspense, useRef, useSyncExternalStore } from 'react'
 import { authApi, session } from '../../services/auth.ts'
 import { allowedNav } from './nav.ts'
+import { Loading } from './ui.tsx'
+import { decodeOnce, useKit } from '../ascii/useKit.ts'
 
 const Dashboard = lazy(() => import('./pages/DashboardPage.tsx'))
 const Members = lazy(() => import('./pages/MembersPage.tsx'))
@@ -18,6 +20,9 @@ import { navigate, parseRoute, useHash } from '../../state/route.ts'
 export default function AdminShell() {
   const user = useSyncExternalStore(session.subscribe, session.get, () => null)
   const route = parseRoute(useHash())
+  const title = useRef<HTMLHeadingElement>(null)
+  // The module name condenses out of characters when you open it; the real text stays in the DOM.
+  useKit(title, (kit, el) => decodeOnce(kit, el, 700), [route.path[1]])
   if (!user) return null
   const items = allowedNav(user.role)
   const current = route.path[1] ?? 'dashboard'
@@ -44,9 +49,9 @@ export default function AdminShell() {
         </div>
       </aside>
       <main className="rpg-panel min-h-0 min-w-0 flex-1 overflow-y-auto p-5">
-        {active ? <h2 className="rpg-title mb-4">{active.label}</h2> : <p role="alert">No tienes acceso a este módulo.</p>}
+        {active ? <h2 ref={title} className="rpg-title mb-4">{active.label}</h2> : <p role="alert">No tienes acceso a este módulo.</p>}
         {active && (
-          <Suspense fallback={<p role="status" className="muted">Cargando…</p>}>
+          <Suspense fallback={<Loading />}>
             {active.path === 'dashboard' && <Dashboard />}
             {active.path === 'members' && <Members />}
             {active.path === 'events' && <Events canEdit={management} />}

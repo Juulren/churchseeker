@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { publicApi } from '../../services/api.ts'
 import type { PublicChurch } from '../../services/types.ts'
 import Bookshelf from '../bookshelf/Bookshelf.tsx'
-import { useKit } from '../ascii/useKit.ts'
+import { decodeOnce, useKit } from '../ascii/useKit.ts'
 import Sigil from '../sigil/Sigil.tsx'
 import ChurchStage from './ChurchStage.tsx'
 import { EventsPanel, InfoPanel, NewsPanel } from './Panels.tsx'
@@ -22,7 +22,7 @@ export default function RpgView({ church, onBack }: Props) {
 
   useEffect(() => { heading.current?.focus() }, [church.id])
   // The name condenses out of characters once; the real text stays in the DOM the whole time.
-  useKit(heading, (kit, el) => kit.decode(el, { duration: 900, settle: 'text' }), [church.id])
+  useKit(heading, (kit, el) => decodeOnce(kit, el, 900), [church.id])
   useEffect(() => {
     // While a book is open, Esc closes the book (handled by the reader), not the whole view.
     if (readerOpen) return

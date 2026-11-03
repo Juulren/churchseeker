@@ -1,5 +1,6 @@
-﻿import { useEffect, useId, useRef, type ReactNode } from 'react'
+﻿import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { useKit } from '../ascii/useKit.ts'
 import { scaleBars } from './format.ts'
 
 export function Notice({ kind = 'error', children }: { kind?: 'error' | 'ok'; children: ReactNode }) {
@@ -112,19 +113,50 @@ export function Pager({ page, pageSize, total, onPage }: { page: number; pageSiz
   )
 }
 
-/** Simple accessible bar chart: SVG bars with a text alternative. */
+/** Loading state: an orb of characters orbits while work runs; the text stays for screen readers. */
+export function Loading({ label = 'Cargando…' }: { label?: string }) {
+  const orb = useRef<HTMLSpanElement>(null)
+  useKit(orb, (kit, el) => { const h = kit.statusOrb(el); h.loading(); return h })
+  return <p role="status" className="muted loading"><span ref={orb} className="orb" aria-hidden="true" /> {label}</p>
+}
+
+/** A figure whose changed digits roll through characters and land on the crisp number; the text is always in the DOM. */
+export function Odometer({ value, format = (n: number) => n.toLocaleString('es-MX') }: { value: number; format?: (n: number) => string }) {
+  const el = useRef<HTMLElement>(null)
+  const handle = useRef<{ set: (n: number) => void } | null>(null)
+  // React renders the first text once and never touches it again; the odometer (or, without it, the effect below) owns the node afterwards.
+  const [first] = useState(() => format(value))
+  useKit(el, (kit, node) => { const h = kit.odometer(node, { value, format }); handle.current = h; return { destroy: () => { handle.current = null; h.destroy() } } }, [])
+  useEffect(() => {
+    if (handle.current) handle.current.set(value)
+    else if (el.current) el.current.textContent = format(value)
+    // format is stable per call site
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value])
+  return <strong ref={el}>{first}</strong>
+}
+
+/** Bar chart in characters when the browser can draw it; otherwise the SVG below, which is also the text alternative. */
 export function BarChart({ labels, values, title, format = (n: number) => String(n) }: { labels: string[]; values: number[]; title: string; format?: (n: number) => string }) {
+  const plot = useRef<HTMLDivElement>(null)
+  const [ascii, setAscii] = useState(false)
+  useKit(plot, (kit, el) => {
+    const h = kit.blockChart(el, { values, labels, format, look: { cellSize: 6 } })
+    setAscii(h.supported)
+    return h
+  }, [labels.join('|'), values.join(',')])
   const bars = scaleBars(values)
   const w = 36
   return (
     <figure className="chart">
-      <svg viewBox={`0 0 ${Math.max(labels.length, 1) * w} 120`} role="img" aria-label={`${title}: ${labels.map((l, i) => `${l} ${format(values[i] ?? 0)}`).join(', ')}`} preserveAspectRatio="none">
+      <div ref={plot} className="chart-plot" hidden={!ascii} aria-hidden="true" style={{ width: `min(100%, ${Math.max(labels.length, 1) * 84}px)` }} />
+      <svg className={ascii ? 'sr-only' : undefined} viewBox={`0 0 ${Math.max(labels.length, 1) * w} 120`} role="img" aria-label={`${title}: ${labels.map((l, i) => `${l} ${format(values[i] ?? 0)}`).join(', ')}`} preserveAspectRatio="none">
         {bars.map((b, i) => (
           <g key={i}>
-            <rect x={i * w + 6} y={100 - b * 90} width={w - 12} height={Math.max(b * 90, values[i] > 0 ? 2 : 0)} rx="3" fill="rgba(255,255,255,0.85)">
+            <rect x={i * w + 6} y={100 - b * 90} width={w - 12} height={Math.max(b * 90, values[i] > 0 ? 2 : 0)} rx="3" style={{ fill: 'var(--accent)' }}>
               <title>{`${labels[i]}: ${format(values[i] ?? 0)}`}</title>
             </rect>
-            <text x={i * w + w / 2} y={115} textAnchor="middle" fontSize="9" fill="#9aa6b6">{labels[i]}</text>
+            <text x={i * w + w / 2} y={115} textAnchor="middle" fontSize="9" style={{ fill: 'var(--ink-dim)' }}>{labels[i]}</text>
           </g>
         ))}
       </svg>
