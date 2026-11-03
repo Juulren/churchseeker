@@ -29,7 +29,7 @@ function grow(out: Segment[], rand: () => number, x: number, y: number, angle: n
   for (let i = 0; i < children; i++) {
     const spread = (i - (children - 1) / 2) * (0.5 + rand() * 0.28) + (rand() - 0.5) * 0.3
     const shorter = 0.68 + rand() * 0.14
-    grow(out, rand, x2, y2, angle + spread, length * shorter, Math.max(width * 0.7, 2.4), depth - 1, root)
+    grow(out, rand, x2, y2, angle + spread, length * shorter, Math.max(width * 0.76, 7), depth - 1, root)
   }
 }
 
@@ -38,7 +38,7 @@ export function treeSegments(seed: number): Segment[] {
   const out: Segment[] = []
   const baseY = TREE_HEIGHT * 0.56
   const cx = TREE_WIDTH / 2
-  grow(out, rand, cx, baseY, -Math.PI / 2 + (rand() - 0.5) * 0.08, 118, 34, 8, false)
+  grow(out, rand, cx, baseY, -Math.PI / 2 + (rand() - 0.5) * 0.08, 134, 44, 7, false)
   grow(out, rand, cx, baseY, Math.PI / 2 + (rand() - 0.5) * 0.1, 92, 24, 6, true)
   return out
 }
@@ -60,6 +60,9 @@ export function drawTreeOfLife(canvas: HTMLCanvasElement, seed = 5): void {
   g.stroke()
 
   g.lineCap = 'round'
+  // A soft halo gives the character ramp gradations to work with: edges fade instead of cutting.
+  g.shadowColor = 'rgba(255,255,255,0.7)'
+  g.shadowBlur = 0
   for (const s of treeSegments(seed)) {
     g.strokeStyle = s.root ? 'rgba(255,255,255,0.62)' : 'rgba(255,255,255,0.95)'
     g.lineWidth = s.width
@@ -69,9 +72,9 @@ export function drawTreeOfLife(canvas: HTMLCanvasElement, seed = 5): void {
     g.moveTo(s.x1, s.y1)
     g.quadraticCurveTo(mx, my, s.x2, s.y2)
     g.stroke()
-    if (s.tip && !s.root) {
+    if (s.tip && !s.root && rand() < 0.22) {
       // Leaves and seeds: a small cluster of soft dots at each branch tip.
-      const n = 2 + Math.floor(rand() * 3)
+      const n = 1 + Math.floor(rand() * 2)
       for (let i = 0; i < n; i++) {
         const a = rand() * Math.PI * 2
         const r = 4 + rand() * 16

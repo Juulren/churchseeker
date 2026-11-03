@@ -35,7 +35,7 @@ export default function SignIn() {
       const { artPanel } = await import('asciify-engine/kit')
       if (!alive) return
       // The characters take over from the poster; without WebGL the poster stays and the form works the same.
-      art.current = artPanel(el, { image: poster, clear: brand.current ?? false, focus: { x: 0.5, y: 0.5 } }) as unknown as ArtHandle
+      art.current = artPanel(el, { image: poster, clear: brand.current ?? false, focus: { x: 0.5, y: 0.5 }, look: { cellSize: 8 }, charset: ' .:-=+*#' }) as unknown as ArtHandle
       // The tree wakes once: a ring of light rises from its base.
       art.current.pulse?.({ x: el.getBoundingClientRect().left + el.clientWidth / 2, y: el.getBoundingClientRect().bottom - 40 }, 2.2)
     })().catch(() => { /* the form works without the art */ })
