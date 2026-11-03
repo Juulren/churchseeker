@@ -4,7 +4,7 @@ import { type ProfileInput } from '../../../services/adminTypes.ts'
 import { DAY_NAMES } from '../../rpg-view/format.ts'
 import { emptyToNull } from '../format.ts'
 import { messageOf, useAsync } from '../useAsync.ts'
-import { Check, Notice, SelectInput, TextInput } from '../ui.tsx'
+import { Check, Loading, Notice, SelectInput, TextInput } from '../ui.tsx'
 
 function Profile() {
   const church = useAsync(() => adminApi.church.get(), [])
@@ -16,7 +16,7 @@ function Profile() {
     if (c) setF({ name: c.name, denomination: c.denomination, patronSaint: c.patronSaint, address: c.address, contactPhone: c.contactPhone, contactEmail: c.contactEmail, latitude: c.latitude, longitude: c.longitude, schedules: c.schedules.map((s) => ({ ...s, time: s.time.slice(0, 5) })) })
   }, [church.data])
   if (church.error) return <Notice>{church.error}</Notice>
-  if (!f) return <p role="status" className="muted">Cargando…</p>
+  if (!f) return <Loading />
   const set = <K extends keyof ProfileInput>(k: K, v: ProfileInput[K]) => setF({ ...f, [k]: v })
   const submit = async (e: FormEvent) => {
     e.preventDefault()

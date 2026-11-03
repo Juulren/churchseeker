@@ -60,9 +60,6 @@ export function drawTreeOfLife(canvas: HTMLCanvasElement, seed = 5): void {
   g.stroke()
 
   g.lineCap = 'round'
-  // A soft halo gives the character ramp gradations to work with: edges fade instead of cutting.
-  g.shadowColor = 'rgba(255,255,255,0.7)'
-  g.shadowBlur = 0
   for (const s of treeSegments(seed)) {
     g.strokeStyle = s.root ? 'rgba(255,255,255,0.62)' : 'rgba(255,255,255,0.95)'
     g.lineWidth = s.width

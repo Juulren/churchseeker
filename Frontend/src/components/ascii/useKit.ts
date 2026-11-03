@@ -24,3 +24,12 @@ export function useKit<E extends HTMLElement>(ref: RefObject<E | null>, mount: (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 }
+
+/** Plays the decode headline once and removes its canvas when it has finished, so nothing is left drawn over the real text. */
+export function decodeOnce(kit: Kit, el: HTMLElement, duration = 800): { destroy: () => void } {
+  const handle = kit.decode(el, { duration, settle: 'text' })
+  let done = false
+  const finish = () => { if (!done) { done = true; handle.destroy() } }
+  const timer = window.setTimeout(finish, duration + 400)
+  return { destroy: () => { window.clearTimeout(timer); finish() } }
+}
