@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { FieldBackgroundHandle } from 'asciify-engine/kit'
-import { useKit } from '../ascii/useKit.ts'
+import { useLostField } from './useLostField.ts'
 
 /**
  * Unknown address: 404 drawn large in characters that scatter under the pointer, and a way back to the map that breaks
@@ -9,34 +8,17 @@ import { useKit } from '../ascii/useKit.ts'
  */
 export default function NotFound() {
   const heading = useRef<HTMLHeadingElement>(null)
-  const art = useRef<HTMLDivElement>(null)
-  const lost = useRef<FieldBackgroundHandle | null>(null)
-  const going = useRef(false)
   const mounted = useRef(true)
+  const { art, play } = useLostField('404')
   useEffect(() => { heading.current?.focus(); mounted.current = true; return () => { mounted.current = false } }, [])
-  useKit(art, (kit, el) => {
-    const handle = kit.fieldBackground(el, { preset: 'notFound', text: '404' })
-    lost.current = handle
-    return { destroy: () => { lost.current = null; handle.destroy() } }
-  }, [])
 
-  const home = async (e: React.MouseEvent<HTMLAnchorElement>) => {
-    const field = lost.current
-    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    // A modified click, no field to play or reduced motion: the browser follows the link as usual.
-    if (!field || still || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
+  const home = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // A modified click follows the link as usual.
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
     e.preventDefault()
-    if (going.current) return
-    going.current = true
     const here = window.location.hash
-    let timer: ReturnType<typeof setTimeout> | undefined
-    try {
-      await Promise.race([field.scatter(e.currentTarget), new Promise((r) => { timer = setTimeout(r, 1800) })])
-    } catch { /* go home anyway */ }
-    clearTimeout(timer)
-    going.current = false
-    // Only if the person is still on this page: Back or another link during the scatter wins.
-    if (mounted.current && window.location.hash === here) window.location.hash = '#/'
+    // Only if the person is still on this page afterwards: Back or another link during the scatter wins.
+    void play(e.currentTarget, () => { if (mounted.current && window.location.hash === here) window.location.hash = '#/' })
   }
 
   return (

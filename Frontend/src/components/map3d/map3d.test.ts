@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { styleFor } from './churchStyles.ts'
 import {
   MERIDA_CENTER, UNIT_METERS, centroid, project, validCoordinates,
 } from './projection.ts'
@@ -62,30 +61,6 @@ describe('validCoordinates', () => {
 
   it('has a sane centroid even for an empty list', () => {
     expect(centroid([])).toEqual(MERIDA_CENTER)
-  })
-})
-
-describe('styleFor', () => {
-  it('gives the pilot churches their own architecture', () => {
-    const cathedral = styleFor({ id: '11111111-1111-1111-1111-111111111111' })
-    const lucia = styleFor({ id: '22222222-2222-2222-2222-222222222222' })
-    const jesus = styleFor({ id: '33333333-3333-3333-3333-333333333333' })
-    expect(cathedral.towers).toBe(2)
-    expect(lucia.arches).toBeGreaterThan(0)
-    expect(jesus.dome).toBe(true)
-    expect(new Set([cathedral.wall, lucia.wall, jesus.wall]).size).toBe(3)
-  })
-
-  it('is stable and valid for churches added later', () => {
-    for (const id of ['abc', '', 'ñandú', '00000000-0000-0000-0000-000000000000', 'x'.repeat(5000)]) {
-      const a = styleFor({ id })
-      expect(styleFor({ id })).toEqual(a)
-      expect(a.wall).toMatch(/^#[0-9a-f]{6}$/i)
-      expect([0, 1, 2]).toContain(a.towers)
-      expect(a.length).toBeGreaterThan(4)
-      expect(a.width).toBeGreaterThan(3)
-      expect(a.height).toBeGreaterThan(2)
-    }
   })
 })
 

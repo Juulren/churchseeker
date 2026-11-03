@@ -204,7 +204,7 @@ test.describe('hostile and broken API data', () => {
 })
 
 test.describe('devices', () => {
-  test('without WebGL the list still works and the church view explains it', async ({ page }) => {
+  test('without WebGL the list still works and the church view still shows its engraving', async ({ page }) => {
     await page.addInitScript(() => {
       const original = HTMLCanvasElement.prototype.getContext
       HTMLCanvasElement.prototype.getContext = function (type: string, ...rest: unknown[]) {
@@ -218,7 +218,8 @@ test.describe('devices', () => {
     await pick(page, /Catedral/).click()
     await page.getByRole('button', { name: 'Entrar' }).click()
     await expect(detail(page, /Catedral/)).toBeVisible()
-    await expect(page.getByText(/vista 3D no está disponible/i)).toBeVisible()
+    // The engraving is plain SVG: it needs no WebGL.
+    await expect(page.getByRole('img', { name: /^Grabado de / })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Próximos eventos' })).toBeVisible()
     expect(problems).toEqual([])
   })

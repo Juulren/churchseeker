@@ -47,6 +47,9 @@ test('with the server down the public page says so, keeps the staff link and off
   await page.goto('/')
   await expect(page.getByRole('heading', { level: 1, name: 'No pudimos cargar las iglesias' })).toBeVisible()
   await expect(page.getByText('Error 502')).toHaveCount(0)
+  // The status is drawn large in characters, like the 404; the text and the buttons are HTML.
+  await expect(page.locator('.notfound-art')).toHaveAttribute('aria-hidden', 'true')
+  await expect(page.getByText('Sin conexión · 503')).toBeVisible()
   down = false
   await page.getByRole('button', { name: 'Reintentar' }).click()
   await expect(page.getByRole('navigation', { name: 'Iglesias de Mérida' })).toBeVisible()

@@ -43,7 +43,7 @@ Cormorant Garamond for titles and church names (weight 500 or more, never below 
 ## 5. Ornaments: SVG components that pair with Asciify
 A library of SVG parts drawn in code in a Gothic, Renaissance and sigil spirit, in the system's inks. Nothing external, so no licences.
 - **Parts:** pointed-arch frames, trefoil and seven-fold tracery, a rosette, corner marks, dividers, cartouches and plaques, drop capitals in Cinzel, a guilloche border, a ring, a lamp, a tree, a doorway, a path.
-- **Where:** empty states, the loading screen, the screen for a failed load (a path to an open doorway), section headers, the dashboard strip, the church-viewer frame, the book shelf.
+- **Where:** empty states, the loading screen, the empty states, section headers, the dashboard strip, the church-viewer frame, the book shelf.
 - **Pairing with Asciify:**
   1. *Frames hold fields.* The login art panel and any other full-field surface are clipped to a pointed-arch or rosette shape from the library. Small components are not clipped.
   2. *Ornament as source.* An SVG ornament is rasterised once and fed to a glyph field (`morphField`) so a sigil can condense out of characters into lines and back.
@@ -65,19 +65,15 @@ A library of SVG parts drawn in code in a Gothic, Renaissance and sigil spirit, 
 | `scramble` on menu links, `pageDissolve` between modules | done: `scramble` plays on pointer hover over the admin menu links (real text stays, no replay on keyboard focus); `pageDissolve` carries one admin module out and the next in from the clicked link (plain swap without GL, with reduced motion or if the kit fails) |
 | `globe` | only if the map intro is approved (assumed no) |
 | `wordmark`, `tabs` | not used: `wordmark` draws large letters only; the admin menu is made of links the e2e specs rely on |
-| `fieldBackground` 404 | done: the 404 draws the numerals in characters that scatter under the pointer and break apart and re-form when "Volver al mapa" is pressed; the message and the button are HTML (the lost-road ornament now belongs to the screen shown when the church list cannot load) |
+| `fieldBackground` 404 | done: the 404 draws the numerals in characters that scatter under the pointer and break apart and re-form when "Volver al mapa" is pressed; the message and the button are HTML (the screen shown when the church list cannot load uses the same field with its status, 503 for no answer, and a Reintentar button that breaks the numerals apart while it tries again) |
 
-## 7. Church renders rebuilt from scratch
-**Why the old ones feel simple:** they are one generic box-and-towers builder with three hand-set variations. More pixels or other colours cannot fix that; the geometry has to carry the real building.
-
-**What the research found (and did not):** public sources for the three real churches are thin and partly contradictory. Reasonably reliable: the cathedral is Renaissance, 1561 to 1598, two towers, a crossing dome, about 67 by 31 m; Jesús (1618) has a cross plan, a hemispherical dome on a drum and two slender towers; Santa Lucía has a bell gable and no towers. Not verified: facade orders, niches, tower tiers, and the dimensions of the other two. Nothing unverified is invented. Fidelity works in three tiers:
-- **Tier 1, scans (exact).** The admin uploads a .glb scan (phone apps such as Polycam, Luma or Scaniverse produce them). Rules: at most 1.5 MB, at most 80,000 triangles, Draco or meshopt accepted; a short guide in Configuración explains how to optimise one. A scan is shown as scanned. This is the only way to be exactly faithful for any church, in any faith.
-- **Tier 2, authored models for the three pilot churches.** Built in code from a shared **facade kit** (orders and pilasters, round and pointed arches, niches, pediments, balustrades, bell gables, tiered towers with belfry openings, drums and domes with lanterns, buttresses, mouldings, rose windows) and checked against real photographs: free photos from Wikimedia Commons used as guides, not as textures, and any photos or plans supplied. Anything not verifiable is flagged as an interpretation in the code and on the church page.
-- **Tier 3, typologies for every other church.** Nave, rotunda, portico and courtyard from the same kit, at a fixed size. Importing the real footprint from OpenStreetMap (an optional admin action) was not built.
-- **Budgets so it loads anywhere:** at most 40,000 triangles per authored model for the viewer and 3,000 for the map (two levels of detail), baked ambient occlusion in vertex colours, one tiny tileable stone normal map, no per-model image downloads, at most 250 KB of code for the whole kit, and a low tier: the viewer builds the map level of detail on a weak device (little memory, two cores or fewer, or the data saver on).
-- **Seed check:** the cathedral's seed point is about 75 m from its real footprint (OpenStreetMap way 31296521, about 20.9671, -89.6225); the other two are unverified. The seed coordinates are corrected against the map.
-- **Look:** grey, matte and sculptural, soft light, baked occlusion, a dark plinth with an inscription (name and sigil): in the viewer a plaque at the foot of the church carries the sigil and the name in Cinzel; on the map the plinth is plain and the sigil badge marker does that job. After the new geometry exists it is rendered in two or three finishes, the engraving in negative included, and the choice is made from real screenshots of the new models.
-- **The view:** a fixed close-up of the front, seen from low down and looking up (the line to the top of the facade rises at about 45 degrees), a little to one side. It never turns and cannot be dragged. Without WebGL the text fallback stays. (Planta and alzado drawings were built and then discarded at the owner's request.)
+## 7. Churches as line engravings
+The churches were first built as 3D models (a facade kit, authored models, typologies, scans, a fixed close-up view). They never looked right next to the books, so they were replaced by **engravings**: each church is a front elevation drawn in lines with parallel hatching, in the ink of the interface, the way a Renaissance plate would show it. The 3D model code, the model upload rules and the Draco decoders were removed; the book shelf is the only 3D left.
+- **Plates.** Three drawn by hand for the pilot churches from their real arrangement (cathedral: two towers, crossing dome, two-order facade; Jesús: slender towers, dome on a drum, seven-spoke window; Santa Lucía: a bell gable over an arcade) and four typologies (nave, rotunda, portico, courtyard) for every other church, varied by the church's id (towers, dome, number of columns). Anything not verified is an interpretation, as before.
+- **Made of:** `engraving/draft.ts` (lines, solids that hide what is behind them, three densities of hatching made with SVG patterns, so a plate weighs a few KB), `plates.ts`, `choose.ts` (which plate for which id) and `markup.ts` (the SVG as text, used by the page and by the map markers). No cross, crescent or figure; anything that repeats around a point repeats seven times.
+- **Where:** the church's page shows the engraving on a sheet with a caption, drawing itself in (lines first, then the hatching; still under reduced motion); on the map every church has a marker with its engraving on a small plate from zoom 15.5, its sigil badge, and its name from zoom 15.
+- **Why it works:** pure SVG, the same on every device, no WebGL, no downloads, no models to optimise or upload, and it is legible at any size.
+- **Optional later:** a photo uploaded by each church, shown in greys with a grain and an arch frame, next to the engraving.
 
 ## 8. Books
 Greyscale only (the admin's chosen colour stays stored and is shown by its luminance), about 40% thinner, slightly varied heights. Details: spine bands, a stamped sigil seeded from the title, a tooled border, the title in Cinzel and a small lozenge ornament at the tail of the spine, drawn to canvas textures from the ornament library. A pointed-arch frame for the shelf; books lean and lift on hover. The PDF reader goes monochrome, with a guilloche band under its toolbar instead of the shelf's arch (an arch would cut the toolbar corners).
@@ -86,7 +82,7 @@ Greyscale only (the admin's chosen colour stays stored and is shown by its lumin
 - Satellite is the default: Esri World Imagery (no key; `arcgisonline.com` is already allowed by the CSP) with a labels layer on top (places and roads) so names stay readable, and a toggle to the street map. Full colour, no muting: the map is the one place with colour.
 - Zoom limits follow the imagery's real resolution in Mérida; attribution stays.
 - A monochrome atlas frame (hairline rules, corner marks from the ornament library), a north arrow with one tick (no cross-shaped compass rose), controls restyled to the system.
-- Markers: a sigil badge on a plate with the name in Cinzel is an HTML marker over the map (no pointer events; below the model zoom the badge is what is clicked), and the church's low-detail model, drawn by a MapLibre custom layer inside the map's own WebGL context, from zoom 15.5 (the names from zoom 15), so the three pilot churches show as models at the opening view.
+- Markers: HTML markers over the map, one per church: a sigil badge with its name in Cinzel from zoom 15 and, from zoom 15.5, the church's engraving on a small dark plate standing above it (section 7). The mouse can hover and click a marker (it selects the church); the church list stays the way in for the keyboard and screen readers, so markers are `aria-hidden`.
 - Selection, flight and arrival keep their logic and their e2e specs; tests keep tile requests stubbed so they never depend on the live server.
 
 ## 10. Phases (one PR each; advisor review before each merge)
@@ -96,11 +92,12 @@ Done: A system, B login, C public view, D admin Asciify, the Asciify batch. The 
 | E. Monochrome | section 3: tokens, outcomes by words and shape, greys everywhere, ink mapping | contrast test with alpha compositing, full e2e |
 | M. Satellite map | section 9 without the markers: imagery, labels, toggle, atlas frame, restyled controls | phase4 e2e with stubbed tiles, screenshots |
 | F. Ornaments and Asciify pairing | section 5: SVG parts, arch-clipped fields, sigil morph, illustrations, 404, empty states, plus `scramble` and `pageDissolve` (done in the admin area) | fold, aria-hidden and size tests, screenshots |
-| R1. Facade kit and the cathedral | the kit, the cathedral model, two detail levels, seed coordinates fixed | geometry bounds and triangle budget tests, screenshots against references |
-| R2. Jesús, Santa Lucía and the viewer | the other two models and the fixed low front view (done) | e2e, screenshots |
+| R1. Facade kit and the cathedral | the kit, the cathedral model, two detail levels, seed coordinates fixed (replaced by the engravings) | geometry bounds and triangle budget tests |
+| R2. Jesús, Santa Lucía and the viewer | the other two models and the fixed low front view (replaced by the engravings) | e2e, screenshots |
 | L. Books | section 8 (done: greys, slimmer, sigil stamps, arch frame) | bookshelf tests, screenshots |
-| S. Scans and typologies | tier 1 rules and guide, tier 3 typologies (done; the optional OSM footprint was left out) | upload tests, budget tests |
-| H. Map markers | sigil badges and names, models from zoom 15.5 (done) | phase4 e2e |
+| S. Scans and typologies | tier 1 rules and guide, tier 3 typologies (replaced by the engravings; the model upload rules left the viewer) | upload tests, budget tests |
+| H. Map markers | sigil badges and names (done) | phase4 e2e |
+| G. Engravings | the 3D churches replaced by line engravings: plates, page, map markers, 3D code removed (done) | plate bounds, weight and determinism tests, e2e |
 
 ## 11. Constraints (apply to every phase)
 - Accessible names, roles and Spanish labels stay the same, so the Playwright specs keep working (they match on text and roles).
@@ -108,24 +105,24 @@ Done: A system, B login, C public view, D admin Asciify, the Asciify batch. The 
 - Inputs and buttons keep a 3:1 boundary.
 - The production build is tested too, since the CSP applies only there.
 - One Asciify surface (a full field) at a time, small components aside, paused off-screen, frame rate capped; Asciify code loads lazily; without WebGL or with reduced motion a still or plain markup shows and everything works.
-- **WebGL context budget** (the leak test caps canvases at 4): public map 1 (markers inside it). Opening a church unmounts the map, as the app does today, so the church view is 1 shared by stage, planta and alzado, plus 1 for the book shelf, plus 1 only while an Asciify surface is on: 3 at most. Login 1 (the art panel; the small components share the kit's budget); admin 0 to 2.
+- **WebGL context budget** (the leak test caps canvases at 4): public map 1 (markers inside it). Opening a church unmounts the map, as the app does today, so the church view is the engraving (SVG, no context), plus 1 for the book shelf, plus 1 only while an Asciify surface is on: 2 at most. Login 1 (the art panel; the small components share the kit's budget); admin 0 to 2.
 - **No text over images.** Text never sits over an image, an ornament or an Asciify field. Church names over the satellite imagery sit on their own plate (section 9).
-- Geometry bounds, as tested: a model fits a 72 by 72 by 45 m box (the cathedral is the largest) centred at the origin with its base at y = 0, stays inside its triangle budget, has no NaN, and where real dimensions are verified its size is within 15% of them.
+- Plate bounds, as tested: every plate stays on its 240 by 180 sheet, rests on the ground line, has no NaN and weighs under 14 KB of path data.
 - Hatching, outlines and any engraving are done in the material (`onBeforeCompile`, `EdgesGeometry`), not with a post-process composer. The e2e checks that shaders compile and log no GL error; it never compares pixels.
 
 ## 12. Risks
-- Fidelity depends on references: without photos or scans the authored models are interpretations, and the page says so.
+- Fidelity depends on references: without photos the plates of the pilot churches are interpretations of their real arrangement.
 - Imagery tiles are external: stubbed in tests, attribution kept, the street map is the fallback if imagery fails.
 - Bundle: lazy chunks per feature, budgets checked per PR.
 - Low-vision users: meaning never depends on colour alone.
 
 ## 13. Open choices
-1. Photos, plans or scans of the three churches, even phone photos: they make the models far more faithful.
+1. Photos or plans of the three churches, even phone photos: they make the plates more faithful (and can be shown beside them).
 2. Globe intro before the map: assumed no.
 3. Per-church sigil: generated from the name (assumed) or designed by each church later.
 
 ## 14. Gaps closed and gaps left
-An audit of this document against the code found gaps; they were closed in the same round except those listed below.
-- **Closed:** the viewer plaque (sigil and name), the device-based low tier, the 250 KB kit budget test, ornaments in admin module titles and the PDF reader, the "never behind text" placement test, toasts with a check and "Listo:", a solid underline on invalid fields, the paper texture in grey, and the geometry box stated as tested.
-- **By design, not gaps:** the map plinth stays plain (the badge marker carries the sigil and name there); the bar chart has one hatch pattern because it has one series; the Events and Reports pages have no empty lists to illustrate (a calendar and a report form); the PDF reader uses a guilloche band, not an arch.
-- **Left open:** the Esri World Imagery licence without a key needs a check before production, and the optional OpenStreetMap footprint import was not built.
+An audit of this document against the code found gaps; they were closed in the same round except those listed below. The 3D churches were later replaced by engravings (section 7), which also retired the viewer plaque, the weak-device detail level and the kit size budget.
+- **Closed:** ornaments in admin module titles and the PDF reader, the "never behind text" placement test, toasts with a check and "Listo:", a solid underline on invalid fields, the paper texture in grey.
+- **By design, not gaps:** the bar chart has one hatch pattern because it has one series; the Events and Reports pages have no empty lists to illustrate; the PDF reader uses a guilloche band, not an arch.
+- **Left open:** the Esri World Imagery licence without a key needs a check before production. The backend still accepts a .glb upload for a church (`/api/church/model`) although no page shows it any more; it can be removed with its tests.

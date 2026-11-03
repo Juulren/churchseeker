@@ -19,9 +19,12 @@ test.describe('ornaments', () => {
   })
 
   test('every ornament on a page is decoration: hidden, never focusable, never taking the pointer', async ({ page }) => {
-    // The screen shown when the list of churches cannot load carries the lost-road ornaments.
-    await page.route('**/api/public/churches', (r) => r.fulfill({ status: 502, body: 'Bad Gateway' }))
-    await page.goto('/')
+    // The admin dashboard carries a strip of ornaments and a divider under its title.
+    await page.goto('/#/login')
+    await page.getByLabel('Correo').fill(ADMIN.email)
+    await page.getByLabel('Contraseña').fill(ADMIN.password)
+    await page.getByRole('button', { name: 'Continuar' }).click()
+    await expect(page.getByRole('heading', { level: 2, name: 'Panel' })).toBeVisible()
     await expect(page.locator('.ornament').first()).toBeVisible()
     const bad = await page.evaluate(() => [...document.querySelectorAll('.ornament')].filter((e) => e.getAttribute('aria-hidden') !== 'true' || e.getAttribute('focusable') !== 'false' || getComputedStyle(e).pointerEvents !== 'none').length)
     expect(bad).toBe(0)

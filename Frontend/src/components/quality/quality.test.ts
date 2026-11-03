@@ -1,8 +1,6 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { buildBook, disposeBook } from '../bookshelf/bookModel.ts'
-import { buildChurch, churchTop, disposeObject } from '../map3d/churchBuilder.ts'
-import { styleFor } from '../map3d/churchStyles.ts'
 import { fitTitle, leather, spine } from './proceduralTextures.ts'
 
 const measure = (t: string, px: number) => t.length * px * 0.55
@@ -62,37 +60,5 @@ describe('buildBook', () => {
       expect(Number.isFinite(new THREE.Box3().setFromObject(b).getSize(new THREE.Vector3()).x)).toBe(true)
       expect(() => disposeBook(b)).not.toThrow()
     }
-  })
-})
-
-describe('buildChurch', () => {
-  const ids = ['11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', '33333333-3333-3333-3333-333333333333', 'new-church', 'otra', 'una-mas', 'x', 'y', 'z']
-
-  it('builds a church for every style, inside sane bounds, at both levels of detail', () => {
-    for (const id of ids) {
-      const style = styleFor({ id })
-      for (const detail of ['high', 'low'] as const) {
-        const c = buildChurch(style, detail)
-        expect(meshes(c)).toBeGreaterThan(5)
-        const box = new THREE.Box3().setFromObject(c)
-        const size = box.getSize(new THREE.Vector3())
-        expect(box.min.y).toBeGreaterThanOrEqual(-0.01)
-        expect(size.y).toBeLessThanOrEqual(churchTop(style) + 0.5)
-        expect(Math.max(size.x, size.z)).toBeLessThan(14)
-        expect(Number.isFinite(size.x + size.y + size.z)).toBe(true)
-        expect(() => disposeObject(c)).not.toThrow()
-      }
-    }
-  })
-
-  it('gives churches that have no model of their own one of four forms, all of them in use', () => {
-    const kinds = new Set(Array.from({ length: 60 }, (_, i) => styleFor({ id: 'church-' + i }).typology))
-    expect(kinds.size).toBe(4)
-  })
-
-  it('is deterministic: the same church is always built the same way', () => {
-    const a = styleFor({ id: 'abc' }), b = styleFor({ id: 'abc' })
-    expect(a).toEqual(b)
-    expect(meshes(buildChurch(a))).toBe(meshes(buildChurch(b)))
   })
 })
