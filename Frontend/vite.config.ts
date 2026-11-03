@@ -33,6 +33,10 @@ const csp = (): Plugin => ({
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss(), csp()],
+  build: {
+    // The CSP has no data: in font-src, so fonts must stay files; everything else keeps Vite's default 4 KB inlining.
+    assetsInlineLimit: (file) => (file.endsWith('.woff2') || file.endsWith('.woff') ? false : undefined),
+  },
   server: {
     port: 5173,
     strictPort: true,
