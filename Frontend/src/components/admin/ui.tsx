@@ -126,7 +126,10 @@ export function Odometer({ value, format = (n: number) => n.toLocaleString('es-M
   const handle = useRef<{ set: (n: number) => void } | null>(null)
   // React renders the first text once and never touches it again; the odometer (or, without it, the effect below) owns the node afterwards.
   const [first] = useState(() => format(value))
-  useKit(el, (kit, node) => { const h = kit.odometer(node, { value, format }); handle.current = h; return { destroy: () => { handle.current = null; h.destroy() } } }, [])
+  // The kit loads late: it must start from the newest value, not the one from the first render.
+  const latest = useRef(value)
+  latest.current = value
+  useKit(el, (kit, node) => { const h = kit.odometer(node, { value: latest.current, format }); handle.current = h; return { destroy: () => { handle.current = null; h.destroy() } } }, [])
   useEffect(() => {
     if (handle.current) handle.current.set(value)
     else if (el.current) el.current.textContent = format(value)
@@ -143,13 +146,13 @@ export function BarChart({ labels, values, title, format = (n: number) => String
   useKit(plot, (kit, el) => {
     const h = kit.blockChart(el, { values, labels, format, look: { cellSize: 6 } })
     setAscii(h.supported)
-    return h
+    return { destroy: () => { setAscii(false); h.destroy() } }
   }, [labels.join('|'), values.join(',')])
   const bars = scaleBars(values)
   const w = 36
   return (
     <figure className="chart">
-      <div ref={plot} className="chart-plot" hidden={!ascii} aria-hidden="true" style={{ width: `min(100%, ${Math.max(labels.length, 1) * 84}px)` }} />
+      <div ref={plot} className="chart-plot" data-ascii={ascii || undefined} aria-hidden="true" style={{ width: `min(100%, ${Math.max(labels.length, 1) * 84}px)` }} />
       <svg className={ascii ? 'sr-only' : undefined} viewBox={`0 0 ${Math.max(labels.length, 1) * w} 120`} role="img" aria-label={`${title}: ${labels.map((l, i) => `${l} ${format(values[i] ?? 0)}`).join(', ')}`} preserveAspectRatio="none">
         {bars.map((b, i) => (
           <g key={i}>

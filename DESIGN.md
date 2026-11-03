@@ -1,4 +1,4 @@
-# ChurchSeeker design direction (implemented: phases A to D)
+# ChurchSeeker design direction (phases A to D done; see the status table)
 
 Goal: a Renaissance, sigil and Gothic look that is also modern and material, with Asciify characters as the living material. Symbols stay open to interpretation so any religion can recognise itself in them.
 
@@ -9,7 +9,7 @@ Goal: a Renaissance, sigil and Gothic look that is also modern and material, wit
    - Stars use 7 or 12 points only (6, 8, 9 and an inverted 5 each belong to a tradition).
    - The tree is organic (uneven branches), never a 10-node diagram.
    - Arches stay simple and are not paired with a rosette on the same screen, so it does not read as one cathedral.
-   - The sigil generator rejects shapes that contain a cross, a hexagram or a hooked cross; a snapshot test covers every seeded church.
+   - The sigil is seven-fold symmetric (`sigil.ts`). A pattern repeated 7 times cannot have 4-fold or 6-fold symmetry, so it cannot form a cross or a hexagram; tests check the fold count and the repetition for the seeded church names. There is no per-shape rejection list.
 4. **Gothic structure, modern surface.** Pointed-arch frames, tracery lines, corner marks and hairline rules on flat, quiet panels. No skeuomorphic textures on the interface.
 5. **Quiet motion.** Slow, eased, reduced-motion safe. Motion confirms something happened.
 
@@ -60,6 +60,20 @@ Asciify inks map to these: `--ascii-ink` = `--ink-dim`, `--ascii-ink-strong` = `
 | Admin quick navigation | `commandPalette` (Ctrl+K) |
 | Public landing | `globe` of dots with the churches as points, as the quiet ground before a church is chosen |
 | Church name / sigil | `wordmark` assembling the name; sigil drawn with `morphField` once on entry |
+
+## Status of the Asciify components
+| Component | State |
+|---|---|
+| `artPanel` (login tree, cursor trail, pulse) | done |
+| `decode` (church name, admin module title) | done |
+| `statusOrb` (loading) | done |
+| `odometer` (dashboard figures) | done |
+| `blockChart` (dashboard charts) | done |
+| `buttonLoading`, `beam`, `cursorTrail` | not yet |
+| `toastStack`, `pill`, `tabs`, `skeleton` | not yet |
+| `slideToConfirm`, `disintegrate`, `dropzone` | not yet (the e2e specs click plain buttons) |
+| `commandPalette`, `pageDissolve`, `wordmark`, `scramble` | not yet |
+| `globe`, `fieldBackground` 404, `morphField` | not yet |
 
 ## Phases (one PR each, E2E kept green)
 - **A. System.** Tokens (with aliases for the old `--panel` and `--panel-edge` names), fonts, base classes (`rpg-panel`, buttons, inputs, tables, notices), Gothic frame and corner marks, Asciify ink mapping.

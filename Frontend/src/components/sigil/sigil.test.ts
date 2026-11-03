@@ -11,6 +11,14 @@ describe('sigil', () => {
     expect(SIGIL_FOLD % 6).not.toBe(0)
   })
 
+  it('repeats one sector exactly seven times, for the three seeded churches and any other name', () => {
+    for (const n of NAMES) {
+      const sector = sigilMarks(n).length
+      const marks = (sigilPath(n).match(/M/g) ?? []).length
+      expect(marks).toBe(sector * SIGIL_FOLD)
+    }
+  })
+
   it('is deterministic per name and differs between names', () => {
     expect(sigilPath('Santa Lucía')).toBe(sigilPath('santa lucía'))
     expect(sigilPath('Catedral de San Ildefonso')).not.toBe(sigilPath('Iglesia de Santa Lucía'))

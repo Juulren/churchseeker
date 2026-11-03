@@ -33,6 +33,7 @@ export default function SignIn() {
     el.prepend(poster)
     ;(async () => {
       const { artPanel } = await import('asciify-engine/kit')
+      await poster.decode().catch(() => { /* a broken image just shows no art */ })
       if (!alive) return
       // The characters take over from the poster; without WebGL the poster stays and the form works the same.
       art.current = artPanel(el, { image: poster, clear: brand.current ?? false, focus: { x: 0.5, y: 0.5 }, look: { cellSize: 8 }, charset: ' .:-=+*#' }) as unknown as ArtHandle
