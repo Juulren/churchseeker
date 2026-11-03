@@ -86,7 +86,7 @@ Greyscale only (the admin's chosen colour stays stored and is shown by its lumin
 - Satellite is the default: Esri World Imagery (no key; `arcgisonline.com` is already allowed by the CSP) with a labels layer on top (places and roads) so names stay readable, and a toggle to the street map. Full colour, no muting: the map is the one place with colour.
 - Zoom limits follow the imagery's real resolution in Mérida; attribution stays.
 - A monochrome atlas frame (hairline rules, corner marks from the ornament library), a north arrow with one tick (no cross-shaped compass rose), controls restyled to the system.
-- Markers as a MapLibre custom layer inside the map's own WebGL context: a sigil badge on a plate with the name in Cinzel, and the church's low-detail model from zoom 16.
+- Markers as a MapLibre custom layer inside the map's own WebGL context: a sigil badge on a plate with the name in Cinzel, and the church's low-detail model from zoom 15.5 (the names from zoom 15), so the three pilot churches show as models at the opening view.
 - Selection, flight and arrival keep their logic and their e2e specs; tests keep tile requests stubbed so they never depend on the live server.
 
 ## 10. Phases (one PR each; advisor review before each merge)
@@ -99,8 +99,8 @@ Done: A system, B login, C public view, D admin Asciify, the Asciify batch. The 
 | R1. Facade kit and the cathedral | the kit, the cathedral model, two detail levels, seed coordinates fixed | geometry bounds and triangle budget tests, screenshots against references |
 | R2. Jesús, Santa Lucía and the viewer | the other two models and the fixed low front view (done) | e2e, screenshots |
 | L. Books | section 8 (done: greys, slimmer, sigil stamps, arch frame) | bookshelf tests, screenshots |
-| S. Scans and typologies | tier 1 rules and guide, tier 3 typologies, optional OSM footprint | upload tests, budget tests |
-| H. Map markers | sigil badges, low-detail models, labels | phase4 e2e |
+| S. Scans and typologies | tier 1 rules and guide, tier 3 typologies (done; the optional OSM footprint was left out) | upload tests, budget tests |
+| H. Map markers | sigil badges and names, models from zoom 15.5 (done) | phase4 e2e |
 
 ## 11. Constraints (apply to every phase)
 - Accessible names, roles and Spanish labels stay the same, so the Playwright specs keep working (they match on text and roles).
