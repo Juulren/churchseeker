@@ -82,7 +82,7 @@ export class ChurchLayer implements CustomLayerInterface {
         mercator: MercatorCoordinate.fromLngLat([church.longitude, church.latitude], 0),
       }
       this.items.push(item)
-      loadChurchObject(church, styleFor(church)).then((object) => {
+      loadChurchObject(church, styleFor(church), 'low').then((object) => {
         // A newer set of churches may have replaced this one while the model was loading.
         if (generation !== this.generation) { disposeObject(object); return }
         item.object = object

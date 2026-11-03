@@ -57,6 +57,8 @@ test.describe('map and navigation', () => {
   })
 
   test('opening and leaving churches repeatedly does not leak WebGL contexts or memory', async ({ page }) => {
+    // Eight full visits drawn by software WebGL: each takes several seconds, so the default 90 s is too tight.
+    test.setTimeout(240_000)
     const problems = watch(page)
     await page.goto('/')
     await expect(nav(page).getByRole('button')).toHaveCount(3)

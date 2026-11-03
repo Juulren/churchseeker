@@ -10,12 +10,14 @@ export interface ChurchStyle {
   length: number
   width: number
   height: number
+  /** A church with its own authored model (see kit/), instead of the generic builder. */
+  authored?: 'cathedral'
 }
 
 // Hand-tuned looks for the pilot churches (database ids), inspired by their real architecture.
 const KNOWN: Record<string, ChurchStyle> = {
   // Cathedral of San Ildefonso: sober stone façade with two bell towers.
-  '11111111-1111-1111-1111-111111111111': { wall: '#d8c9a3', roof: '#8c5a3c', trim: '#a89670', towers: 2, dome: true, arches: 0, length: 7, width: 5, height: 3.2 },
+  '11111111-1111-1111-1111-111111111111': { wall: '#d8c9a3', roof: '#8c5a3c', trim: '#a89670', towers: 2, dome: true, arches: 0, length: 7, width: 5, height: 3.2, authored: 'cathedral' },
   // Santa Lucía: porticoed church with a single bell tower.
   '22222222-2222-2222-2222-222222222222': { wall: '#f0e0bd', roof: '#b4533c', trim: '#7ba7a0', towers: 1, dome: false, arches: 5, length: 6.5, width: 3.6, height: 2.6 },
   // Jesús (Tercera Orden): baroque, ochre walls, dome.

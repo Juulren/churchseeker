@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import ChurchModel from '../map3d/ChurchModel.tsx'
@@ -18,7 +19,8 @@ function Unavailable() {
 /** Close-up of one church on a round stage. Drag to turn it around; it also turns slowly by itself. */
 export default function ChurchStage({ id, name, modelUrl }: Props) {
   if (!hasWebGL()) return <Unavailable />
-  const style = styleFor({ id })
+  // Memoised: a new style object on every render would rebuild the whole church.
+  const style = useMemo(() => styleFor({ id }), [id])
   return (
     <GraphicsBoundary fallback={<Unavailable />}>
       <Canvas shadows="soft" camera={{ position: [10, 6.5, 13], fov: 38 }} dpr={[1, 2]} gl={{ antialias: true, alpha: true }}
