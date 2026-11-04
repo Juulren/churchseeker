@@ -16,19 +16,16 @@ public class Church : BaseEntity
     public string Address { get; private set; } = string.Empty;
     public double Latitude { get; private set; }
     public double Longitude { get; private set; }
-    // Default 3D model shipped with the frontend (static path). An uploaded model overrides it.
-    public string? ModelPath { get; private set; }
     public string? ContactPhone { get; private set; }
     public string? ContactEmail { get; private set; }
     // Server-generated storage names (GUID + extension), never user-supplied file names.
     public string? LogoFile { get; private set; }
-    public string? ModelFile { get; private set; }
     public IReadOnlyList<ScheduleSlot> Schedules { get; private set; } = [];
 
     private Church() { }
 
     public Church(Guid id, string name, string denomination, string patronSaint,
-                  string address, double latitude, double longitude, string? modelPath = null)
+                  string address, double latitude, double longitude)
     {
         if (id == Guid.Empty) throw new DomainException("Id is required.");
         Id = id;
@@ -37,7 +34,6 @@ public class Church : BaseEntity
         PatronSaint = RequireText(patronSaint, nameof(PatronSaint), 150);
         Address = RequireText(address, nameof(Address), 300);
         SetLocation(latitude, longitude);
-        ModelPath = modelPath;
     }
 
     public void SetLocation(double latitude, double longitude)
@@ -77,5 +73,4 @@ public class Church : BaseEntity
     }
 
     public void SetLogo(string storedName) { LogoFile = storedName; Touch(); }
-    public void SetModel(string storedName) { ModelFile = storedName; Touch(); }
 }

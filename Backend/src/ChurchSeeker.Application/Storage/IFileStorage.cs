@@ -1,6 +1,6 @@
 ﻿namespace ChurchSeeker.Application.Storage;
 
-public enum FileKind { Logo, Model, Book }
+public enum FileKind { Logo, Book }
 
 public interface IFileStorage
 {

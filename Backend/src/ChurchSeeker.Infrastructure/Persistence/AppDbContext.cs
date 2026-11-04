@@ -49,11 +49,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             e.Property(x => x.Denomination).IsRequired().HasMaxLength(100);
             e.Property(x => x.PatronSaint).IsRequired().HasMaxLength(150);
             e.Property(x => x.Address).IsRequired().HasMaxLength(300);
-            e.Property(x => x.ModelPath).HasMaxLength(300);
             e.Property(x => x.ContactPhone).HasMaxLength(30);
             e.Property(x => x.ContactEmail).HasMaxLength(256);
             e.Property(x => x.LogoFile).HasMaxLength(64);
-            e.Property(x => x.ModelFile).HasMaxLength(64);
             e.Property(x => x.Schedules).HasConversion(
                 v => JsonSerializer.Serialize(v.ToList(), (JsonSerializerOptions?)null),
                 v => (IReadOnlyList<ScheduleSlot>)(JsonSerializer.Deserialize<List<ScheduleSlot>>(v, (JsonSerializerOptions?)null) ?? new List<ScheduleSlot>()),

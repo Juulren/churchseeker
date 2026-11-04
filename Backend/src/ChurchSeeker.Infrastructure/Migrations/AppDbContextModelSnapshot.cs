@@ -199,14 +199,6 @@ namespace ChurchSeeker.Infrastructure.Migrations
                     b.Property<double>("Longitude")
                         .HasColumnType("double precision");
 
-                    b.Property<string>("ModelFile")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("ModelPath")
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -233,46 +225,43 @@ namespace ChurchSeeker.Infrastructure.Migrations
                         {
                             Id = new Guid("11111111-1111-1111-1111-111111111111"),
                             Address = "Calle 60 s/n, Centro, Mérida, Yucatán",
-                            CreatedAt = new DateTime(2026, 11, 3, 5, 22, 57, 830, DateTimeKind.Utc).AddTicks(6993),
+                            CreatedAt = new DateTime(2026, 11, 3, 5, 22, 57, 830, DateTimeKind.Utc),
                             Denomination = "Católica",
                             IsActive = true,
-                            Latitude = 20.967369999999999,
-                            Longitude = -89.623689999999996,
-                            ModelPath = "models/cathedral.glb",
+                            Latitude = 20.967099999999999,
+                            Longitude = -89.622500000000002,
                             Name = "Catedral de San Ildefonso",
                             PatronSaint = "San Ildefonso de Toledo",
                             Schedules = "[]",
-                            UpdatedAt = new DateTime(2026, 11, 3, 5, 22, 57, 830, DateTimeKind.Utc).AddTicks(7006)
+                            UpdatedAt = new DateTime(2026, 11, 3, 5, 22, 57, 830, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = new Guid("22222222-2222-2222-2222-222222222222"),
                             Address = "Calle 60 x 55, Santa Lucía, Mérida, Yucatán",
-                            CreatedAt = new DateTime(2026, 11, 3, 5, 22, 57, 830, DateTimeKind.Utc).AddTicks(7010),
+                            CreatedAt = new DateTime(2026, 11, 3, 5, 22, 57, 830, DateTimeKind.Utc),
                             Denomination = "Católica",
                             IsActive = true,
                             Latitude = 20.971599999999999,
                             Longitude = -89.624799999999993,
-                            ModelPath = "models/santa-lucia.glb",
                             Name = "Iglesia de Santa Lucía",
                             PatronSaint = "Santa Lucía",
                             Schedules = "[]",
-                            UpdatedAt = new DateTime(2026, 11, 3, 5, 22, 57, 830, DateTimeKind.Utc).AddTicks(7013)
+                            UpdatedAt = new DateTime(2026, 11, 3, 5, 22, 57, 830, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = new Guid("33333333-3333-3333-3333-333333333333"),
                             Address = "Calle 60 x 57, Centro, Mérida, Yucatán",
-                            CreatedAt = new DateTime(2026, 11, 3, 5, 22, 57, 830, DateTimeKind.Utc).AddTicks(7014),
+                            CreatedAt = new DateTime(2026, 11, 3, 5, 22, 57, 830, DateTimeKind.Utc),
                             Denomination = "Católica",
                             IsActive = true,
                             Latitude = 20.966100000000001,
                             Longitude = -89.623400000000004,
-                            ModelPath = "models/jesus.glb",
                             Name = "Iglesia de Jesús (Tercera Orden)",
                             PatronSaint = "Jesús Nazareno",
                             Schedules = "[]",
-                            UpdatedAt = new DateTime(2026, 11, 3, 5, 22, 57, 830, DateTimeKind.Utc).AddTicks(7017)
+                            UpdatedAt = new DateTime(2026, 11, 3, 5, 22, 57, 830, DateTimeKind.Utc)
                         });
                 });
 

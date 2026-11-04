@@ -41,7 +41,7 @@ public sealed class SmtpEmailSender : IEmailSender
         {
             using var client = new SmtpClient();
             await client.ConnectAsync(_opt.Host, _opt.Port, _opt.UseSsl ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTlsWhenAvailable, ct);
-            if (!string.IsNullOrEmpty(_opt.User)) await client.AuthenticateAsync(_opt.User, _opt.Password, ct);
+            if (!string.IsNullOrEmpty(_opt.User)) await client.AuthenticateAsync(_opt.User, _opt.Password ?? string.Empty, ct);
             await client.SendAsync(message, ct);
             await client.DisconnectAsync(true, ct);
         }

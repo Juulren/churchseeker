@@ -6,7 +6,6 @@ export interface PublicChurch {
   patronSaint: string
   latitude: number
   longitude: number
-  modelUrl: string | null
   logoUrl: string | null
 }
 
@@ -41,11 +40,6 @@ export interface PublicAnnouncement {
   publishDate: string
   expiresOn: string | null
   isImportant: boolean
-}
-
-export interface PublicHighlights {
-  importantAnnouncements: PublicAnnouncement[]
-  upcomingEvents: PublicEvent[]
 }
 
 export interface PublicBook {

@@ -59,14 +59,6 @@ public class ChurchController : ApiControllerBase
         return bytes is null ? BadRequest(new { errors = new[] { "Missing, empty or oversized file." } }) : Map(await _church.SetLogoAsync(bytes, ct));
     }
 
-    [HttpPost("model")]
-    [Authorize(Policy = Policies.AdminOnly)]
-    [RequestSizeLimit(2 * 1024 * 1024)]
-    public async Task<IActionResult> UploadModel(IFormFile file, CancellationToken ct)
-    {
-        var bytes = await UploadReader.ReadCappedAsync(file, _opt.MaxModelBytes, ct);
-        return bytes is null ? BadRequest(new { errors = new[] { "Missing, empty or oversized file." } }) : Map(await _church.SetModelAsync(bytes, ct));
-    }
 }
 
 [Route("api/public/churches")]
@@ -87,9 +79,6 @@ public class PublicChurchesController : ApiControllerBase
 
     [HttpGet("{churchId:guid}/logo")]
     public async Task<IActionResult> Logo(Guid churchId, CancellationToken ct) => FileOrNotFound(await _churches.OpenLogoAsync(churchId, ct));
-
-    [HttpGet("{churchId:guid}/model")]
-    public async Task<IActionResult> Model(Guid churchId, CancellationToken ct) => FileOrNotFound(await _churches.OpenModelAsync(churchId, ct));
 
     private IActionResult FileOrNotFound(Result<FileContent> r) => r.Succeeded ? File(r.Value!.Stream, r.Value.ContentType) : NotFound();
 }

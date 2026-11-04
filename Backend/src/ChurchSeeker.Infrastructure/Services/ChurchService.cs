@@ -50,9 +50,6 @@ public sealed class ChurchService : IChurchService, IPublicChurchService
     public Task<Result<ChurchProfileResponse>> SetLogoAsync(byte[] content, CancellationToken ct = default) =>
         SetFileAsync(content, _opt.MaxImageBytes, FileValidator.ValidateImage, FileKind.Logo, (c, n) => c.SetLogo(n), ct);
 
-    public Task<Result<ChurchProfileResponse>> SetModelAsync(byte[] content, CancellationToken ct = default) =>
-        SetFileAsync(content, _opt.MaxModelBytes, d => FileValidator.ValidateGlb(d, _opt.MaxModelTriangles), FileKind.Model, (c, n) => c.SetModel(n), ct);
-
     private async Task<Result<ChurchProfileResponse>> SetFileAsync(byte[] content, int max, Func<byte[], FileCheck> validate,
         FileKind kind, Action<Church, string> apply, CancellationToken ct)
     {
@@ -72,7 +69,7 @@ public sealed class ChurchService : IChurchService, IPublicChurchService
     public async Task<IReadOnlyList<PublicChurchSummary>> ListAsync(CancellationToken ct = default)
     {
         var rows = await _churches.Query().AsNoTracking().Where(c => c.IsActive).OrderBy(c => c.Name).ToListAsync(ct);
-        return rows.Select(c => new PublicChurchSummary(c.Id, c.Name, c.Denomination, c.PatronSaint, c.Latitude, c.Longitude, ModelUrl(c), LogoUrl(c))).ToList();
+        return rows.Select(c => new PublicChurchSummary(c.Id, c.Name, c.Denomination, c.PatronSaint, c.Latitude, c.Longitude, LogoUrl(c))).ToList();
     }
 
     public async Task<Result<ChurchProfileResponse>> GetAsync(Guid churchId, CancellationToken ct = default)
@@ -83,9 +80,6 @@ public sealed class ChurchService : IChurchService, IPublicChurchService
 
     public Task<Result<FileContent>> OpenLogoAsync(Guid churchId, CancellationToken ct = default) =>
         OpenAsync(churchId, FileKind.Logo, c => c.LogoFile, ct);
-
-    public Task<Result<FileContent>> OpenModelAsync(Guid churchId, CancellationToken ct = default) =>
-        OpenAsync(churchId, FileKind.Model, c => c.ModelFile, ct);
 
     private async Task<Result<FileContent>> OpenAsync(Guid churchId, FileKind kind, Func<Church, string?> pick, CancellationToken ct)
     {
@@ -100,15 +94,13 @@ public sealed class ChurchService : IChurchService, IPublicChurchService
         ".png" => "image/png",
         ".jpg" => "image/jpeg",
         ".webp" => "image/webp",
-        ".glb" => "model/gltf-binary",
         ".pdf" => "application/pdf",
         _ => "application/octet-stream"
     };
 
-    private static string? ModelUrl(Church c) => c.ModelFile is not null ? $"/api/public/churches/{c.Id}/model" : c.ModelPath;
     private static string? LogoUrl(Church c) => c.LogoFile is not null ? $"/api/public/churches/{c.Id}/logo" : null;
 
     private static ChurchProfileResponse ToProfile(Church c) => new(c.Id, c.Name, c.Denomination, c.PatronSaint, c.Address,
-        c.ContactPhone, c.ContactEmail, c.Latitude, c.Longitude, ModelUrl(c), LogoUrl(c),
+        c.ContactPhone, c.ContactEmail, c.Latitude, c.Longitude, LogoUrl(c),
         c.Schedules.Select(s => new ScheduleSlotDto(s.Day, s.Time, s.Description)).ToList());
 }
