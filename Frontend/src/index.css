@@ -307,3 +307,11 @@ select.input option { background: var(--stone); color: var(--ink); }
 .engraving-box { display: block; min-height: 0; }
 .engraving-stage .engraving { height: 100%; }
 .engraving-stage figcaption { text-align: center; }
+
+/* The searchable member field: a list under the input, over what follows it. */
+.member-picker-list { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 30; padding: 4px; background: var(--stone-high); }
+.member-picker-options { margin: 0; padding: 0; list-style: none; max-height: 240px; overflow-y: auto; }
+.member-picker-options [role="option"] { padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+.member-picker-options [role="option"][data-active] { background: var(--accent); color: var(--ground); }
+.member-picker-options [role="option"][data-chosen]::after { content: " ✓"; }
+.member-picker-status { padding: 4px 10px 2px; font-size: 0.82rem; }

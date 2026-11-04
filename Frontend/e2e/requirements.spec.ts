@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { cleanTracked, trackedMember } from './tracked.ts'
+import { cleanTracked, pickMember, trackedMember } from './tracked.ts'
 
 // Checks the requirements that need several screens to work together (RF-03, RF-04, RF-05, RF-07, RF-09).
 const ADMIN = { email: process.env.E2E_ADMIN_EMAIL ?? 'admin@churchseeker.local', password: process.env.E2E_ADMIN_PASSWORD ?? 'Adm1n!Passw0rd#' }
@@ -42,7 +42,7 @@ test.describe('requirements across modules', () => {
     await expect(row).toBeVisible()
 
     await row.getByRole('button', { name: 'Integrantes' }).click()
-    await page.getByLabel('Agregar miembro').selectOption({ label: member })
+    await pickMember(page, 'Agregar miembro', member)
     await page.getByRole('button', { name: 'Agregar', exact: true }).click()
     await expect(page.getByRole('listitem').filter({ hasText: member })).toBeVisible()
     await expect(page.getByText('Sin actividades.')).toBeVisible()
@@ -66,14 +66,14 @@ test.describe('requirements across modules', () => {
     await page.getByRole('button', { name: 'Nuevo evento' }).click()
     await page.getByLabel('Título').fill(title)
     await page.getByLabel('Lugar').fill('Salón')
-    await page.getByLabel('Responsable').selectOption({ label: person })
+    await pickMember(page, 'Responsable', person)
     await page.getByLabel('Ministerio').selectOption({ label: ministry })
     await page.getByRole('button', { name: 'Guardar' }).click()
     await expect(page.getByRole('button', { name: new RegExp(title) })).toBeVisible()
 
     // The assignment survives reopening the event.
     await page.getByRole('button', { name: new RegExp(title) }).click()
-    await expect(page.getByLabel('Responsable')).not.toHaveValue('')
+    await expect(page.getByLabel('Responsable')).toHaveValue(person)
     await expect(page.getByLabel('Ministerio')).not.toHaveValue('')
     await page.keyboard.press('Escape')
 
@@ -92,7 +92,7 @@ test.describe('requirements across modules', () => {
 
     await login(page)
     await page.getByRole('link', { name: 'Asistencia' }).click()
-    await page.getByLabel('Miembro', { exact: true }).selectOption({ label: name })
+    await pickMember(page, 'Miembro', name, true)
     const row = page.getByRole('row', { name: new RegExp(title) })
     await expect(row).toBeVisible()
     await expect(row).toContainText('Presente')
@@ -133,4 +133,37 @@ test.describe('requirements across modules', () => {
     await expect(page.getByText('Asistencias del mes')).toBeVisible()
     await expect(page.getByText('Ministerios activos')).toBeVisible()
   })
+})
+
+test('the member field searches the whole list, not just the first 100', async ({ page, request }) => {
+  test.setTimeout(240_000)
+  const h = await headers(request)
+  // More than a page of members, with the one we look for last in alphabetical order.
+  const tag = stamp()
+  for (let i = 0; i < 105; i++) await trackedMember(request, h, `Relleno ${tag} ${String(i).padStart(3, '0')}`)
+  const target = await trackedMember(request, h, `Zzz Buscado ${tag}`)
+  void target
+
+  await login(page)
+  await page.getByRole('link', { name: 'Eventos' }).click()
+  await page.getByRole('button', { name: 'Nuevo evento' }).click()
+  const field = page.getByLabel('Responsable')
+  await field.click()
+  // The list never shows more than a dozen options, however many members there are.
+  const options = page.getByRole('listbox').getByRole('option')
+  await expect(options.first()).toBeVisible()
+  expect(await options.count()).toBeLessThanOrEqual(13)
+  await field.fill(`Buscado ${tag}`)
+  await expect(options.filter({ hasText: `Zzz Buscado ${tag}` })).toBeVisible()
+  // Arrow keys and Enter choose; the first Escape closes the list, not the dialog.
+  await field.press('ArrowDown')
+  await field.press('Enter')
+  await expect(field).toHaveValue(`Zzz Buscado ${tag}`)
+  await field.click()
+  await field.press('Escape')
+  await expect(page.getByRole('listbox')).toHaveCount(0)
+  await expect(page.getByRole('dialog', { name: 'Nuevo evento' })).toBeVisible()
+  // A search with no match says so.
+  await field.fill('zzzz-nadie-' + tag)
+  await expect(page.getByText('Nadie coincide con esa búsqueda.')).toBeVisible()
 })

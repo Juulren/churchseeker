@@ -3,6 +3,7 @@ import { adminApi } from '../../../services/adminApi.ts'
 import type { Ministry } from '../../../services/adminTypes.ts'
 import { addDays, emptyToNull, todayIso } from '../format.ts'
 import { messageOf, useAsync } from '../useAsync.ts'
+import MemberPicker from '../MemberPicker.tsx'
 import { Modal, Notice, SelectInput, TextArea, TextInput } from '../ui.tsx'
 import { Empty } from '../../ornament/Illustrations.tsx'
 
@@ -42,7 +43,6 @@ function MinistryForm({ ministry, onDone, onClose }: { ministry: Ministry | null
 
 function Roster({ ministry, canManage }: { ministry: Ministry; canManage: boolean }) {
   const roster = useAsync(() => adminApi.ministries.members(ministry.id), [ministry.id])
-  const members = useAsync(() => adminApi.members.list({ active: true, pageSize: 100 }), [])
   const [add, setAdd] = useState('')
   const activities = useAsync(() => adminApi.ministries.events(ministry.id, { from: todayIso(), to: addDays(todayIso(), 180) }), [ministry.id])
   const [error, setError] = useState<string | null>(null)
@@ -55,8 +55,7 @@ function Roster({ ministry, canManage }: { ministry: Ministry; canManage: boolea
       {canManage && (
         <div className="toolbar">
           <div style={{ flex: '1 1 240px' }}>
-            <SelectInput label="Agregar miembro" value={add} onChange={setAdd}
-              options={[{ value: '', label: 'Elige…' }, ...(members.data?.items ?? []).filter((m) => !inRoster.has(m.id)).map((m) => ({ value: m.id, label: m.fullName }))]} />
+            <MemberPicker label="Agregar miembro" value={add} onChange={setAdd} exclude={inRoster} />
           </div>
           <button className="rpg-button" disabled={!add} onClick={() => act(async () => { await adminApi.ministries.addMember(ministry.id, add); setAdd('') })}>Agregar</button>
         </div>

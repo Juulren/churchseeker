@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import { adminApi } from '../../../services/adminApi.ts'
 import { addDays, todayIso } from '../format.ts'
 import { messageOf, useAsync } from '../useAsync.ts'
+import MemberPicker from '../MemberPicker.tsx'
 import { Notice, Pager, SelectInput } from '../ui.tsx'
 import { Empty } from '../../ornament/Illustrations.tsx'
 
 function MemberHistory() {
-  const members = useAsync(() => adminApi.members.list({ pageSize: 100 }), [])
   const [member, setMember] = useState('')
   const [page, setPage] = useState(1)
   const history = useAsync(async () => (member ? adminApi.attendance.memberHistory(member, page) : null), [member, page])
@@ -15,8 +15,7 @@ function MemberHistory() {
       <h3 className="rpg-title text-xl">Historial por miembro</h3>
       <div className="toolbar">
         <div style={{ flex: '1 1 260px' }}>
-          <SelectInput label="Miembro" value={member} onChange={(v) => { setMember(v); setPage(1) }}
-            options={[{ value: '', label: 'Elige un miembro…' }, ...(members.data?.items ?? []).map((m) => ({ value: m.id, label: m.fullName }))]} />
+          <MemberPicker label="Miembro" value={member} onChange={(v) => { setMember(v); setPage(1) }} includeInactive />
         </div>
       </div>
       {history.error && <Notice>{history.error}</Notice>}

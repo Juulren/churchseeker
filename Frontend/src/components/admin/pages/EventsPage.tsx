@@ -3,6 +3,7 @@ import { adminApi } from '../../../services/adminApi.ts'
 import { EVENT_KINDS, type EventItem } from '../../../services/adminTypes.ts'
 import { emptyToNull, MONTHS, monthGrid, monthRange, todayIso } from '../format.ts'
 import { messageOf, useAsync } from '../useAsync.ts'
+import MemberPicker from '../MemberPicker.tsx'
 import { Check, Modal, Notice, SelectInput, TextArea, TextInput } from '../ui.tsx'
 
 const DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
@@ -17,7 +18,6 @@ function EventForm({ event, date, canEdit, onDone, onClose }: { event: EventItem
   const [isPublic, setPublic] = useState(event?.isPublic ?? true)
   const [responsible, setResponsible] = useState(event?.responsibleMemberId ?? '')
   const [ministry, setMinistry] = useState(event?.ministryId ?? '')
-  const members = useAsync(() => adminApi.members.list({ active: true, pageSize: 100 }), [])
   const ministries = useAsync(() => adminApi.ministries.list(), [])
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -43,8 +43,7 @@ function EventForm({ event, date, canEdit, onDone, onClose }: { event: EventItem
             <TextInput label="Fecha" type="date" value={d} onChange={setD} />
             <TextInput label="Hora" type="time" value={time} onChange={setTime} />
             <SelectInput label="Tipo" value={kind} onChange={setKind} options={[1, 2].map((k) => ({ value: String(k), label: EVENT_KINDS[k] }))} />
-            <SelectInput label="Responsable" value={responsible} onChange={setResponsible}
-              options={[{ value: '', label: 'Sin responsable' }, ...(members.data?.items ?? []).map((m) => ({ value: m.id, label: m.fullName }))]} />
+            <MemberPicker label="Responsable" value={responsible} onChange={setResponsible} noneLabel="Sin responsable" disabled={!canEdit || busy} />
             <SelectInput label="Ministerio" value={ministry} onChange={setMinistry}
               options={[{ value: '', label: 'Ninguno' }, ...(ministries.data ?? []).filter((m) => m.isActive).map((m) => ({ value: m.id, label: m.name }))]} />
           </div>
