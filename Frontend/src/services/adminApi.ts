@@ -23,6 +23,7 @@ export const adminApi = {
 
   members: {
     list: (q: { search?: string; active?: boolean; page?: number; pageSize?: number }) => get<Paged<T.Member>>(`/api/members${qs(q)}`),
+    get: (m: string) => get<T.Member>(`/api/members/${id(m)}`),
     create: (d: T.MemberInput) => call<T.Member>('/api/members', 'POST', d),
     update: (m: string, d: T.MemberInput) => call<T.Member>(`/api/members/${id(m)}`, 'PUT', d),
     deactivate: async (m: string) => { await request(`/api/members/${id(m)}`, send('DELETE')) },

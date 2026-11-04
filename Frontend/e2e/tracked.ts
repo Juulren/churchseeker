@@ -23,3 +23,11 @@ export async function cleanTracked(playwright: Playwright): Promise<void> {
     for (const id of created.splice(0)) await ctx.delete(`${API}/api/members/${id}`, { headers })
   } finally { await ctx.dispose() }
 }
+
+/** Picks a member in a searchable member field: types part of the name and chooses the matching option. */
+export async function pickMember(page: import('@playwright/test').Page, label: string | RegExp, name: string, exact = false): Promise<void> {
+  const field = page.getByLabel(label, { exact })
+  await field.click()
+  await field.fill(name)
+  await page.getByRole('option', { name }).click()
+}
