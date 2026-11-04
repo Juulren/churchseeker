@@ -1,5 +1,5 @@
 ﻿import type {
-  ChurchProfile, Paged, PublicBook, PublicChurch, PublicEvent, PublicHighlights, StaffBook, PublicAnnouncement,
+  ChurchProfile, PublicBook, PublicChurch, PublicEvent, PublicAnnouncement,
 } from './types.ts'
 
 export class ApiError extends Error {
@@ -20,7 +20,6 @@ let accessToken: string | null = null
 let refreshing: Promise<boolean> | null = null
 
 export const setAccessToken = (token: string | null) => { accessToken = token }
-export const hasSession = () => accessToken !== null
 
 async function send(path: string, init: RequestInit = {}, withAuth = true): Promise<Response> {
   const controller = new AbortController()
@@ -97,14 +96,8 @@ export const publicApi = {
   },
   announcements: async (id: string) =>
     arrayOf<PublicAnnouncement>(await json<unknown>(`/api/public/churches/${enc(id)}/announcements`, undefined, false)),
-  highlights: (id: string) => json<PublicHighlights>(`/api/public/churches/${enc(id)}/highlights`, undefined, false),
   books: async (id: string) => arrayOf<PublicBook>(await json<unknown>(`/api/public/churches/${enc(id)}/books`, undefined, false)),
   bookFile: async (churchId: string, bookId: string) =>
     (await request(`/api/public/churches/${enc(churchId)}/books/${enc(bookId)}/file`, undefined, false)).arrayBuffer(),
 }
 
-// Needs a session. Lists the church's own shelf, private books included.
-export const staffApi = {
-  books: async () => (await json<Paged<StaffBook>>('/api/books?pageSize=100')).items,
-  bookFile: async (bookId: string) => (await request(`/api/books/${enc(bookId)}/file`)).arrayBuffer(),
-}

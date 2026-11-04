@@ -150,18 +150,17 @@ test.describe('hostile and broken API data', () => {
     const problems = watch(page)
     const evil = '<img src=x onerror="window.__xss=1">'
     await page.route('**/api/public/churches', (r) => json(r, [
-      { id: CATHEDRAL, name: evil, denomination: '<b>x</b>', patronSaint: '"><script>window.__xss=2</script>', latitude: 20.96737, longitude: -89.62369, modelUrl: null, logoUrl: null },
-      { id: 'bad-1', name: 'Sin coordenadas', denomination: 'x', patronSaint: 'y', latitude: null, longitude: null, modelUrl: null, logoUrl: null },
-      { id: 'bad-2', name: 'Fuera de rango', denomination: 'x', patronSaint: 'y', latitude: 9999, longitude: -9999, modelUrl: null, logoUrl: null },
-      { id: 'bad-3', name: 'Modelo hostil', denomination: 'x', patronSaint: 'y', latitude: 20.97, longitude: -89.62, modelUrl: 'javascript:alert(1)', logoUrl: null },
+      { id: CATHEDRAL, name: evil, denomination: '<b>x</b>', patronSaint: '"><script>window.__xss=2</script>', latitude: 20.96737, longitude: -89.62369, logoUrl: null },
+      { id: 'bad-1', name: 'Sin coordenadas', denomination: 'x', patronSaint: 'y', latitude: null, longitude: null, logoUrl: null },
+      { id: 'bad-2', name: 'Fuera de rango', denomination: 'x', patronSaint: 'y', latitude: 9999, longitude: -9999, logoUrl: null },
     ]))
     await page.route('**/api/public/churches/*/events*', (r) => json(r, [{ id: 'e1', title: evil, description: evil, date: 'no-date', time: '??', location: evil, kind: 1, isCancelled: false }]))
     await page.route('**/api/public/churches/*/announcements', (r) => json(r, [{ id: 'a1', title: evil, body: evil, publishDate: '31/12/2026', expiresOn: null, isImportant: true }]))
     await page.route('**/api/public/churches/*/books', (r) => json(r, []))
-    await page.route(new RegExp(`/api/public/churches/${CATHEDRAL}$`), (r) => json(r, { id: CATHEDRAL, name: evil, denomination: 'x', patronSaint: 'y', latitude: 20.96737, longitude: -89.62369, modelUrl: null, logoUrl: null, address: evil, contactPhone: 'javascript:alert(1)', contactEmail: '"><script>x</script>@a.b', schedules: [{ day: 99, time: 'zz', description: evil }] }))
+    await page.route(new RegExp(`/api/public/churches/${CATHEDRAL}$`), (r) => json(r, { id: CATHEDRAL, name: evil, denomination: 'x', patronSaint: 'y', latitude: 20.96737, longitude: -89.62369, logoUrl: null, address: evil, contactPhone: 'javascript:alert(1)', contactEmail: '"><script>x</script>@a.b', schedules: [{ day: 99, time: 'zz', description: evil }] }))
 
     await page.goto('/')
-    await expect(nav(page).getByRole('button')).toHaveCount(4)
+    await expect(nav(page).getByRole('button')).toHaveCount(3)
     await nav(page).getByRole('button').first().click()
     await expect(page.getByRole('heading', { level: 2 })).toContainText('<img', { timeout: 30_000 })
     await expect(page.locator('a[href^="javascript:"]')).toHaveCount(0)

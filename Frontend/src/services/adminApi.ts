@@ -72,7 +72,7 @@ export const adminApi = {
   church: {
     get: () => get<ChurchProfile>('/api/church'),
     update: (d: T.ProfileInput) => call<ChurchProfile>('/api/church', 'PUT', d),
-    upload: async (kind: 'logo' | 'model', file: File) => {
+    upload: async (kind: 'logo', file: File) => {
       const f = new FormData()
       f.append('file', file)
       return (await request(`/api/church/${kind}`, { method: 'POST', body: f })).json() as Promise<ChurchProfile>

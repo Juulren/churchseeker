@@ -7,10 +7,10 @@ namespace ChurchSeeker.Infrastructure.Storage;
 public sealed partial class LocalFileStorage : IFileStorage
 {
     // Only names this class generated can be read back: 32 hex chars plus a known extension.
-    [GeneratedRegex(@"^[0-9a-f]{32}\.(pdf|png|jpg|webp|glb)$")]
+    [GeneratedRegex(@"^[0-9a-f]{32}\.(pdf|png|jpg|webp)$")]
     private static partial Regex StoredNamePattern();
 
-    private static readonly HashSet<string> AllowedExtensions = ["pdf", "png", "jpg", "webp", "glb"];
+    private static readonly HashSet<string> AllowedExtensions = ["pdf", "png", "jpg", "webp"];
     private readonly string _root;
 
     public LocalFileStorage(IOptions<StorageOptions> options)

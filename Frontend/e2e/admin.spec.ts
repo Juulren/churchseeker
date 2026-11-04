@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { cleanTracked, trackedMember } from './tracked.ts'
 
 // Phase 5 tests: staff sign-in and every module of the admin panel against the real API.
 const ADMIN = { email: process.env.E2E_ADMIN_EMAIL ?? 'admin@churchseeker.local', password: process.env.E2E_ADMIN_PASSWORD ?? 'Adm1n!Passw0rd#' }
@@ -97,6 +98,8 @@ test.describe('sign-in', () => {
 })
 
 test.describe('admin modules', () => {
+  test.afterAll(async ({ playwright }) => { await cleanTracked(playwright) })
+
   test('members: create, search, edit, deactivate and reactivate', async ({ page }) => {
     await login(page)
     await page.getByRole('link', { name: 'Miembros' }).click()
@@ -188,7 +191,7 @@ test.describe('admin modules', () => {
     const token = await apiToken(request)
     const h = { Authorization: `Bearer ${token}` }
     const name = `Asiste ${stamp()}`
-    await request.post(`${API}/api/members`, { headers: h, data: { fullName: name, joinDate: '2024-01-01' } })
+    await trackedMember(request, h, name)
     const date = new Date(Date.now() - 3 * 86_400_000).toISOString().slice(0, 10)
     const title = `Reunión ${stamp()}`
     await request.post(`${API}/api/events`, { headers: h, data: { title, date, time: '10:00:00', location: 'Salón', kind: 1, isPublic: false } })

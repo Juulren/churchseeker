@@ -13,7 +13,7 @@ interface Props {
   onBack: () => void
 }
 
-/** RPG split screen: the 3D church and its institutional data on the left (40%), events, notices and the codex shelf on the right (60%). */
+/** RPG split screen: the church engraving and its institutional data on the left (40%), events, notices and the codex shelf on the right (60%). */
 export default function RpgView({ church, onBack }: Props) {
   const { data, loading } = useChurchData(church.id)
   const heading = useRef<HTMLHeadingElement>(null)

@@ -1,6 +1,6 @@
 ﻿import * as THREE from 'three'
 import { toGrey } from './grey.ts'
-import { leather, paper, plaster, tiles, wood, type TexturePair } from './proceduralTextures.ts'
+import { leather, paper, wood, type TexturePair } from './proceduralTextures.ts'
 
 const cache = new Map<string, THREE.Material>()
 function memo<T extends THREE.Material>(key: string, make: () => T): T {
@@ -20,17 +20,12 @@ function withPair(m: THREE.MeshStandardMaterial, p: TexturePair | null, repeat: 
 export const goldMaterial = () => memo('gold', () => new THREE.MeshStandardMaterial({ color: toGrey('#d9b24a'), metalness: 1, roughness: 0.28 }))
 export const brassMaterial = () => memo('brass', () => new THREE.MeshStandardMaterial({ color: toGrey('#b08d3a'), metalness: 1, roughness: 0.38 }))
 export const darkMaterial = () => memo('dark', () => new THREE.MeshStandardMaterial({ color: toGrey('#1b1511'), roughness: 0.9 }))
-export const glassMaterial = () => memo('glass', () => new THREE.MeshPhysicalMaterial({ color: toGrey('#0f1a24'), roughness: 0.08, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.05 }))
 
 export const leatherMaterial = (color: string) =>
   memo(`leather:${color}`, () => withPair(new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.55, metalness: 0.02 }), leather(color), [1, 1], 0.9))
 export const paperMaterial = () => memo('paper', () => withPair(new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.95 }), paper(), [1, 1], 0.6))
 export const woodMaterial = (color: string, repeat: [number, number] = [2, 1]) =>
   memo(`wood:${color}:${repeat}`, () => withPair(new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.62 }), wood(color), repeat, 0.5))
-export const plasterMaterial = (color: string, blocks = false) =>
-  memo(`plaster:${color}:${blocks}`, () => withPair(new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.9 }), plaster(color, blocks), [2, 2], 1.2))
-export const tileMaterial = (color: string) =>
-  memo(`tiles:${color}`, () => withPair(new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.7, side: THREE.DoubleSide }), tiles(color), [3, 3], 1.5))
 export const plainMaterial = (color: string, roughness = 0.8, metalness = 0) =>
   memo(`plain:${color}:${roughness}:${metalness}`, () => new THREE.MeshStandardMaterial({ color: toGrey(color), roughness, metalness }))
 

@@ -17,24 +17,6 @@ public static class TestFiles
     public static byte[] Png() =>
         [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, 1, 2, 3, 4];
 
-    /// <summary>A real binary glTF: header plus a JSON chunk with one mesh of <paramref name="triangles"/> triangles.</summary>
-    public static byte[] Glb(int triangles = 12, string extensionsRequired = "", string version = "2.0")
-    {
-        var json = $"{{\"asset\":{{\"version\":\"{version}\"}}{extensionsRequired}," +
-                   $"\"accessors\":[{{\"count\":{triangles * 3}}}],\"meshes\":[{{\"primitives\":[{{\"attributes\":{{\"POSITION\":0}},\"indices\":0}}]}}]}}";
-        var bytes = new List<byte>(Encoding.UTF8.GetBytes(json));
-        while (bytes.Count % 4 != 0) bytes.Add((byte)' ');
-        var total = 20 + bytes.Count;
-        var data = new byte[total];
-        Encoding.ASCII.GetBytes("glTF").CopyTo(data, 0);
-        BitConverter.GetBytes(2u).CopyTo(data, 4);
-        BitConverter.GetBytes((uint)total).CopyTo(data, 8);
-        BitConverter.GetBytes((uint)bytes.Count).CopyTo(data, 12);
-        BitConverter.GetBytes(0x4E4F534Au).CopyTo(data, 16);
-        bytes.CopyTo(data, 20);
-        return data;
-    }
-
     public static MultipartFormDataContent Form(byte[] file, string fileName, IDictionary<string, string>? fields = null, string field = "file")
     {
         var form = new MultipartFormDataContent();
@@ -120,7 +102,6 @@ public class ChurchAndBookApiTests : IClassFixture<AuthApiFactory>
             (await c.GetAsync("/api/church")).StatusCode.Should().Be(HttpStatusCode.OK);
             (await c.PutAsJsonAsync("/api/church", Profile())).StatusCode.Should().Be(HttpStatusCode.Forbidden);
             (await c.PostAsync("/api/church/logo", TestFiles.Form(TestFiles.Png(), "l.png"))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
-            (await c.PostAsync("/api/church/model", TestFiles.Form(TestFiles.Glb(), "m.glb"))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
         (await _f.CreateClient().GetAsync("/api/church")).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
@@ -157,27 +138,6 @@ public class ChurchAndBookApiTests : IClassFixture<AuthApiFactory>
         ((int)(await admin.PostAsync("/api/church/logo", TestFiles.Form(big, "big.png"))).StatusCode).Should().BeInRange(400, 413);
         (await admin.PostAsync("/api/church/logo", TestFiles.Form([], "empty.png"))).StatusCode.Should().Be(HttpStatusCode.BadRequest);
         (await admin.PostAsync("/api/church/logo", TestFiles.Form(TestFiles.Png(), "x.png", field: "wrong"))).StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-
-    [Fact]
-    public async Task Model_ValidatesGlbHeaderAndBudget()
-    {
-        var admin = await As(UserRole.Administrador, ChurchSeedData.JesusId, "model");
-        (await admin.PostAsync("/api/church/model", TestFiles.Form(TestFiles.Glb(), "m.glb"))).StatusCode.Should().Be(HttpStatusCode.OK);
-
-        var list = await Json(await _f.CreateClient().GetAsync("/api/public/churches"));
-        var jesus = list.EnumerateArray().Single(c => c.GetProperty("id").GetGuid() == ChurchSeedData.JesusId);
-        jesus.GetProperty("modelUrl").GetString().Should().Be($"/api/public/churches/{ChurchSeedData.JesusId}/model");
-        (await _f.CreateClient().GetAsync(jesus.GetProperty("modelUrl").GetString()!)).Content.Headers.ContentType!.MediaType.Should().Be("model/gltf-binary");
-
-        var wrongLength = TestFiles.Glb(); BitConverter.GetBytes(9999u).CopyTo(wrongLength, 8);
-        var wrongVersion = TestFiles.Glb(); BitConverter.GetBytes(1u).CopyTo(wrongVersion, 4);
-        var tooMany = TestFiles.Glb(triangles: 80_001);
-        var unknownExt = TestFiles.Glb(extensionsRequired: ",\"extensionsRequired\":[\"KHR_materials_sheen_custom\"]");
-        var gltf1 = TestFiles.Glb(version: "1.0");
-        (await admin.PostAsync("/api/church/model", TestFiles.Form(TestFiles.Glb(80_000, ",\"extensionsRequired\":[\"KHR_draco_mesh_compression\"]"), "m.glb"))).StatusCode.Should().Be(HttpStatusCode.OK);
-        foreach (var bad in new[] { tooMany, unknownExt, gltf1, wrongLength, wrongVersion, Encoding.ASCII.GetBytes("not a model at all, sorry...."), TestFiles.Png() })
-            (await admin.PostAsync("/api/church/model", TestFiles.Form(bad, "m.glb"))).StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]

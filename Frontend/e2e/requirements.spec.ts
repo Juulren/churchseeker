@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { cleanTracked, trackedMember } from './tracked.ts'
 
 // Checks the requirements that need several screens to work together (RF-03, RF-04, RF-05, RF-07, RF-09).
 const ADMIN = { email: process.env.E2E_ADMIN_EMAIL ?? 'admin@churchseeker.local', password: process.env.E2E_ADMIN_PASSWORD ?? 'Adm1n!Passw0rd#' }
@@ -20,13 +21,15 @@ async function headers(request: Page['request']) {
 }
 
 test.describe('requirements across modules', () => {
+  test.afterAll(async ({ playwright }) => { await cleanTracked(playwright) })
+
   test('RF-05: a coordinator can be assigned, and a ministry shows its members and scheduled activities', async ({ page, request }) => {
     const h = await headers(request)
     const coordEmail = `coord-${stamp()}@churchseeker.local`
     const coordName = `Coordinadora ${stamp()}`
     expect((await request.post(`${API}/api/auth/users`, { headers: h, data: { email: coordEmail, fullName: coordName, password: 'Sup3r!Passw0rd#xx', role: 5 } })).status()).toBe(201)
     const member = `Integrante ${stamp()}`
-    await request.post(`${API}/api/members`, { headers: h, data: { fullName: member, joinDate: '2024-01-01' } })
+    await trackedMember(request, h, member)
 
     await login(page)
     await page.getByRole('link', { name: 'Ministerios' }).click()
@@ -54,7 +57,7 @@ test.describe('requirements across modules', () => {
     const h = await headers(request)
     const person = `Responsable ${stamp()}`
     const ministry = `Jóvenes ${stamp()}`
-    await request.post(`${API}/api/members`, { headers: h, data: { fullName: person, joinDate: '2024-01-01' } })
+    await trackedMember(request, h, person)
     await request.post(`${API}/api/ministries`, { headers: h, data: { name: ministry } })
 
     await login(page)
@@ -82,7 +85,7 @@ test.describe('requirements across modules', () => {
   test('RF-03: the attendance history of a member lists the events they attended', async ({ page, request }) => {
     const h = await headers(request)
     const name = `Historial ${stamp()}`
-    const member = (await (await request.post(`${API}/api/members`, { headers: h, data: { fullName: name, joinDate: '2024-01-01' } })).json()) as { id: string }
+    const member = await trackedMember(request, h, name)
     const title = `Culto ${stamp()}`
     const ev = (await (await request.post(`${API}/api/events`, { headers: h, data: { title, date: iso(-2), time: '10:00:00', location: 'Nave', kind: 1, isPublic: false } })).json()) as { id: string }
     await request.put(`${API}/api/events/${ev.id}/attendance`, { headers: h, data: { entries: [{ memberId: member.id, present: true }] } })

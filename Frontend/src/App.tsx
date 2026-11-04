@@ -5,7 +5,7 @@ import Sigil from './components/sigil/Sigil.tsx'
 import ServerDown from './components/ornament/ServerDown.tsx'
 
 // three.js is heavy: the map and the detail view load on demand, after the first paint.
-const RealMap = lazy(() => import('./components/map3d/RealMap.tsx'))
+const RealMap = lazy(() => import('./components/map/RealMap.tsx'))
 const RpgView = lazy(() => import('./components/rpg-view/RpgView.tsx'))
 
 type View = 'map' | 'detail'

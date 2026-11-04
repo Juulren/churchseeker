@@ -231,7 +231,7 @@ public class Phase3BreakTests : IClassFixture<BreakFactory>
         var mine = await BreakFactory.ReadJson(await admin.GetAsync("/api/church"));
         mine.GetProperty("id").GetGuid().Should().Be(SantaLucia);
         (mine.GetProperty("logoUrl").ValueKind == System.Text.Json.JsonValueKind.Null).Should().BeTrue();
-        mine.GetProperty("modelUrl").GetString().Should().NotContain("evil");
+        mine.TryGetProperty("modelUrl", out _).Should().BeFalse("the model upload no longer exists");
         (await _f.Anonymous().GetAsync($"/api/public/churches/{SantaLucia}")).StatusCode.Should().Be(HttpStatusCode.OK, "isActive must not be flippable");
         (await _f.Anonymous().GetAsync($"/api/public/churches/{Cathedral}")).StatusCode.Should().Be(HttpStatusCode.OK);
     }

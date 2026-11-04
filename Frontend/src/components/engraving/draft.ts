@@ -15,7 +15,6 @@ const f = (n: number) => Number(n.toFixed(1))
 
 export const rect = (x: number, y: number, w: number, h: number) => `M${f(x)} ${f(y)}h${f(w)}v${f(h)}h${f(-w)}Z`
 export const hline = (x1: number, x2: number, y: number) => `M${f(x1)} ${f(y)}H${f(x2)}`
-export const vline = (x: number, y1: number, y2: number) => `M${f(x)} ${f(y1)}V${f(y2)}`
 
 /** A round-headed opening from its base: jambs and a half circle. */
 export function roundArch(cx: number, base: number, w: number, h: number): string {

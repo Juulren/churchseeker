@@ -11,6 +11,9 @@ public abstract class BaseEntity
 
     public void Touch() => UpdatedAt = DateTime.UtcNow;
 
+    /// <summary>Seed rows carry a fixed time, so generating a migration never rewrites their timestamps.</summary>
+    public void AtSeedTime(DateTime at) { CreatedAt = at; UpdatedAt = at; }
+
     // Soft delete only: physical deletes are forbidden by design.
     public void Deactivate()
     {
