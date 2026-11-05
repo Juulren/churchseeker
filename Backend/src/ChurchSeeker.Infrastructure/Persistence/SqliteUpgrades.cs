@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace ChurchSeeker.Infrastructure.Persistence;
 
@@ -22,6 +22,22 @@ public static class SqliteUpgrades
                 CONSTRAINT "FK_UserChurchAccess_Churches_ChurchId" FOREIGN KEY ("ChurchId") REFERENCES "Churches" ("Id") ON DELETE RESTRICT)
             """, ct);
         await db.Database.ExecuteSqlRawAsync("""CREATE INDEX IF NOT EXISTS "IX_UserChurchAccess_ChurchId" ON "UserChurchAccess" ("ChurchId")""", ct);
+
+        // Files kept in the database (Storage:Provider=Database).
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS "StoredFiles" (
+                "Name" TEXT NOT NULL CONSTRAINT "PK_StoredFiles" PRIMARY KEY,
+                "Kind" INTEGER NOT NULL,
+                "Content" BLOB NOT NULL,
+                "CreatedAt" TEXT NOT NULL)
+            """, ct);
+
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS "DataProtectionKeys" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_DataProtectionKeys" PRIMARY KEY AUTOINCREMENT,
+                "FriendlyName" TEXT NULL,
+                "Xml" TEXT NULL)
+            """, ct);
 
         // The church a session works in, remembered by its refresh token.
         _ = await AddColumnAsync(db, "RefreshTokens", "ChurchId", "TEXT NULL", ct);

@@ -29,12 +29,22 @@ public sealed partial class LocalFileStorage : IFileStorage
         return name;
     }
 
-    public Stream? OpenRead(FileKind kind, string storedName)
+    public Task<Stream?> OpenReadAsync(FileKind kind, string storedName, CancellationToken ct = default)
     {
-        if (string.IsNullOrEmpty(storedName) || !StoredNamePattern().IsMatch(storedName)) return null;
+        if (!IsStoredName(storedName)) return Task.FromResult<Stream?>(null);
         var path = Path.Combine(DirectoryFor(kind), storedName);
-        return File.Exists(path) ? new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read) : null;
+        return Task.FromResult<Stream?>(File.Exists(path) ? new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read) : null);
     }
+
+    public Task DeleteAsync(FileKind kind, string storedName, CancellationToken ct = default)
+    {
+        if (!IsStoredName(storedName)) return Task.CompletedTask;
+        var path = Path.Combine(DirectoryFor(kind), storedName);
+        try { File.Delete(path); } catch (IOException) { /* a file in use is left for later */ }
+        return Task.CompletedTask;
+    }
+
+    internal static bool IsStoredName(string? name) => !string.IsNullOrEmpty(name) && StoredNamePattern().IsMatch(name);
 
     private string DirectoryFor(FileKind kind) => Path.Combine(_root, kind.ToString().ToLowerInvariant());
 }

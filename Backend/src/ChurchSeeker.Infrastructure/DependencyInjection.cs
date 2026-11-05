@@ -20,6 +20,7 @@ using ChurchSeeker.Infrastructure.Email;
 using ChurchSeeker.Infrastructure.Identity;
 using ChurchSeeker.Infrastructure.Persistence;
 using ChurchSeeker.Infrastructure.Security;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -52,7 +53,8 @@ public static class DependencyInjection
         if (!string.IsNullOrWhiteSpace(config["Email:Host"])) services.AddScoped<IEmailSender, SmtpEmailSender>();
         else services.AddScoped<IEmailSender, LoggingEmailSender>();
 
-        services.AddDataProtection();
+        // Instances of a serverless host come and go: the keys live in the database, not in a folder that disappears.
+        services.AddDataProtection().SetApplicationName("churchseeker").PersistKeysToDbContext<AppDbContext>();
         services.AddIdentityCore<ApplicationUser>(o =>
             {
                 o.Password.RequiredLength = 10;
@@ -89,7 +91,10 @@ public static class DependencyInjection
         services.AddScoped<IReportService, ReportService>();
         services.AddScoped<IReportExportService, ReportExportService>();
         services.Configure<StorageOptions>(config.GetSection(StorageOptions.Section));
-        services.AddSingleton<IFileStorage, LocalFileStorage>();
+        if (string.Equals(config.GetSection(StorageOptions.Section)["Provider"], "Database", StringComparison.OrdinalIgnoreCase))
+            services.AddScoped<IFileStorage, DatabaseFileStorage>();
+        else
+            services.AddScoped<IFileStorage, LocalFileStorage>();
         services.AddScoped<ChurchService>();
         services.AddScoped<IChurchService>(sp => sp.GetRequiredService<ChurchService>());
         services.AddScoped<IPublicChurchService>(sp => sp.GetRequiredService<ChurchService>());

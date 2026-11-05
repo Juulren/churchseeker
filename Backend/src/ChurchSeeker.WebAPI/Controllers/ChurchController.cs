@@ -78,7 +78,13 @@ public class PublicChurchesController : ApiControllerBase
     public async Task<IActionResult> Get(Guid churchId, CancellationToken ct) => Map(await _churches.GetAsync(churchId, ct));
 
     [HttpGet("{churchId:guid}/logo")]
-    public async Task<IActionResult> Logo(Guid churchId, CancellationToken ct) => FileOrNotFound(await _churches.OpenLogoAsync(churchId, ct));
+    public async Task<IActionResult> Logo(Guid churchId, CancellationToken ct)
+    {
+        var r = await _churches.OpenLogoAsync(churchId, ct);
+        if (!r.Succeeded) return NotFound();
+        Response.Headers.CacheControl = "public, max-age=300";
+        return File(r.Value!.Stream, r.Value.ContentType);
+    }
 
     private IActionResult FileOrNotFound(Result<FileContent> r) => r.Succeeded ? File(r.Value!.Stream, r.Value.ContentType) : NotFound();
 }

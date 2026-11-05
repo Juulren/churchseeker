@@ -48,7 +48,7 @@ public sealed class BookService : IBookService, IPublicBookService
     {
         if (_current.ChurchId is not { } churchId) return Result<BookResponse>.Fail(ErrorKind.Forbidden);
         if (pdf.Length == 0 || pdf.Length > _opt.MaxPdfBytes)
-            return Result<BookResponse>.Fail(ErrorKind.Validation, $"The PDF must be between 1 byte and {_opt.MaxPdfBytes / 1024 / 1024} MB.");
+            return Result<BookResponse>.Fail(ErrorKind.Validation, $"The PDF must be between 1 byte and {_opt.MaxPdfBytes / 1024 / 1024} MiB.");
         var check = FileValidator.ValidatePdf(pdf);
         if (!check.Ok) return Result<BookResponse>.Fail(ErrorKind.Validation, check.Error!);
 
@@ -90,7 +90,7 @@ public sealed class BookService : IBookService, IPublicBookService
     public async Task<Result<FileContent>> OpenFileAsync(Guid id, CancellationToken ct = default)
     {
         var b = await _books.Query().AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && x.IsActive, ct);
-        return Open(b);
+        return await OpenAsync(b, ct);
     }
 
     public async Task<Result<IReadOnlyList<PublicBookResponse>>> ListAsync(Guid churchId, CancellationToken ct = default)
@@ -106,12 +106,12 @@ public sealed class BookService : IBookService, IPublicBookService
     {
         if (!await UsePublicScopeAsync(churchId, ct)) return Result<FileContent>.Fail(ErrorKind.NotFound);
         var b = await _books.Query().AsNoTracking().FirstOrDefaultAsync(x => x.Id == bookId && x.IsActive && x.IsPublic, ct);
-        return Open(b);
+        return await OpenAsync(b, ct);
     }
 
-    private Result<FileContent> Open(ChurchArchiveBook? b)
+    private async Task<Result<FileContent>> OpenAsync(ChurchArchiveBook? b, CancellationToken ct)
     {
-        var stream = b is null ? null : _storage.OpenRead(FileKind.Book, b.StoredFileName);
+        var stream = b is null ? null : await _storage.OpenReadAsync(FileKind.Book, b.StoredFileName, ct);
         return stream is null ? Result<FileContent>.Fail(ErrorKind.NotFound) : Result<FileContent>.Ok(new FileContent(stream, "application/pdf"));
     }
 
