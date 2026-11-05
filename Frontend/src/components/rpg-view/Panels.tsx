@@ -28,10 +28,10 @@ export function HistoryPanel({ section, loading }: { section: Section<ChurchProf
       <PanelTitle>Historia</PanelTitle>
       <State section={section} loading={loading} empty="Sin información.">
         {(p) => {
-          const paragraphs = (p.history ?? '').split(/\n{2,}/).map((t) => t.trim()).filter(Boolean)
+          const paragraphs = (p.history ?? '').split(/\r?\n\s*\r?\n/).map((t) => t.trim()).filter(Boolean)
           return paragraphs.length === 0
             ? <p style={dim}>La historia de esta iglesia se está documentando.</p>
-            : <div className="grid gap-2">{paragraphs.map((t, i) => <p key={i}>{t}</p>)}</div>
+            : <div className="grid gap-2">{paragraphs.map((t, i) => <p key={i} style={{ whiteSpace: 'pre-line' }}>{t}</p>)}</div>
         }}
       </State>
     </div>

@@ -23,7 +23,7 @@ namespace ChurchSeeker.Infrastructure.Migrations
                 keyColumn: "Id",
                 keyValue: new Guid("11111111-1111-1111-1111-111111111111"),
                 column: "History",
-                value: "La Catedral de San Ildefonso es la sede de la Arquidiócesis de Yucatán y se la considera de las primeras catedrales construidas en tierra firme americana. Sus obras comenzaron hacia 1562, sobre una capilla de San José, y se dieron por concluidas en 1598.\n\nEl proyecto fue encomendado a Pedro de Aulestia y lo completaron Juan Miguel de Agüero y Gregorio de la Torre. Es de cantera, con una fachada renacentista y torres de aire morisco. En 1915 sufrió saqueos durante la entrada de fuerzas revolucionarias a la ciudad.");
+                value: "La Catedral de San Ildefonso es la sede de la Arquidiócesis de Yucatán y suele mencionarse entre las primeras catedrales construidas en tierra firme americana. Sus obras comenzaron hacia 1562, sobre una capilla de San José, y se dieron por concluidas en 1598.\n\nEl proyecto fue encomendado a Pedro de Aulestia y lo completaron Juan Miguel de Agüero y Gregorio de la Torre. Es de cantera, con una fachada renacentista y torres de aire morisco. En 1915 sufrió saqueos durante la entrada de fuerzas revolucionarias a la ciudad.");
 
             migrationBuilder.UpdateData(
                 table: "Churches",
