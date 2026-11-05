@@ -16,8 +16,9 @@ $env:Seed__SuperEmail = $env:CS_SUPER_EMAIL
 $env:Seed__SuperPassword = $env:CS_SUPER_PASSWORD
 $env:Jwt__Key = [Convert]::ToBase64String((1..48 | ForEach-Object { Get-Random -Maximum 256 }))  # solo para arrancar; aquí no se emiten sesiones
 $env:ASPNETCORE_ENVIRONMENT = 'Production'
+$env:Seed__Demo = 'false'   # nunca sembrar las cuentas de demostración (contraseñas públicas) en una base real
 $env:Logging__LogLevel__Default = 'Warning'
 $env:Logging__LogLevel__Microsoft = 'Warning'
-dotnet run --project (Join-Path $PSScriptRoot '..\Backend\src\ChurchSeeker.WebAPI') -c Release -- --bootstrap
+dotnet run --project (Join-Path $PSScriptRoot '..\Backend\src\ChurchSeeker.WebAPI') -c Release --no-launch-profile -- --bootstrap
 if ($LASTEXITCODE -ne 0) { throw "El bootstrap falló (código $LASTEXITCODE)." }
 Write-Host 'Base de datos lista.'

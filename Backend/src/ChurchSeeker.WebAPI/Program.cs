@@ -145,8 +145,9 @@ if (hasWeb)
         // Built assets carry a hash in their name and never change.
         OnPrepareResponse = c =>
         {
-            if (c.Context.Request.Path.StartsWithSegments("/assets"))
-                c.Context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+            c.Context.Response.Headers.CacheControl = c.Context.Request.Path.StartsWithSegments("/assets")
+                ? "public, max-age=31536000, immutable"
+                : "no-cache"; // index.html must be revalidated, or a new deploy would keep pointing at old assets
         }
     });
 }

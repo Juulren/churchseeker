@@ -5,7 +5,7 @@ Un solo contenedor sirve la aplicación web y la API (mismo origen: las cookies 
 ## Qué hay que saber antes
 
 - **Vercel Hobby es solo para uso no comercial.** Para una iglesia que recibe donaciones o cobra, revisa los términos o usa el plan Pro.
-- **El runtime de contenedores de Vercel está en beta** y sin SLA. El mismo `Dockerfile` corre en Render, Fly.io, Azure Container Apps o cualquier host de contenedores; solo cambian las variables de entorno.
+- **El runtime de contenedores de Vercel está en beta** y sin SLA (según su documentación al momento de escribir esto; verifícalo). El mismo `Dockerfile` corre en Render, Fly.io, Azure Container Apps o cualquier host de contenedores; solo cambian las variables de entorno.
 - **Arranques en frío:** la instancia se apaga sin tráfico y .NET + Neon tardan un par de segundos en despertar. La primera visita tras un rato quieto es lenta; las siguientes no.
 - **Neon gratis** suspende el cómputo a los 5 minutos sin uso y tiene 0.5 GB de almacenamiento. Cada PDF ocupa hasta 4 MiB (unos 100 en total) y un libro desactivado conserva su archivo.
 - **Límites de petición de Vercel:** el cuerpo no puede pasar de 4.5 MB (por eso el límite de 4 MiB) y las respuestas tampoco; un informe PDF muy grande podría rechazarse.
@@ -42,7 +42,7 @@ Aplica las migraciones, crea los roles y la cuenta de la plataforma (SuperAdmini
 ## 3. Vercel
 
 1. `vercel login` (en tu terminal) y crea un proyecto desde este repositorio, con la raíz en `/`.
-2. Elige el preset **Container** (usa el `Dockerfile` de la raíz). Si tu panel lo nombra distinto, busca «Dockerfile» en la configuración del framework: la guía oficial de Vercel para contenedores es la referencia vigente.
+2. Elige el preset de contenedor que use el `Dockerfile` de la raíz. **No verifiqué el nombre exacto del preset ni que el límite de 4.5 MB aplique igual a contenedores:** sigue la guía oficial de Vercel para contenedores, que es la referencia vigente.
 3. Variables de entorno (Production):
 
 | Variable | Valor |
@@ -62,7 +62,7 @@ Ya vienen fijadas en la imagen: `Storage__Provider=Database`, `Database__Provide
 2. Cambia a una iglesia, sube un PDF de menos de 4 MiB y ábrelo desde la página pública.
 3. Descarga un informe en PDF y en Excel.
 4. Prueba «¿Olvidaste tu contraseña?» y comprueba que llega el correo y que el enlace funciona.
-5. **Dirección del cliente:** la limitación de intentos usa `X-Forwarded-For`. Si tras desplegar todos los usuarios comparten el mismo contador (te bloquean tras 10 intentos entre todos), define `ForwardedHeaders__ForwardedForHeaderName` con la cabecera que tu host ponga con la IP real (en Vercel suele bastar `X-Forwarded-For`; si no, `X-Real-IP`).
+5. **Dirección del cliente:** la limitación de intentos usa `X-Forwarded-For` (con un solo salto de proxy; si el host no reemplaza esa cabecera, un cliente podría falsearla). Si tras desplegar todos los usuarios comparten el mismo contador (te bloquean tras 10 intentos entre todos), define `ForwardedHeaders__ForwardedForHeaderName` con la cabecera que tu host ponga con la IP real (no verificado en Vercel: prueba `X-Forwarded-For` y, si no sirve, `X-Real-IP`).
 
 ## Probar la imagen en local
 
