@@ -48,7 +48,16 @@ builder.Services
                 var church = ctx.Principal?.FindFirst("church_id")?.Value;
                 var users = ctx.HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<ChurchSeeker.Infrastructure.Identity.ApplicationUser>>();
                 var user = Guid.TryParse(sub, out _) ? await users.FindByIdAsync(sub!) : null;
-                if (user is null || !user.IsActive || user.ChurchId.ToString() != church || string.IsNullOrEmpty(role) || !await users.IsInRoleAsync(user, role))
+                if (user is null || !user.IsActive || string.IsNullOrEmpty(role) || !await users.IsInRoleAsync(user, role)
+                    || !Guid.TryParse(church, out var churchId))
+                {
+                    ctx.Fail("The session is no longer valid.");
+                    return;
+                }
+                // The church in the token must still be one this user may use (and active): taking an access away, or switching
+                // a church off, ends that session on its very next request.
+                var access = ctx.HttpContext.RequestServices.GetRequiredService<ChurchSeeker.Infrastructure.Identity.ChurchAccess>();
+                if (!await access.CanUseAsync(user.Id, role == "SuperAdministrador", churchId))
                     ctx.Fail("The session is no longer valid.");
             }
         };
@@ -72,10 +81,17 @@ builder.Services
 
 builder.Services.AddAuthorization(o =>
 {
-    o.AddPolicy(Policies.AdminOnly, p => p.RequireRole("Administrador"));
-    o.AddPolicy(Policies.Finance, p => p.RequireRole("Tesorero", "Administrador"));
-    o.AddPolicy(Policies.Management, p => p.RequireRole("Administrador", "Pastor", "Secretario"));
-    o.AddPolicy(Policies.MinistryAccess, p => p.RequireRole("Administrador", "Pastor", "Secretario", "Coordinador"));
+    // The platform account may do everything an Administrador can, inside the church it is working in.
+    o.AddPolicy(Policies.AdminOnly, p => p.RequireRole("Administrador", "SuperAdministrador"));
+    o.AddPolicy(Policies.Finance, p => p.RequireRole("Tesorero", "Administrador", "SuperAdministrador"));
+    o.AddPolicy(Policies.Management, p => p.RequireRole("Administrador", "Pastor", "Secretario", "SuperAdministrador"));
+    o.AddPolicy(Policies.MinistryAccess, p => p.RequireRole("Administrador", "Pastor", "Secretario", "Coordinador", "SuperAdministrador"));
+    o.AddPolicy(Policies.PlatformOnly, p => p.RequireRole("SuperAdministrador"));
+    // Any signed-in account, including a plain Usuario (the account page and the church switch).
+    o.AddPolicy(Policies.Authenticated, p => p.RequireAuthenticatedUser());
+    // A bare [Authorize] means staff: everything except a plain Usuario, so new endpoints are closed to it by default.
+    o.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder().RequireAuthenticatedUser()
+        .RequireRole("Administrador", "Pastor", "Secretario", "Tesorero", "Coordinador", "SuperAdministrador").Build();
 });
 
 var app = builder.Build();

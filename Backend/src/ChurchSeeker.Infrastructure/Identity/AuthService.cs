@@ -18,11 +18,12 @@ public sealed class AuthService : IAuthService
     private readonly ICurrentUser _current;
     private readonly TimeProvider _clock;
     private readonly IAuditLogger _audit;
+    private readonly ChurchAccess _access;
 
     public AuthService(UserManager<ApplicationUser> users, AppDbContext db, ITokenService tokens,
-                       IEmailSender mail, ICurrentUser current, TimeProvider clock, IAuditLogger audit)
+                       IEmailSender mail, ICurrentUser current, TimeProvider clock, IAuditLogger audit, ChurchAccess access)
     {
-        _users = users; _db = db; _tokens = tokens; _mail = mail; _current = current; _clock = clock; _audit = audit;
+        _users = users; _db = db; _tokens = tokens; _mail = mail; _current = current; _clock = clock; _audit = audit; _access = access;
     }
 
     // Never put the email or password in audit details: only ids.
@@ -61,10 +62,16 @@ public sealed class AuthService : IAuthService
         }
 
         user = await RetryOnConflictAsync(user, u => _users.ResetAccessFailedCountAsync(u)) ?? user;
-        var issued = await IssueAsync(user, ct);
+        var issued = await IssueAsync(user, null, ct);
+        if (issued is null)
+        {
+            // An account whose churches are all inactive has nowhere to work: the same generic answer as a wrong password.
+            await AuditAsync("auth.login.no_church", user, ct);
+            return AuthResult<AuthTokens>.Fail(AuthError.InvalidCredentials);
+        }
         await _db.SaveChangesAsync(ct);
         await AuditAsync("auth.login.succeeded", user, ct);
-        return AuthResult<AuthTokens>.Ok(issued.Tokens);
+        return AuthResult<AuthTokens>.Ok(issued.Value.Tokens);
     }
 
     public async Task<AuthResult<AuthTokens>> RefreshAsync(string? refreshToken, CancellationToken ct = default)
@@ -93,10 +100,43 @@ public sealed class AuthService : IAuthService
         if (user is null || !user.IsActive || await _users.IsLockedOutAsync(user))
             return AuthResult<AuthTokens>.Fail(AuthError.InvalidToken);
 
-        var issued = await IssueAsync(user, ct);
-        stored.Revoke(now, issued.RefreshHash);
+        // The session keeps its church if the user may still use it; otherwise it falls back to the home church.
+        var issued = await IssueAsync(user, stored.ChurchId, ct);
+        if (issued is null) return AuthResult<AuthTokens>.Fail(AuthError.InvalidToken);
+        stored.Revoke(now, issued.Value.RefreshHash);
         await _db.SaveChangesAsync(ct);
-        return AuthResult<AuthTokens>.Ok(issued.Tokens);
+        return AuthResult<AuthTokens>.Ok(issued.Value.Tokens);
+    }
+
+    public async Task<AuthResult<AuthTokens>> SwitchChurchAsync(string? refreshToken, Guid churchId, CancellationToken ct = default)
+    {
+        if (_current.UserId is not { } userId || string.IsNullOrWhiteSpace(refreshToken))
+            return AuthResult<AuthTokens>.Fail(AuthError.InvalidToken);
+
+        var hash = _tokens.Hash(refreshToken);
+        var stored = await _db.RefreshTokens.FirstOrDefaultAsync(t => t.TokenHash == hash, ct);
+        var now = Now;
+        // The refresh cookie must be this user's and still alive: switching never works from a stolen access token alone.
+        if (stored is null || stored.UserId != userId || !stored.IsActiveAt(now))
+            return AuthResult<AuthTokens>.Fail(AuthError.InvalidToken);
+
+        var user = await _users.FindByIdAsync(userId.ToString());
+        if (user is null || !user.IsActive || await _users.IsLockedOutAsync(user))
+            return AuthResult<AuthTokens>.Fail(AuthError.InvalidToken);
+
+        var roles = await _users.GetRolesAsync(user);
+        var isSuper = roles.Contains(nameof(UserRole.SuperAdministrador));
+        // Asked for a church outside the user's own: refused, never silently replaced by another one.
+        if (!await _access.CanUseAsync(userId, isSuper, churchId, ct))
+            return AuthResult<AuthTokens>.Fail(AuthError.Forbidden);
+
+        var previous = stored.ChurchId;
+        var issued = await IssueAsync(user, churchId, ct);
+        if (issued is null) return AuthResult<AuthTokens>.Fail(AuthError.Forbidden);
+        stored.Revoke(now, issued.Value.RefreshHash);
+        await _db.SaveChangesAsync(ct);
+        await _audit.WriteAsync(new AuditEntry("auth.church_switched", churchId, userId, nameof(ApplicationUser), userId.ToString(), $"from={previous};to={churchId}"), ct);
+        return AuthResult<AuthTokens>.Ok(issued.Value.Tokens);
     }
 
     public async Task LogoutAsync(string? refreshToken, CancellationToken ct = default)
@@ -152,7 +192,8 @@ public sealed class AuthService : IAuthService
 
         var email = request.Email?.Trim() ?? string.Empty;
         var name = request.FullName?.Trim() ?? string.Empty;
-        if (email.Length == 0 || email.Length > 256 || name.Length == 0 || name.Length > 200 || !Enum.IsDefined(request.Role))
+        // The platform role is never given through a church: only the seed or the platform itself creates it.
+        if (email.Length == 0 || email.Length > 256 || name.Length == 0 || name.Length > 200 || !UserRoles.ChurchAssignable.Contains(request.Role))
             return AuthResult<UserInfo>.Fail(AuthError.Validation, "Invalid email, name or role.");
 
         // New users always land in the caller's church: ChurchId is never taken from the payload.
@@ -164,7 +205,15 @@ public sealed class AuthService : IAuthService
         if (!created.Succeeded)
             return AuthResult<UserInfo>.Fail(AuthError.Validation, created.Errors.Select(e => e.Description).ToArray());
 
-        await _users.AddToRoleAsync(user, request.Role.ToString());
+        var roled = await _users.AddToRoleAsync(user, request.Role.ToString());
+        if (!roled.Succeeded)
+        {
+            // Never leave an account without a role: it could not sign in.
+            await _users.DeleteAsync(user);
+            return AuthResult<UserInfo>.Fail(AuthError.Validation, "The role could not be assigned.");
+        }
+        await _access.AddAsync(user.Id, churchId);
+        await _db.SaveChangesAsync(ct);
         await _audit.WriteAsync(new AuditEntry("user.created", churchId, _current.UserId, nameof(ApplicationUser), user.Id.ToString(), $"role={request.Role}"), ct);
         return AuthResult<UserInfo>.Ok(new UserInfo(user.Id, email, name, request.Role, churchId));
     }
@@ -174,16 +223,18 @@ public sealed class AuthService : IAuthService
         if (_current.Role is not (UserRole.Administrador or UserRole.Pastor or UserRole.Secretario) || _current.ChurchId is not { } churchId)
             return AuthResult<IReadOnlyList<UserInfo>>.Fail(AuthError.Forbidden);
 
-        // Identity users are not covered by the tenant filter: the church is always checked explicitly.
+        // Identity users are not covered by the tenant filter: the church is always checked explicitly (its access rows).
+        var inChurch = await _access.StaffOf(churchId).Where(u => u.IsActive).OrderBy(u => u.FullName).Take(400).ToListAsync(ct);
         var candidates = role is { } wanted && Enum.IsDefined(wanted)
-            ? (await _users.GetUsersInRoleAsync(wanted.ToString())).Where(u => u.ChurchId == churchId && u.IsActive).ToList()
-            : await _users.Users.Where(u => u.ChurchId == churchId && u.IsActive).OrderBy(u => u.FullName).Take(200).ToListAsync(ct);
+            ? (await _users.GetUsersInRoleAsync(wanted.ToString())).Where(u => inChurch.Any(c => c.Id == u.Id)).ToList()
+            : inChurch;
 
         var result = new List<UserInfo>();
         foreach (var u in candidates.OrderBy(u => u.FullName).Take(200))
         {
             var parsed = (await _users.GetRolesAsync(u)).Select(r => Enum.TryParse<UserRole>(r, out var p) ? p : (UserRole?)null).FirstOrDefault(r => r is not null);
-            if (parsed is not null) result.Add(new UserInfo(u.Id, u.Email!, u.FullName, parsed.Value, u.ChurchId));
+            // The platform account is not part of any church's staff.
+            if (parsed is not null && parsed != UserRole.SuperAdministrador) result.Add(new UserInfo(u.Id, u.Email!, u.FullName, parsed.Value, churchId));
         }
         return AuthResult<IReadOnlyList<UserInfo>>.Ok(result);
     }
@@ -221,7 +272,7 @@ public sealed class AuthService : IAuthService
         foreach (var t in active) t.Revoke(now);
     }
 
-    private async Task<(AuthTokens Tokens, string RefreshHash)> IssueAsync(ApplicationUser user, CancellationToken ct)
+    private async Task<(AuthTokens Tokens, string RefreshHash)?> IssueAsync(ApplicationUser user, Guid? preferredChurch, CancellationToken ct)
     {
         var roles = await _users.GetRolesAsync(user);
         var role = roles.Select(r => Enum.TryParse<UserRole>(r, out var parsed) ? parsed : (UserRole?)null)
@@ -229,11 +280,14 @@ public sealed class AuthService : IAuthService
         if (role is null)
             throw new InvalidOperationException("User has no valid role.");
 
-        var info = new UserInfo(user.Id, user.Email!, user.FullName, role.Value, user.ChurchId);
+        var isSuper = role == UserRole.SuperAdministrador;
+        var church = await _access.ChooseAsync(user.Id, user.ChurchId, isSuper, preferredChurch, ct);
+        if (church is null) return null;
+        var info = new UserInfo(user.Id, user.Email!, user.FullName, role.Value, church.Value, await _access.ListAsync(user.Id, isSuper, ct));
         var now = Now;
         var access = _tokens.CreateAccessToken(info, now);
         var refresh = _tokens.CreateRefreshToken(now);
-        _db.RefreshTokens.Add(new RefreshToken(user.Id, refresh.Hash, refresh.ExpiresAt));
+        _db.RefreshTokens.Add(new RefreshToken(user.Id, refresh.Hash, refresh.ExpiresAt, church));
         return (new AuthTokens(access.Token, access.ExpiresAt, refresh.Raw, refresh.ExpiresAt, info), refresh.Hash);
     }
 }

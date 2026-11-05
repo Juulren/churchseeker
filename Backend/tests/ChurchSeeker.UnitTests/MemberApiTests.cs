@@ -23,6 +23,10 @@ public static class TestUsers
         var user = new ApplicationUser { Id = Guid.NewGuid(), UserName = email, Email = email, FullName = email, ChurchId = churchId };
         (await users.CreateAsync(user, Password)).Succeeded.Should().BeTrue();
         await users.AddToRoleAsync(user, role.ToString());
+        // Every user works in their home church: the same row the real account creation adds.
+        var db = scope.ServiceProvider.GetRequiredService<ChurchSeeker.Infrastructure.Persistence.AppDbContext>();
+        db.UserChurchAccess.Add(new ChurchSeeker.Domain.Entities.UserChurchAccess(user.Id, churchId));
+        await db.SaveChangesAsync();
     }
 
     public static async Task<HttpClient> ClientFor(AuthApiFactory f, string email)

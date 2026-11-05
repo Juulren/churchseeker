@@ -2,7 +2,8 @@ using ChurchSeeker.Domain.Enums;
 
 namespace ChurchSeeker.Application.Auth;
 
-public record ManagedUser(Guid Id, string Email, string FullName, UserRole Role, bool IsActive, bool IsSelf);
+/// <summary>IsShared: the account works in more than one church, so only the platform may change it.</summary>
+public record ManagedUser(Guid Id, string Email, string FullName, UserRole Role, bool IsActive, bool IsSelf, bool IsShared = false);
 public record ChangeRoleRequest(UserRole Role);
 
 // Administrator-only management of the staff of one church.

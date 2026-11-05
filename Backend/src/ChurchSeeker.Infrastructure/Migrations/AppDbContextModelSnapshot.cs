@@ -551,6 +551,9 @@ namespace ChurchSeeker.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ChurchId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -585,6 +588,24 @@ namespace ChurchSeeker.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("ChurchSeeker.Domain.Entities.UserChurchAccess", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChurchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("GrantedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId", "ChurchId");
+
+                    b.HasIndex("ChurchId");
+
+                    b.ToTable("UserChurchAccess");
                 });
 
             modelBuilder.Entity("ChurchSeeker.Infrastructure.Identity.ApplicationUser", b =>
@@ -903,6 +924,21 @@ namespace ChurchSeeker.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("MinistryId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChurchSeeker.Domain.Entities.UserChurchAccess", b =>
+                {
+                    b.HasOne("ChurchSeeker.Domain.Entities.Church", null)
+                        .WithMany()
+                        .HasForeignKey("ChurchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ChurchSeeker.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

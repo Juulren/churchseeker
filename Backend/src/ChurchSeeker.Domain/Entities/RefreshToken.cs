@@ -11,16 +11,19 @@ public class RefreshToken : BaseEntity
     public DateTime ExpiresAt { get; private set; }
     public DateTime? RevokedAt { get; private set; }
     public string? ReplacedByHash { get; private set; }
+    /// <summary>The church the session was working in when it was issued, so a refresh keeps it. Never taken from a request.</summary>
+    public Guid? ChurchId { get; private set; }
 
     private RefreshToken() { }
 
-    public RefreshToken(Guid userId, string tokenHash, DateTime expiresAt)
+    public RefreshToken(Guid userId, string tokenHash, DateTime expiresAt, Guid? churchId = null)
     {
         if (userId == Guid.Empty) throw new DomainException("UserId is required.");
         if (string.IsNullOrWhiteSpace(tokenHash)) throw new DomainException("TokenHash is required.");
         UserId = userId;
         TokenHash = tokenHash;
         ExpiresAt = expiresAt;
+        ChurchId = churchId;
     }
 
     public bool IsActiveAt(DateTime utcNow) => RevokedAt is null && utcNow < ExpiresAt;

@@ -14,6 +14,7 @@ using ChurchSeeker.Application.Donations;
 using ChurchSeeker.Application.Events;
 using ChurchSeeker.Application.Ministries;
 using ChurchSeeker.Application.Members;
+using ChurchSeeker.Application.Platform;
 using ChurchSeeker.Infrastructure.Services;
 using ChurchSeeker.Infrastructure.Email;
 using ChurchSeeker.Infrastructure.Identity;
@@ -74,6 +75,8 @@ public static class DependencyInjection
         services.AddSingleton<ITokenService, TokenService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserAdminService, UserAdminService>();
+        services.AddScoped<ChurchAccess>();
+        services.AddScoped<IPlatformService, PlatformService>();
         services.AddScoped<IAuditLogger, AuditLogger>();
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
         services.AddScoped<IMemberService, MemberService>();

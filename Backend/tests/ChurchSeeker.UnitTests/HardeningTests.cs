@@ -140,6 +140,7 @@ public class HardeningTests : IClassFixture<AuthApiFactory>, IClassFixture<LowLi
     private sealed record Who(Guid? ChurchId) : ICurrentUser
     {
         public bool IsAuthenticated => true;
+        public bool IsSuper => false;
         public Guid? UserId => Guid.Parse("99999999-9999-9999-9999-999999999999");
         public Domain.Enums.UserRole? Role => Domain.Enums.UserRole.Tesorero;
         public string? IpAddress => "10.0.0.1";
