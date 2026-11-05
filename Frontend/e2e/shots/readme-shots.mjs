@@ -26,9 +26,9 @@ const TILE = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQV
 
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] })
 
-async function context(width = 1280, height = 800) {
+async function context(width = 1280, height = 800, realTiles = false) {
   const ctx = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, locale: 'es-MX' })
-  await ctx.route('https://server.arcgisonline.com/**', (r) => r.fulfill({ status: 200, contentType: 'image/png', body: TILE }))
+  if (!realTiles) await ctx.route('https://server.arcgisonline.com/**', (r) => r.fulfill({ status: 200, contentType: 'image/png', body: TILE }))
   return ctx
 }
 
@@ -48,11 +48,12 @@ const shot = async (page, name, wait = 2500) => {
 // --- Public ---------------------------------------------------------------------------------------------------------------
 // A larger window for the map, so the markers of churches that are close together do not overlap.
 {
-  const ctx = await context(1700, 1050)
+  const ctx = await context(1700, 1050, true)
   const page = await ctx.newPage()
   await page.goto(BASE + '/')
   await page.locator('.church-marker').first().waitFor({ timeout: 60_000 })
-  await shot(page, '01-mapa-publico', 4000)
+  // Give the imagery time to arrive: the capture is taken once the tiles have loaded.
+  await shot(page, '01-mapa-publico', 14_000)
   await page.getByRole('navigation', { name: 'Iglesias de Mérida' }).getByRole('button', { name: /Jesús/ }).click()
   await page.getByRole('button', { name: 'Entrar' }).click({ timeout: 45_000 })
   await page.getByRole('heading', { level: 3, name: 'Historia' }).waitFor({ timeout: 45_000 })
