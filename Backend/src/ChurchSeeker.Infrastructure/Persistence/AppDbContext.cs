@@ -25,6 +25,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
 
     public DbSet<Church> Churches => Set<Church>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<UserChurchAccess> UserChurchAccess => Set<UserChurchAccess>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Member> Members => Set<Member>();
     public DbSet<ChurchEvent> Events => Set<ChurchEvent>();
@@ -68,8 +69,19 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             e.HasOne<Church>().WithMany().HasForeignKey(x => x.ChurchId).OnDelete(DeleteBehavior.Restrict);
         });
 
+        // Which churches a user may work in. Not tenant-filtered: it is the table that defines the tenants a user may use.
+        b.Entity<UserChurchAccess>(e =>
+        {
+            e.HasKey(x => new { x.UserId, x.ChurchId });
+            e.HasIndex(x => x.ChurchId);
+            e.HasOne<ApplicationUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Church>().WithMany().HasForeignKey(x => x.ChurchId).OnDelete(DeleteBehavior.Restrict);
+        });
+
         b.Entity<RefreshToken>(e =>
         {
+            // Spending a token is a conditional update: if another request revoked it first, this one fails instead of forking the session.
+            e.Property(x => x.RevokedAt).IsConcurrencyToken();
             e.HasKey(x => x.Id);
             e.Property(x => x.TokenHash).IsRequired().HasMaxLength(128);
             e.HasIndex(x => x.TokenHash).IsUnique();

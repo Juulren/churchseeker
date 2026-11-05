@@ -14,8 +14,13 @@ public sealed class HttpCurrentUser : ICurrentUser
     public bool IsAuthenticated => Principal?.Identity?.IsAuthenticated == true;
     public Guid? UserId => ParseGuid("sub");
     public Guid? ChurchId => ParseGuid("church_id");
-    public UserRole? Role =>
+    private UserRole? Claimed =>
         Enum.TryParse<UserRole>(Principal?.FindFirst("role")?.Value, out var r) && Enum.IsDefined(r) ? r : null;
+
+    public bool IsSuper => Claimed == UserRole.SuperAdministrador;
+
+    // One place decides what the platform can do inside a church: everything an Administrador can.
+    public UserRole? Role => Claimed == UserRole.SuperAdministrador ? UserRole.Administrador : Claimed;
 
     public string? IpAddress => _accessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
 

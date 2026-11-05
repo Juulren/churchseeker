@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, publicApi, request, setAccessToken } from './api.ts'
+import { ApiError, publicApi, request, setAccessToken, exclusive } from './api.ts'
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
@@ -72,5 +72,20 @@ describe('api client', () => {
     setAccessToken('old')
     vi.stubGlobal('fetch', vi.fn(async () => json({}, 401)))
     await expect(request('/api/a')).rejects.toMatchObject({ status: 401 })
+  })
+})
+
+describe('exclusive', () => {
+  it('runs one piece of work at a time, in the order asked, even when one fails', async () => {
+    const log: string[] = []
+    const slow = (name: string, ms: number, fail = false) => exclusive(async () => {
+      log.push('start ' + name)
+      await new Promise((r) => setTimeout(r, ms))
+      log.push('end ' + name)
+      if (fail) throw new Error(name)
+    })
+    const results = await Promise.allSettled([slow('a', 30, true), slow('b', 5), slow('c', 1)])
+    expect(log).toEqual(['start a', 'end a', 'start b', 'end b', 'start c', 'end c'])
+    expect(results.map((r) => r.status)).toEqual(['rejected', 'fulfilled', 'fulfilled'])
   })
 })

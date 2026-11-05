@@ -21,6 +21,20 @@ let refreshing: Promise<boolean> | null = null
 
 export const setAccessToken = (token: string | null) => { accessToken = token }
 
+// The refresh cookie is rotated by every refresh and every church switch, and a cookie used twice means theft (the server then
+// ends every session). So those two never overlap: each one waits for the one before it.
+let tail: Promise<unknown> = Promise.resolve()
+export function exclusive<T>(work: () => Promise<T>): Promise<T> {
+  const run = tail.then(work, work)
+  tail = run.catch(() => undefined)
+  return run
+}
+
+// Who owns the session is auth.ts: it is told when a refresh gives a new user (the church may have fallen back to the home
+// church) and when the session is lost.
+let sessionHooks: { refreshed: (body: unknown) => void; lost: () => void } | null = null
+export const onSessionChange = (hooks: { refreshed: (body: unknown) => void; lost: () => void }) => { sessionHooks = hooks }
+
 async function send(path: string, init: RequestInit = {}, withAuth = true): Promise<Response> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
@@ -38,20 +52,22 @@ async function send(path: string, init: RequestInit = {}, withAuth = true): Prom
 
 // One refresh at a time, however many requests hit a 401 together.
 export function refreshSession(): Promise<boolean> {
-  refreshing ??= (async () => {
+  refreshing ??= exclusive(async () => {
     try {
       const res = await send('/api/auth/refresh', { method: 'POST' }, false)
-      if (!res.ok) { accessToken = null; return false }
+      if (!res.ok) { accessToken = null; sessionHooks?.lost(); return false }
       const body = (await res.json()) as { accessToken?: string }
       accessToken = typeof body.accessToken === 'string' ? body.accessToken : null
+      if (accessToken !== null) sessionHooks?.refreshed(body)
+      else sessionHooks?.lost()
       return accessToken !== null
     } catch {
-      accessToken = null
+      // No answer is not a lost session: keep it, the next request tries again.
       return false
     } finally {
       refreshing = null
     }
-  })()
+  })
   return refreshing
 }
 
@@ -68,8 +84,17 @@ async function errorOf(res: Response): Promise<ApiError> {
 }
 
 export async function request(path: string, init: RequestInit = {}, withAuth = true): Promise<Response> {
+  const tokenAtStart = accessToken
   let res = await send(path, init, withAuth)
-  if (res.status === 401 && withAuth && accessToken && await refreshSession()) res = await send(path, init, withAuth)
+  // Retried only with the same session: a request that began before a church switch must never be replayed as the new church.
+  if (res.status === 401 && withAuth && accessToken && accessToken === tokenAtStart && await refreshSession()) res = await send(path, init, withAuth)
+  if (!res.ok) throw await errorOf(res)
+  return res
+}
+
+/** One attempt, no refresh and no retry: for the calls that rotate the refresh cookie themselves. */
+export async function requestOnce(path: string, init: RequestInit = {}): Promise<Response> {
+  const res = await send(path, init, true)
   if (!res.ok) throw await errorOf(res)
   return res
 }

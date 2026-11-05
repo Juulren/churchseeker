@@ -70,9 +70,16 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> ListUsers([FromQuery] UserRole? role, CancellationToken ct) =>
         Map(await _auth.ListUsersAsync(role, ct), u => Ok(u));
 
+    // Moves the session to another church the account may use. Needs the refresh cookie as well as the access token.
+    [HttpPost("church")]
+    [Authorize(Policy = Policies.Authenticated)]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
+    public async Task<IActionResult> SwitchChurch(SwitchChurchRequest request, CancellationToken ct) =>
+        ToResponse(await _auth.SwitchChurchAsync(Request.Cookies[RefreshCookie], request.ChurchId, ct));
+
     [HttpGet("me")]
-    [Authorize]
-    public IActionResult Me() => Ok(new { _current.UserId, _current.ChurchId, Role = _current.Role?.ToString() });
+    [Authorize(Policy = Policies.Authenticated)]
+    public IActionResult Me() => Ok(new { _current.UserId, _current.ChurchId, Role = _current.Role?.ToString(), _current.IsSuper });
 
     private IActionResult ToResponse(AuthResult<AuthTokens> result) =>
         Map(result, t =>

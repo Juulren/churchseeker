@@ -32,6 +32,7 @@ public class TenantFilterTests
     private sealed record FakeUser(Guid? ChurchId) : ICurrentUser
     {
         public bool IsAuthenticated => ChurchId.HasValue;
+        public bool IsSuper => false;
         public Guid? UserId => null;
         public UserRole? Role => null;
         public string? IpAddress => null;

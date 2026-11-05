@@ -21,6 +21,16 @@ const id = encodeURIComponent
 export const adminApi = {
   dashboard: () => get<T.Dashboard>('/api/dashboard'),
 
+  // The platform account only: the general dashboard and who works in which church.
+  platform: {
+    overview: () => get<T.PlatformOverview>('/api/platform/overview'),
+    staff: () => get<T.PlatformStaff[]>('/api/platform/staff'),
+    setChurches: (u: string, churchIds: string[]) => call<T.PlatformStaff>(`/api/platform/staff/${id(u)}/churches`, 'PUT', { churchIds }),
+    setRole: (u: string, role: number) => call<T.PlatformStaff>(`/api/platform/staff/${id(u)}/role`, 'PUT', { role }),
+    setActive: (u: string, active: boolean) => call<T.PlatformStaff>(`/api/platform/staff/${id(u)}/${active ? 'activate' : 'deactivate'}`, 'POST'),
+    create: (d: { email: string; fullName: string; password: string; role: number; churchIds: string[] }) => call<T.PlatformStaff>('/api/platform/staff', 'POST', d),
+  },
+
   members: {
     list: (q: { search?: string; active?: boolean; page?: number; pageSize?: number }) => get<Paged<T.Member>>(`/api/members${qs(q)}`),
     get: (m: string) => get<T.Member>(`/api/members/${id(m)}`),

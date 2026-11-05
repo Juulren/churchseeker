@@ -72,6 +72,10 @@ public class BreakFactory : WebApplicationFactory<Program>
             var created = await users.CreateAsync(user, UserPassword);
             if (!created.Succeeded) throw new InvalidOperationException(string.Join(";", created.Errors.Select(e => e.Description)));
             await users.AddToRoleAsync(user, role.ToString());
+            // Every user works in their home church: the same row the real account creation adds.
+            var db = scope.ServiceProvider.GetRequiredService<ChurchSeeker.Infrastructure.Persistence.AppDbContext>();
+            db.UserChurchAccess.Add(new ChurchSeeker.Domain.Entities.UserChurchAccess(user.Id, churchId));
+            await db.SaveChangesAsync();
         }
         return WithBearer(await AccessToken(await Login(Anonymous(), email, UserPassword)));
     }
