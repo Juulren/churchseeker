@@ -80,6 +80,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
 
         b.Entity<RefreshToken>(e =>
         {
+            // Spending a token is a conditional update: if another request revoked it first, this one fails instead of forking the session.
+            e.Property(x => x.RevokedAt).IsConcurrencyToken();
             e.HasKey(x => x.Id);
             e.Property(x => x.TokenHash).IsRequired().HasMaxLength(128);
             e.HasIndex(x => x.TokenHash).IsUnique();

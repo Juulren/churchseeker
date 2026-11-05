@@ -52,6 +52,12 @@ public sealed class ChurchAccess
         var missing = await _db.Users.Where(u => !_db.UserChurchAccess.Any(a => a.UserId == u.Id && a.ChurchId == u.ChurchId))
             .Select(u => new { u.Id, u.ChurchId }).ToListAsync(ct);
         foreach (var m in missing) _db.UserChurchAccess.Add(new UserChurchAccess(m.Id, m.ChurchId));
-        if (missing.Count > 0) await _db.SaveChangesAsync(ct);
+        if (missing.Count == 0) return;
+        try { await _db.SaveChangesAsync(ct); }
+        catch (DbUpdateException)
+        {
+            // Another instance (or a user created at this very moment) inserted the same rows first: nothing left to do.
+            _db.ChangeTracker.Clear();
+        }
     }
 }

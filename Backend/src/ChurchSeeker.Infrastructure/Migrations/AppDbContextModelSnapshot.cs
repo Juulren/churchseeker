@@ -567,6 +567,7 @@ namespace ChurchSeeker.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("RevokedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("TokenHash")

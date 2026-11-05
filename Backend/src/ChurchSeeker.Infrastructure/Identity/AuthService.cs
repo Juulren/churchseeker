@@ -104,8 +104,22 @@ public sealed class AuthService : IAuthService
         var issued = await IssueAsync(user, stored.ChurchId, ct);
         if (issued is null) return AuthResult<AuthTokens>.Fail(AuthError.InvalidToken);
         stored.Revoke(now, issued.Value.RefreshHash);
-        await _db.SaveChangesAsync(ct);
+        if (!await TrySaveSpentAsync(stored.UserId, ct)) return AuthResult<AuthTokens>.Fail(AuthError.InvalidToken);
         return AuthResult<AuthTokens>.Ok(issued.Value.Tokens);
+    }
+
+    // Another request spent the same token a moment earlier: that is a replay, so every session of the user ends.
+    private async Task<bool> TrySaveSpentAsync(Guid userId, CancellationToken ct)
+    {
+        try { await _db.SaveChangesAsync(ct); return true; }
+        catch (DbUpdateConcurrencyException)
+        {
+            _db.ChangeTracker.Clear();
+            await RevokeAllAsync(userId, Now, ct);
+            await _db.SaveChangesAsync(ct);
+            await AuditAsync("auth.refresh.reuse_detected", await _users.FindByIdAsync(userId.ToString()), ct);
+            return false;
+        }
     }
 
     public async Task<AuthResult<AuthTokens>> SwitchChurchAsync(string? refreshToken, Guid churchId, CancellationToken ct = default)
@@ -117,7 +131,16 @@ public sealed class AuthService : IAuthService
         var stored = await _db.RefreshTokens.FirstOrDefaultAsync(t => t.TokenHash == hash, ct);
         var now = Now;
         // The refresh cookie must be this user's and still alive: switching never works from a stolen access token alone.
-        if (stored is null || stored.UserId != userId || !stored.IsActiveAt(now))
+        if (stored is null || stored.UserId != userId)
+            return AuthResult<AuthTokens>.Fail(AuthError.InvalidToken);
+        if (stored.RevokedAt is not null)
+        {
+            await RevokeAllAsync(userId, now, ct);
+            await _db.SaveChangesAsync(ct);
+            await AuditAsync("auth.refresh.reuse_detected", await _users.FindByIdAsync(userId.ToString()), ct);
+            return AuthResult<AuthTokens>.Fail(AuthError.InvalidToken);
+        }
+        if (!stored.IsActiveAt(now))
             return AuthResult<AuthTokens>.Fail(AuthError.InvalidToken);
 
         var user = await _users.FindByIdAsync(userId.ToString());
@@ -134,7 +157,7 @@ public sealed class AuthService : IAuthService
         var issued = await IssueAsync(user, churchId, ct);
         if (issued is null) return AuthResult<AuthTokens>.Fail(AuthError.Forbidden);
         stored.Revoke(now, issued.Value.RefreshHash);
-        await _db.SaveChangesAsync(ct);
+        if (!await TrySaveSpentAsync(userId, ct)) return AuthResult<AuthTokens>.Fail(AuthError.InvalidToken);
         await _audit.WriteAsync(new AuditEntry("auth.church_switched", churchId, userId, nameof(ApplicationUser), userId.ToString(), $"from={previous};to={churchId}"), ct);
         return AuthResult<AuthTokens>.Ok(issued.Value.Tokens);
     }
@@ -234,7 +257,7 @@ public sealed class AuthService : IAuthService
         {
             var parsed = (await _users.GetRolesAsync(u)).Select(r => Enum.TryParse<UserRole>(r, out var p) ? p : (UserRole?)null).FirstOrDefault(r => r is not null);
             // The platform account is not part of any church's staff.
-            if (parsed is not null && parsed != UserRole.SuperAdministrador) result.Add(new UserInfo(u.Id, u.Email!, u.FullName, parsed.Value, churchId));
+            if (parsed is not null && parsed is not (UserRole.SuperAdministrador or UserRole.Usuario)) result.Add(new UserInfo(u.Id, u.Email!, u.FullName, parsed.Value, churchId));
         }
         return AuthResult<IReadOnlyList<UserInfo>>.Ok(result);
     }

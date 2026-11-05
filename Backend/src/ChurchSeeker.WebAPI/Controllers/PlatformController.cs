@@ -30,6 +30,15 @@ public class PlatformController : ControllerBase
     public async Task<IActionResult> CreateStaff(CreatePlatformStaffRequest request, CancellationToken ct) =>
         Map(await _platform.CreateStaffAsync(request, ct), s => StatusCode(StatusCodes.Status201Created, s));
 
+    [HttpPost("staff/{id:guid}/deactivate")]
+    public async Task<IActionResult> Deactivate(Guid id, CancellationToken ct) => Map(await _platform.SetActiveAsync(id, false, ct), Ok);
+
+    [HttpPost("staff/{id:guid}/activate")]
+    public async Task<IActionResult> Activate(Guid id, CancellationToken ct) => Map(await _platform.SetActiveAsync(id, true, ct), Ok);
+
+    [HttpPut("staff/{id:guid}/role")]
+    public async Task<IActionResult> SetRole(Guid id, ChangeRoleRequest request, CancellationToken ct) => Map(await _platform.SetRoleAsync(id, request.Role, ct), Ok);
+
     private IActionResult Map<T>(AuthResult<T> result, Func<T, IActionResult> ok) => result.Error switch
     {
         AuthError.None => ok(result.Value!),

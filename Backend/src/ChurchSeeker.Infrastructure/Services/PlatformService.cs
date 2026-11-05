@@ -110,18 +110,20 @@ public sealed class PlatformService : IPlatformService
         // Several churches only for administrators; every other staff role works in exactly one.
         if (role != UserRole.Administrador && wanted.Count > 1)
             return AuthResult<PlatformStaff>.Fail(AuthError.Validation, "Only an administrator can work in several churches.");
-        var valid = await _db.Churches.AsNoTracking().Where(c => c.IsActive && wanted.Contains(c.Id)).Select(c => c.Id).ToListAsync(ct);
+
+        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+        var current = await _db.UserChurchAccess.Where(a => a.UserId == userId).ToListAsync(ct);
+        var held = current.Select(a => a.ChurchId).ToHashSet();
+        // A new church must be active; one the account already has can stay even if it was switched off since.
+        var valid = await _db.Churches.AsNoTracking().Where(c => wanted.Contains(c.Id) && (c.IsActive || held.Contains(c.Id))).Select(c => c.Id).ToListAsync(ct);
         if (valid.Count != wanted.Count) return AuthResult<PlatformStaff>.Fail(AuthError.Validation, "Every church must exist and be active.");
 
-        var current = await _db.UserChurchAccess.Where(a => a.UserId == userId).ToListAsync(ct);
         var removed = current.Where(a => !wanted.Contains(a.ChurchId)).ToList();
-        var added = wanted.Where(w => current.All(a => a.ChurchId != w)).ToList();
+        var added = wanted.Where(w => !held.Contains(w)).ToList();
 
         // A church must keep an active administrator: the same rule as everywhere else, now across the access rows.
-        if (role == UserRole.Administrador && user.IsActive)
-            foreach (var r in removed)
-                if (!await AnotherActiveAdminAsync(userId, r.ChurchId, ct))
-                    return AuthResult<PlatformStaff>.Fail(AuthError.Conflict, "A church must keep at least one active administrator.");
+        if (role == UserRole.Administrador && user.IsActive && !await KeepsAnAdministratorAsync(userId, removed.Select(r => r.ChurchId), ct))
+            return AuthResult<PlatformStaff>.Fail(AuthError.Conflict, "A church must keep at least one active administrator.");
 
         _db.UserChurchAccess.RemoveRange(removed);
         foreach (var w in added) _db.UserChurchAccess.Add(new UserChurchAccess(userId, w));
@@ -130,18 +132,85 @@ public sealed class PlatformService : IPlatformService
         var saved = await _users.UpdateAsync(user);
         if (!saved.Succeeded) return AuthResult<PlatformStaff>.Fail(AuthError.Conflict, "The account changed at the same time. Try again.");
 
-        if (removed.Count > 0)
-        {
-            // Taking an access away ends the sessions: they sign in again with what is left.
-            await _users.UpdateSecurityStampAsync(user);
-            var now = _clock.GetUtcNow().UtcDateTime;
-            foreach (var t in await _db.RefreshTokens.Where(t => t.UserId == userId && t.RevokedAt == null).ToListAsync(ct)) t.Revoke(now);
-        }
+        if (removed.Count > 0) await EndSessionsAsync(user, ct);
         await _db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
         // Written explicitly: the automatic audit would file this under the platform account's own active church.
         await _audit.WriteAsync(new AuditEntry("platform.access_changed", null, _current.UserId, nameof(ApplicationUser), userId.ToString(),
             $"before={string.Join(",", current.Select(c => c.ChurchId))};after={string.Join(",", wanted)}"), ct);
         return AuthResult<PlatformStaff>.Ok(await ToStaffAsync(user, role.Value, ct));
+    }
+
+    public async Task<AuthResult<PlatformStaff>> SetActiveAsync(Guid userId, bool active, CancellationToken ct = default)
+    {
+        if (!IsSuper) return AuthResult<PlatformStaff>.Fail(AuthError.Forbidden);
+        var user = await _users.FindByIdAsync(userId.ToString());
+        var role = user is null ? null : await RoleOf(user);
+        // The platform account itself is changed only through configuration, never through this panel.
+        if (user is null || role is null || role == UserRole.SuperAdministrador) return AuthResult<PlatformStaff>.Fail(AuthError.NotFound);
+        if (user.Id == _current.UserId) return AuthResult<PlatformStaff>.Fail(AuthError.Forbidden, "You cannot deactivate yourself.");
+        if (user.IsActive == active) return AuthResult<PlatformStaff>.Ok(await ToStaffAsync(user, role.Value, ct));
+
+        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+        if (!active && role == UserRole.Administrador && !await KeepsAnAdministratorAsync(userId, await HeldChurchesAsync(userId, ct), ct))
+            return AuthResult<PlatformStaff>.Fail(AuthError.Conflict, "A church must keep at least one active administrator.");
+        user.IsActive = active;
+        var saved = await _users.UpdateAsync(user);
+        if (!saved.Succeeded) return AuthResult<PlatformStaff>.Fail(AuthError.Conflict, "The account changed at the same time. Try again.");
+        if (!active) await EndSessionsAsync(user, ct);
+        await _db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
+        await _audit.WriteAsync(new AuditEntry(active ? "platform.user_activated" : "platform.user_deactivated", null, _current.UserId, nameof(ApplicationUser), userId.ToString()), ct);
+        return AuthResult<PlatformStaff>.Ok(await ToStaffAsync(user, role.Value, ct));
+    }
+
+    public async Task<AuthResult<PlatformStaff>> SetRoleAsync(Guid userId, UserRole role, CancellationToken ct = default)
+    {
+        if (!IsSuper) return AuthResult<PlatformStaff>.Fail(AuthError.Forbidden);
+        // The platform role is never handed out from here: it comes only from the seed.
+        if (!UserRoles.ChurchAssignable.Contains(role)) return AuthResult<PlatformStaff>.Fail(AuthError.Validation, "Invalid role.");
+        var user = await _users.FindByIdAsync(userId.ToString());
+        var old = user is null ? null : await RoleOf(user);
+        if (user is null || old is null || old == UserRole.SuperAdministrador) return AuthResult<PlatformStaff>.Fail(AuthError.NotFound);
+        if (user.Id == _current.UserId) return AuthResult<PlatformStaff>.Fail(AuthError.Forbidden, "You cannot change your own role.");
+        if (old == role) return AuthResult<PlatformStaff>.Ok(await ToStaffAsync(user, role, ct));
+
+        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+        var held = await HeldChurchesAsync(userId, ct);
+        // Only an administrator works in several churches: cut the access down first.
+        if (role != UserRole.Administrador && held.Count > 1)
+            return AuthResult<PlatformStaff>.Fail(AuthError.Validation, "Reduce the account to one church before changing its role.");
+        if (old == UserRole.Administrador && user.IsActive && !await KeepsAnAdministratorAsync(userId, held, ct))
+            return AuthResult<PlatformStaff>.Fail(AuthError.Conflict, "A church must keep at least one active administrator.");
+
+        foreach (var r in await _users.GetRolesAsync(user)) await _users.RemoveFromRoleAsync(user, r);
+        await _users.AddToRoleAsync(user, role.ToString());
+        await EndSessionsAsync(user, ct);
+        await _db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
+        await _audit.WriteAsync(new AuditEntry("platform.role_changed", null, _current.UserId, nameof(ApplicationUser), userId.ToString(), $"{old}->{role}"), ct);
+        return AuthResult<PlatformStaff>.Ok(await ToStaffAsync(user, role, ct));
+    }
+
+    // Ends every session of the account: the stamp for Identity, the refresh tokens so nothing renews.
+    private async Task EndSessionsAsync(ApplicationUser user, CancellationToken ct)
+    {
+        await _users.UpdateSecurityStampAsync(user);
+        var now = _clock.GetUtcNow().UtcDateTime;
+        foreach (var t in await _db.RefreshTokens.Where(t => t.UserId == user.Id && t.RevokedAt == null).ToListAsync(ct)) t.Revoke(now);
+    }
+
+    private Task<List<Guid>> HeldChurchesAsync(Guid userId, CancellationToken ct) =>
+        _db.UserChurchAccess.Where(a => a.UserId == userId).Select(a => a.ChurchId).ToListAsync(ct);
+
+    // True when every ACTIVE church in the list still has another active administrator once this one is gone from it.
+    private async Task<bool> KeepsAnAdministratorAsync(Guid userId, IEnumerable<Guid> churchIds, CancellationToken ct)
+    {
+        var ids = churchIds.ToList();
+        var active = await _db.Churches.AsNoTracking().Where(c => c.IsActive && ids.Contains(c.Id)).Select(c => c.Id).ToListAsync(ct);
+        foreach (var id in active)
+            if (!await AnotherActiveAdminAsync(userId, id, ct)) return false;
+        return true;
     }
 
     public async Task<AuthResult<PlatformStaff>> CreateStaffAsync(CreatePlatformStaffRequest request, CancellationToken ct = default)

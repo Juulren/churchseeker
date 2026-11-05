@@ -46,6 +46,9 @@ namespace ChurchSeeker.Infrastructure.Migrations
                 name: "IX_UserChurchAccess_ChurchId",
                 table: "UserChurchAccess",
                 column: "ChurchId");
+
+            // Every existing user works in their home church, so nobody loses access when this migration runs.
+            migrationBuilder.Sql("INSERT INTO \"UserChurchAccess\" (\"UserId\", \"ChurchId\", \"GrantedAt\") SELECT \"Id\", \"ChurchId\", now() FROM \"AspNetUsers\" ON CONFLICT DO NOTHING;");
         }
 
         /// <inheritdoc />

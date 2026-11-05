@@ -25,4 +25,7 @@ public interface IPlatformService
     Task<AuthResult<IReadOnlyList<PlatformStaff>>> ListStaffAsync(CancellationToken ct = default);
     Task<AuthResult<PlatformStaff>> SetChurchesAsync(Guid userId, IReadOnlyList<Guid> churchIds, CancellationToken ct = default);
     Task<AuthResult<PlatformStaff>> CreateStaffAsync(CreatePlatformStaffRequest request, CancellationToken ct = default);
+    // The platform manages the accounts a church administrator cannot touch (those that work in several churches).
+    Task<AuthResult<PlatformStaff>> SetActiveAsync(Guid userId, bool active, CancellationToken ct = default);
+    Task<AuthResult<PlatformStaff>> SetRoleAsync(Guid userId, UserRole role, CancellationToken ct = default);
 }

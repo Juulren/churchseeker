@@ -324,6 +324,106 @@ public class ChurchAccessBreakTests : IClassFixture<BreakFactory>
         (await usuario.Client.GetAsync("/api/auth/me")).StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
+    // ---- Roll-out safety -----------------------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task StartUpBackfill_GivesAUserWithoutARowTheirHomeChurch_AndIsSafeToRunTwice()
+    {
+        var email = $"old-{Guid.NewGuid():N}@acc.local";
+        using (var scope = _f.Services.CreateScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = new ApplicationUser { Id = Guid.NewGuid(), UserName = email, Email = email, FullName = "Antiguo", ChurchId = B };
+            (await users.CreateAsync(user, Pw)).Succeeded.Should().BeTrue();
+            await users.AddToRoleAsync(user, nameof(UserRole.Secretario));
+        }
+        // A user from before the access table has no row, so it cannot work anywhere yet.
+        (await BreakFactory.Login(_f.Anonymous(), email, Pw)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+
+        for (var i = 0; i < 2; i++)
+        {
+            using var scope = _f.Services.CreateScope();
+            await scope.ServiceProvider.GetRequiredService<ChurchAccess>().EnsureHomeRowsAsync();
+        }
+        var login = await BreakFactory.Login(_f.Anonymous(), email, Pw);
+        login.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await BreakFactory.ReadJson(login)).GetProperty("user").GetProperty("churchId").GetGuid().Should().Be(B);
+    }
+
+    [Fact]
+    public async Task SwitchingWithASpentCookie_IsReplay_AndEndsEverySession()
+    {
+        var admin = await NewAsync(UserRole.Administrador, A, "rp", B);
+        var (_, next) = await SwitchAsync(admin, B);
+        // The cookie from before the switch was spent by it. Using it again (even with a live access token) is theft.
+        var replay = new HttpRequestMessage(HttpMethod.Post, "/api/auth/church") { Content = JsonContent.Create(new { churchId = A }) };
+        replay.Headers.Authorization = new AuthenticationHeaderValue("Bearer", next!.Client.DefaultRequestHeaders.Authorization!.Parameter);
+        replay.Headers.Add("Cookie", $"cs_refresh={BreakFactory.CookieValue(admin.Cookie)}");
+        (await _f.Anonymous().SendAsync(replay)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        // The newest cookie died with it.
+        var refresh = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh") { Headers = { { "Cookie", $"cs_refresh={BreakFactory.CookieValue(next.Cookie)}" } } };
+        (await _f.Anonymous().SendAsync(refresh)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    // ---- The platform manages the accounts that work in several churches -----------------------------------------------------
+
+    [Fact]
+    public async Task Platform_CanDeactivateActivateAndChangeTheRoleOfASharedAccount_UnderTheSameRules()
+    {
+        var super = await NewAsync(UserRole.SuperAdministrador, A, "pl");
+        // Each church keeps another administrator, so the shared one may be changed.
+        await CreateAsync(UserRole.Administrador, A, "keep-a");
+        await CreateAsync(UserRole.Administrador, B, "keep-b");
+        var (email, id) = await CreateAsync(UserRole.Administrador, A, "shared", B);
+
+        (await super.Client.PostAsync($"/api/platform/staff/{id}/deactivate", null)).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await BreakFactory.Login(_f.Anonymous(), email, Pw)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        (await super.Client.PostAsync($"/api/platform/staff/{id}/activate", null)).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await BreakFactory.Login(_f.Anonymous(), email, Pw)).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // A role other than administrator means one church: it must be cut down first.
+        (await super.Client.PutAsJsonAsync($"/api/platform/staff/{id}/role", new { role = 2 })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await super.Client.PutAsJsonAsync($"/api/platform/staff/{id}/churches", new { churchIds = new[] { A } })).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await super.Client.PutAsJsonAsync($"/api/platform/staff/{id}/role", new { role = 2 })).StatusCode.Should().Be(HttpStatusCode.OK);
+        // The platform role is never given from here, and the platform account is not managed from here.
+        (await super.Client.PutAsJsonAsync($"/api/platform/staff/{id}/role", new { role = 6 })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await super.Client.PostAsync($"/api/platform/staff/{super.Id}/deactivate", null)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Platform_CannotLeaveAChurchWithoutAnActiveAdministrator_ByDeactivatingOrDemoting()
+    {
+        var super = await NewAsync(UserRole.SuperAdministrador, A, "lw");
+        // The only administrator of church C: any other one that earlier tests left behind is switched off first.
+        var (_, only) = await CreateAsync(UserRole.Administrador, C, "lone");
+        using (var scope = _f.Services.CreateScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            foreach (var other in (await users.GetUsersInRoleAsync(nameof(UserRole.Administrador))).Where(u => u.Id != only && db.UserChurchAccess.Any(a => a.UserId == u.Id && a.ChurchId == C)))
+            {
+                other.IsActive = false;
+                await users.UpdateAsync(other);
+            }
+        }
+        (await super.Client.PostAsync($"/api/platform/staff/{only}/deactivate", null)).StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await super.Client.PutAsJsonAsync($"/api/platform/staff/{only}/role", new { role = 3 })).StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task Platform_AccessChanges_RejectThePlatformAccountAndThePlainAccount()
+    {
+        var super = await NewAsync(UserRole.SuperAdministrador, A, "rj");
+        var (_, otherSuper) = await CreateAsync(UserRole.SuperAdministrador, A, "other-super");
+        var (_, plain) = await CreateAsync(UserRole.Usuario, A, "plain-rj");
+        (await super.Client.PutAsJsonAsync($"/api/platform/staff/{otherSuper}/churches", new { churchIds = new[] { A } })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await super.Client.PutAsJsonAsync($"/api/platform/staff/{plain}/churches", new { churchIds = new[] { A } })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        // A staff pickers list never offers a plain account.
+        var admin = await NewAsync(UserRole.Administrador, A, "pick");
+        var list = await BreakFactory.ReadJson(await admin.Client.GetAsync("/api/auth/users"));
+        list.EnumerateArray().Select(e => e.GetProperty("role").ToString()).Should().NotContain(new[] { "Usuario", "7", "SuperAdministrador", "6" });
+    }
+
     // ---- Demonstration accounts never reach a real deployment ------------------------------------------------------------
 
     [Fact]
