@@ -29,12 +29,21 @@ public sealed partial class LocalFileStorage : IFileStorage
         return name;
     }
 
-    public Stream? OpenRead(FileKind kind, string storedName)
+    public Task<Stream?> OpenReadAsync(FileKind kind, string storedName, CancellationToken ct = default)
     {
-        if (string.IsNullOrEmpty(storedName) || !StoredNamePattern().IsMatch(storedName)) return null;
+        if (!IsStoredName(storedName)) return Task.FromResult<Stream?>(null);
         var path = Path.Combine(DirectoryFor(kind), storedName);
-        return File.Exists(path) ? new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read) : null;
+        return Task.FromResult<Stream?>(File.Exists(path) ? new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read) : null);
     }
+
+    public Task DeleteAsync(FileKind kind, string storedName, CancellationToken ct = default)
+    {
+        // Deliberately a no-op: a file removed before the record that stopped pointing at it is saved could leave a broken link
+        // if that save fails. A replaced file on disk is harmless; only the database provider stages the removal.
+        return Task.CompletedTask;
+    }
+
+    internal static bool IsStoredName(string? name) => !string.IsNullOrEmpty(name) && StoredNamePattern().IsMatch(name);
 
     private string DirectoryFor(FileKind kind) => Path.Combine(_root, kind.ToString().ToLowerInvariant());
 }

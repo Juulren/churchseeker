@@ -48,10 +48,10 @@ public sealed class ChurchService : IChurchService, IPublicChurchService
     }
 
     public Task<Result<ChurchProfileResponse>> SetLogoAsync(byte[] content, CancellationToken ct = default) =>
-        SetFileAsync(content, _opt.MaxImageBytes, FileValidator.ValidateImage, FileKind.Logo, (c, n) => c.SetLogo(n), ct);
+        SetFileAsync(content, _opt.MaxImageBytes, FileValidator.ValidateImage, FileKind.Logo, c => c.LogoFile, (c, n) => c.SetLogo(n), ct);
 
     private async Task<Result<ChurchProfileResponse>> SetFileAsync(byte[] content, int max, Func<byte[], FileCheck> validate,
-        FileKind kind, Action<Church, string> apply, CancellationToken ct)
+        FileKind kind, Func<Church, string?> pick, Action<Church, string> apply, CancellationToken ct)
     {
         if (!IsAdmin || _current.ChurchId is not { } id) return Result<ChurchProfileResponse>.Fail(ErrorKind.Forbidden);
         if (content.Length == 0 || content.Length > max)
@@ -61,7 +61,10 @@ public sealed class ChurchService : IChurchService, IPublicChurchService
 
         var c = await _churches.GetByIdAsync(id, ct);
         if (c is null) return Result<ChurchProfileResponse>.Fail(ErrorKind.NotFound);
+        var previous = pick(c);
         apply(c, await _storage.SaveAsync(kind, content, check.Extension, ct));
+        // The file that was replaced is removed in the same save, so the table does not grow with every new logo.
+        if (previous is not null) await _storage.DeleteAsync(kind, previous, ct);
         await _churches.SaveChangesAsync(ct);
         return Result<ChurchProfileResponse>.Ok(ToProfile(c));
     }
@@ -85,7 +88,7 @@ public sealed class ChurchService : IChurchService, IPublicChurchService
     {
         var c = await _churches.Query().AsNoTracking().FirstOrDefaultAsync(x => x.Id == churchId && x.IsActive, ct);
         var name = c is null ? null : pick(c);
-        var stream = name is null ? null : _storage.OpenRead(kind, name);
+        var stream = name is null ? null : await _storage.OpenReadAsync(kind, name, ct);
         return stream is null ? Result<FileContent>.Fail(ErrorKind.NotFound) : Result<FileContent>.Ok(new FileContent(stream, ContentTypeOf(name!)));
     }
 

@@ -85,6 +85,9 @@ function Profile() {
   )
 }
 
+// Vercel rejects bodies over 4.5 MB, so the server accepts PDFs up to 4 MiB; checking here avoids a pointless upload.
+const MAX_PDF_BYTES = 4 * 1024 * 1024
+
 function Books() {
   const books = useAsync(() => adminApi.books.list(), [])
   const [title, setTitle] = useState('')
@@ -99,6 +102,7 @@ function Books() {
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (!title.trim() || !file) { setMsg({ kind: 'error', text: 'Escribe un título y elige un PDF.' }); return }
+    if (file.size > MAX_PDF_BYTES) { setMsg({ kind: 'error', text: 'El PDF pesa más de 4 MB. Comprímelo o divídelo en dos.' }); return }
     setBusy(true); setMsg(null)
     try {
       await adminApi.books.upload({ title: title.trim(), description: null, author: emptyToNull(author), isPublic, spineColor: color, spineThickness: Number(thick) }, file)
@@ -126,7 +130,7 @@ function Books() {
           <TextInput label="Tono del lomo (de oscuro a claro)" type="range" min="20" max="235" step="5" value={tone} onChange={setTone} />
           <TextInput label="Grosor del lomo (1 a 10)" type="number" min="1" step="1" value={thick} onChange={setThick} />
         </div>
-        <label className="grid gap-1">Archivo PDF (máx. 25 MB; sin scripts ni archivos incrustados)<input className="input" type="file" accept="application/pdf,.pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></label>
+        <label className="grid gap-1">Archivo PDF (máx. 4 MB; sin scripts ni archivos incrustados)<input className="input" type="file" accept="application/pdf,.pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></label>
         <Check label="Público (si no, solo lo ve el personal de la iglesia)" checked={isPublic} onChange={setPublic} />
         {msg && <Notice kind={msg.kind}>{msg.text}</Notice>}
         <div><button type="submit" className="rpg-button btn-primary" disabled={busy}>{busy ? 'Subiendo…' : 'Subir códice'}</button></div>

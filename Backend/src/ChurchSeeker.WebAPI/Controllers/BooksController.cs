@@ -46,8 +46,8 @@ public class BooksController : ApiControllerBase
 
     [HttpPost]
     [Authorize(Policy = Policies.Management)]
-    [RequestSizeLimit(27 * 1024 * 1024)]
-    [RequestFormLimits(MultipartBodyLengthLimit = 27 * 1024 * 1024)]
+    [RequestSizeLimit(4 * 1024 * 1024 + 64 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 4 * 1024 * 1024 + 64 * 1024)]
     public async Task<IActionResult> Upload([FromForm] BookUploadForm form, CancellationToken ct)
     {
         var bytes = await UploadReader.ReadCappedAsync(form.File, _opt.MaxPdfBytes, ct);
@@ -91,6 +91,9 @@ public class PublicBooksController : ApiControllerBase
     public async Task<IActionResult> File(Guid churchId, Guid bookId, CancellationToken ct)
     {
         var r = await _books.OpenFileAsync(churchId, bookId, ct);
-        return r.Succeeded ? base.File(r.Value!.Stream, r.Value.ContentType) : NotFound();
+        if (!r.Succeeded) return NotFound();
+        // Public documents may be cached for a minute, so a database-backed host is not asked for the same bytes again and again.
+        Response.Headers.CacheControl = "public, max-age=60";
+        return base.File(r.Value!.Stream, r.Value.ContentType);
     }
 }

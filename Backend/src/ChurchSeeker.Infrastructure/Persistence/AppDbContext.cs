@@ -4,6 +4,8 @@ using ChurchSeeker.Application.Auth;
 using ChurchSeeker.Domain.Common;
 using ChurchSeeker.Domain.Entities;
 using ChurchSeeker.Infrastructure.Identity;
+using ChurchSeeker.Infrastructure.Storage;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +13,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace ChurchSeeker.Infrastructure.Persistence;
 
-public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
+public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>, IDataProtectionKeyContext
 {
     private readonly ICurrentUser? _currentUser;
     private readonly PublicTenantScope? _publicScope;
@@ -35,6 +37,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     public DbSet<Donation> Donations => Set<Donation>();
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<ChurchArchiveBook> ArchiveBooks => Set<ChurchArchiveBook>();
+    // Keys that protect reset-password and confirmation tokens: shared by every instance and kept across restarts.
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+    public DbSet<StoredFile> StoredFiles => Set<StoredFile>();
 
     // Fail closed: no authenticated church means the tenant filter matches nothing.
     private Guid? CurrentChurchId => _publicScope?.ChurchId ?? _currentUser?.ChurchId;
@@ -42,6 +47,13 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
+
+        b.Entity<StoredFile>(e =>
+        {
+            e.HasKey(x => x.Name);
+            e.Property(x => x.Name).HasMaxLength(64);
+            e.Property(x => x.Content).IsRequired();
+        });
 
         b.Entity<Church>(e =>
         {

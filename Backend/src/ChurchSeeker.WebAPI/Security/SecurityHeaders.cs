@@ -17,7 +17,8 @@ public static class SecurityHeaders
                 // This is a JSON API: nothing should ever be rendered or framed from it.
                 if (!(allowSwagger && ctx.Request.Path.StartsWithSegments("/swagger")))
                     h["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'";
-                if (ctx.Request.Path.StartsWithSegments("/api"))
+                // Everything under /api is uncacheable unless an endpoint chose otherwise (the public logos and documents do).
+                if (ctx.Request.Path.StartsWithSegments("/api") && !h.ContainsKey("Cache-Control"))
                     h["Cache-Control"] = "no-store";
                 return Task.CompletedTask;
             });
