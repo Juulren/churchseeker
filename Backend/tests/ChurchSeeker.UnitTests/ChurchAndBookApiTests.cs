@@ -59,6 +59,67 @@ public class ChurchAndBookApiTests : IClassFixture<AuthApiFactory>
         return Directory.Exists(dir) ? Directory.GetFiles(dir).Length : 0;
     }
 
+    // ---- Church history ------------------------------------------------------------------------
+
+    [Fact]
+    public async Task PilotChurches_HaveTheirHistoryFromTheStart_AndItIsPublic()
+    {
+        foreach (var id in new[] { ChurchSeedData.CathedralId, ChurchSeedData.SantaLuciaId, ChurchSeedData.JesusId })
+        {
+            var pub = await Json(await _f.CreateClient().GetAsync($"/api/public/churches/{id}"));
+            var history = pub.GetProperty("history").GetString();
+            history.Should().NotBeNullOrWhiteSpace();
+            history!.Length.Should().BeLessThanOrEqualTo(4000);
+            history.Should().Contain("\n\n", "paragraphs are separated by a blank line");
+        }
+    }
+
+    [Fact]
+    public async Task Admin_WritesTheHistory_ItIsTrimmed_AndBlankMeansNotWrittenYet()
+    {
+        var admin = await As(UserRole.Administrador, ChurchSeedData.SantaLuciaId, "hist");
+        var body = new
+        {
+            name = "Iglesia de Santa Lucía", denomination = "Católica", patronSaint = "Santa Lucía", address = "Calle 60 x 55",
+            contactPhone = (string?)null, contactEmail = (string?)null, latitude = 20.9716, longitude = -89.6248,
+            schedules = Array.Empty<object>(), history = "  Una historia.\n\nOtro párrafo.  "
+        };
+        var res = await admin.PutAsJsonAsync("/api/church", body);
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await Json(res)).GetProperty("history").GetString().Should().Be("Una historia.\n\nOtro párrafo.");
+        (await Json(await _f.CreateClient().GetAsync($"/api/public/churches/{ChurchSeedData.SantaLuciaId}"))).GetProperty("history").GetString().Should().Be("Una historia.\n\nOtro párrafo.");
+
+        // A client that does not send the history (an older one) leaves it as it is.
+        var omitted = await admin.PutAsJsonAsync("/api/church", new { body.name, body.denomination, body.patronSaint, body.address, body.contactPhone, body.contactEmail, body.latitude, body.longitude, body.schedules });
+        omitted.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await Json(omitted)).GetProperty("history").GetString().Should().Be("Una historia.\n\nOtro párrafo.");
+
+        var blank = await admin.PutAsJsonAsync("/api/church", new { body.name, body.denomination, body.patronSaint, body.address, body.contactPhone, body.contactEmail, body.latitude, body.longitude, body.schedules, history = "   " });
+        blank.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await Json(blank)).GetProperty("history").ValueKind.Should().Be(JsonValueKind.Null);
+        // Put the pilot text back for the other tests.
+        await admin.PutAsJsonAsync("/api/church", new { body.name, body.denomination, body.patronSaint, body.address, body.contactPhone, body.contactEmail, body.latitude, body.longitude, body.schedules, history = ChurchSeedData.SantaLuciaHistory });
+    }
+
+    [Fact]
+    public async Task History_RejectsMarkupControlCharactersAndTooMuchText_AndOnlyTheAdminWritesIt()
+    {
+        var admin = await As(UserRole.Administrador, ChurchSeedData.SantaLuciaId, "hist2");
+        object With(string history) => new
+        {
+            name = "Iglesia de Santa Lucía", denomination = "Católica", patronSaint = "Santa Lucía", address = "Calle 60 x 55",
+            contactPhone = (string?)null, contactEmail = (string?)null, latitude = 20.9716, longitude = -89.6248, schedules = Array.Empty<object>(), history
+        };
+        (await admin.PutAsJsonAsync("/api/church", With("<script>alert(1)</script>"))).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await admin.PutAsJsonAsync("/api/church", With("hola\u0000mundo"))).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await admin.PutAsJsonAsync("/api/church", With(new string('a', 4001)))).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await admin.PutAsJsonAsync("/api/church", With(new string('a', 4000)))).StatusCode.Should().Be(HttpStatusCode.OK);
+        await admin.PutAsJsonAsync("/api/church", With(ChurchSeedData.SantaLuciaHistory));
+
+        var secretary = await As(UserRole.Secretario, ChurchSeedData.SantaLuciaId, "hist3");
+        (await secretary.PutAsJsonAsync("/api/church", With("Otra historia."))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
     // ---- Church profile ------------------------------------------------------------------------
 
     [Fact]

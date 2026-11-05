@@ -20,6 +20,8 @@ export interface ChurchProfile extends PublicChurch {
   contactPhone: string | null
   contactEmail: string | null
   schedules: ScheduleSlot[]
+  /** Plain text; paragraphs are separated by a blank line. Null until the church writes it. */
+  history: string | null
 }
 
 export interface PublicEvent {

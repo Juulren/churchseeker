@@ -25,6 +25,12 @@ public static class SqliteUpgrades
 
         // The church a session works in, remembered by its refresh token.
         await AddColumnAsync(db, "RefreshTokens", "ChurchId", "TEXT NULL", ct);
+
+        // The history of each church (added with the History area). The pilot churches get theirs where nothing is written yet.
+        await AddColumnAsync(db, "Churches", "History", "TEXT NULL", ct);
+        foreach (var c in ChurchSeedData.Churches())
+            if (c.History is { } text)
+                await db.Database.ExecuteSqlInterpolatedAsync($"""UPDATE "Churches" SET "History" = {text} WHERE "Id" = {c.Id} AND "History" IS NULL""", ct);
     }
 
     internal static async Task AddColumnAsync(AppDbContext db, string table, string column, string definition, CancellationToken ct)

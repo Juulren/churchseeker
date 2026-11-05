@@ -35,6 +35,8 @@ export interface ProfileInput {
   name: string; denomination: string; patronSaint: string; address: string
   contactPhone: string | null; contactEmail: string | null; latitude: number; longitude: number
   schedules: { day: number; time: string; description: string }[]
+  /** Sent always: the text, or an empty string to clear it (leaving it out keeps what is saved). */
+  history: string
 }
 
 export interface BookMeta { title: string; description: string | null; author: string | null; isPublic: boolean; spineColor: string; spineThickness: number }

@@ -50,6 +50,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             e.Property(x => x.Denomination).IsRequired().HasMaxLength(100);
             e.Property(x => x.PatronSaint).IsRequired().HasMaxLength(150);
             e.Property(x => x.Address).IsRequired().HasMaxLength(300);
+            e.Property(x => x.History).HasMaxLength(Church.MaxHistory);
             e.Property(x => x.ContactPhone).HasMaxLength(30);
             e.Property(x => x.ContactEmail).HasMaxLength(256);
             e.Property(x => x.LogoFile).HasMaxLength(64);
