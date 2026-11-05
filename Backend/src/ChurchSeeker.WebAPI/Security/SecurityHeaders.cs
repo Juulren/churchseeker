@@ -15,8 +15,12 @@ public static class SecurityHeaders
                 h["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
                 h["Cross-Origin-Resource-Policy"] = "same-site";
                 // This is a JSON API: nothing should ever be rendered or framed from it.
-                if (!(allowSwagger && ctx.Request.Path.StartsWithSegments("/swagger")))
+                if (allowSwagger && ctx.Request.Path.StartsWithSegments("/swagger")) { }
+                else if (ctx.Request.Path.StartsWithSegments("/api"))
                     h["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'";
+                else
+                    // The web app carries its own policy in a meta tag (built by Vite); this adds what a meta tag cannot.
+                    h["Content-Security-Policy"] = "frame-ancestors 'none'; base-uri 'self'";
                 // Everything under /api is uncacheable unless an endpoint chose otherwise (the public logos and documents do).
                 if (ctx.Request.Path.StartsWithSegments("/api") && !h.ContainsKey("Cache-Control"))
                     h["Cache-Control"] = "no-store";
