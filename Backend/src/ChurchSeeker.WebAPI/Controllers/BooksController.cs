@@ -92,8 +92,8 @@ public class PublicBooksController : ApiControllerBase
     {
         var r = await _books.OpenFileAsync(churchId, bookId, ct);
         if (!r.Succeeded) return NotFound();
-        // Public documents may be cached for a few minutes, so a database-backed host is not asked for the same bytes again and again.
-        Response.Headers.CacheControl = "public, max-age=300";
+        // Public documents may be cached for a minute, so a database-backed host is not asked for the same bytes again and again.
+        Response.Headers.CacheControl = "public, max-age=60";
         return base.File(r.Value!.Stream, r.Value.ContentType);
     }
 }

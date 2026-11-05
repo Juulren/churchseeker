@@ -38,9 +38,8 @@ public sealed partial class LocalFileStorage : IFileStorage
 
     public Task DeleteAsync(FileKind kind, string storedName, CancellationToken ct = default)
     {
-        if (!IsStoredName(storedName)) return Task.CompletedTask;
-        var path = Path.Combine(DirectoryFor(kind), storedName);
-        try { File.Delete(path); } catch (IOException) { /* a file in use is left for later */ }
+        // Deliberately a no-op: a file removed before the record that stopped pointing at it is saved could leave a broken link
+        // if that save fails. A replaced file on disk is harmless; only the database provider stages the removal.
         return Task.CompletedTask;
     }
 

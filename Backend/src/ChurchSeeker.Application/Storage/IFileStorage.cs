@@ -1,4 +1,4 @@
-namespace ChurchSeeker.Application.Storage;
+﻿namespace ChurchSeeker.Application.Storage;
 
 public enum FileKind { Logo, Book }
 
@@ -10,6 +10,6 @@ public interface IFileStorage
     Task<string> SaveAsync(FileKind kind, byte[] content, string extension, CancellationToken ct = default);
     // Returns null when the name is malformed or the file does not exist (no path is ever built from user input).
     Task<Stream?> OpenReadAsync(FileKind kind, string storedName, CancellationToken ct = default);
-    // Stages (database) or performs (local) the removal of a file that nothing points at any more. Unknown names are ignored.
+    // Stages (database) the removal, committed by the next SaveChanges; the local provider keeps the file. Applies to a file of a file that nothing points at any more. Unknown names are ignored.
     Task DeleteAsync(FileKind kind, string storedName, CancellationToken ct = default);
 }
