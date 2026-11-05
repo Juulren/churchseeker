@@ -1,6 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest'
 import { qs } from '../../services/adminApi.ts'
 import { allowedNav } from './nav.ts'
+import { effectiveRole, isStaff } from '../../services/auth.ts'
 import { addDays, emptyToNull, formatMoney, monthGrid, monthRange, scaleBars, todayIso } from './format.ts'
 
 describe('qs', () => {
@@ -91,5 +92,29 @@ describe('role navigation', () => {
 
   it('every role at least sees the dashboard', () => {
     for (const r of ['Administrador', 'Pastor', 'Secretario', 'Tesorero', 'Coordinador'] as const) expect(labels(r)).toContain('dashboard')
+  })
+
+  it('gives the platform account every church module (it acts as an Administrador) plus its own two', () => {
+    const staff = labels('Administrador')
+    for (const path of staff) expect(labels('SuperAdministrador')).toContain(path)
+    expect(labels('SuperAdministrador')).toEqual(expect.arrayContaining(['platform', 'access']))
+  })
+
+  it('keeps the platform modules away from every other role', () => {
+    for (const r of ['Administrador', 'Pastor', 'Secretario', 'Tesorero', 'Coordinador', 'Usuario'] as const) {
+      expect(labels(r)).not.toContain('platform')
+      expect(labels(r)).not.toContain('access')
+    }
+  })
+
+  it('gives a plain Usuario no module at all', () => {
+    expect(labels('Usuario')).toEqual([])
+    expect(isStaff('Usuario')).toBe(false)
+    expect(isStaff('Coordinador')).toBe(true)
+  })
+
+  it('effectiveRole turns only the platform account into an Administrador', () => {
+    expect(effectiveRole('SuperAdministrador')).toBe('Administrador')
+    for (const r of ['Administrador', 'Pastor', 'Secretario', 'Tesorero', 'Coordinador', 'Usuario'] as const) expect(effectiveRole(r)).toBe(r)
   })
 })

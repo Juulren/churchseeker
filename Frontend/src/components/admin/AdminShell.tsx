@@ -1,8 +1,9 @@
 import { lazy, Suspense, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { flushSync } from 'react-dom'
-import { authApi, session } from '../../services/auth.ts'
+import { authApi, effectiveRole, isStaff, session } from '../../services/auth.ts'
 import { allowedNav } from './nav.ts'
-import { Loading } from './ui.tsx'
+import { Loading, Notice } from './ui.tsx'
+import { messageOf } from './useAsync.ts'
 import { decodeOnce, useKit } from '../ascii/useKit.ts'
 import { ToastHost } from '../ascii/toast.tsx'
 import CommandPalette from './CommandPalette.tsx'
@@ -18,6 +19,8 @@ const Announcements = lazy(() => import('./pages/AnnouncementsPage.tsx'))
 const Reports = lazy(() => import('./pages/ReportsPage.tsx'))
 const Users = lazy(() => import('./pages/UsersPage.tsx'))
 const Settings = lazy(() => import('./pages/SettingsPage.tsx'))
+const Platform = lazy(() => import('./pages/PlatformPage.tsx'))
+const Access = lazy(() => import('./pages/AccessPage.tsx'))
 import { navigate, parseRoute, useHash } from '../../state/route.ts'
 
 /** Protected layout: only for signed-in staff, with a menu limited to what the role may use. */
@@ -33,6 +36,8 @@ export default function AdminShell() {
   // The module on screen. It trails the route while the old one breaks up and the new one condenses in.
   const [shown, setShown] = useState(current)
   const swapping = useRef(false)
+  const [switchError, setSwitchError] = useState<string | null>(null)
+  const [switching, setSwitching] = useState(false)
   const latest = useRef(current)
   latest.current = current
   // The module name condenses out of characters when you open it; the real text stays in the DOM.
@@ -73,7 +78,17 @@ export default function AdminShell() {
   if (!user) return null
   const items = allowedNav(user.role)
   const active = items.find((i) => i.path === shown)
-  const management = user.role === 'Administrador' || user.role === 'Pastor' || user.role === 'Secretario'
+  // The platform account acts as an Administrador inside the church it is working in.
+  const acting = effectiveRole(user.role)
+  const management = acting === 'Administrador' || acting === 'Pastor' || acting === 'Secretario'
+  const activeChurch = user.churches.find((c) => c.id === user.churchId)?.name
+  const staff = isStaff(user.role)
+
+  // Moving to another church: the server issues a new token for it, and every module below starts again from that church.
+  const changeChurch = async (churchId: string) => {
+    setSwitchError(null); setSwitching(true)
+    try { await authApi.switchChurch(churchId); navigate('#/admin/dashboard') } catch (x) { setSwitchError(messageOf(x)) } finally { setSwitching(false) }
+  }
 
   return (
     <div className="flex h-full flex-col gap-3 p-3 md:flex-row">
@@ -83,6 +98,22 @@ export default function AdminShell() {
           <p className="rpg-label mt-1">{user.role}</p>
           <p className="mt-2 truncate text-sm" title={user.email}>{user.fullName}</p>
         </div>
+        {staff && user.churches.length > 0 && (
+          <div className="form-field">
+            {user.churches.length > 1
+              ? <>
+                <label htmlFor="active-church" className="rpg-label">Iglesia activa</label>
+                <select id="active-church" className="input" value={user.churchId} disabled={switching} onChange={(e) => { void changeChurch(e.target.value) }}>
+                  {user.churches.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </>
+              : <>
+                <span id="active-church-label" className="rpg-label">Iglesia activa</span>
+                <p aria-labelledby="active-church-label" className="text-sm">{activeChurch ?? '—'}</p>
+              </>}
+            {switchError && <Notice>{switchError}</Notice>}
+          </div>
+        )}
         <nav ref={menu} aria-label="Módulos" className="flex gap-2 overflow-x-auto md:flex-col">
           {items.map((i) => (
             <a key={i.path} href={`#/admin/${i.path}`} onClick={(e) => { if (i.path !== current) clicked.current = e.currentTarget }} className="rpg-button whitespace-nowrap text-center"
@@ -90,15 +121,22 @@ export default function AdminShell() {
           ))}
         </nav>
         <div className="mt-auto flex gap-2 md:flex-col">
-          <CommandPalette items={items} />
+          {staff && <CommandPalette items={items} />}
           <a href="#/" className="rpg-button text-center">Ver sitio público</a>
           <button className="rpg-button" onClick={async () => { await authApi.logout(); navigate('#/login') }}>Cerrar sesión</button>
         </div>
       </aside>
       <main ref={main} className="rpg-panel min-h-0 min-w-0 flex-1 overflow-y-auto p-5">
-        {active ? <><h2 ref={title} className="rpg-title">{active.label}</h2><div className="mb-4 mt-1" aria-hidden="true"><Ornament name="divider" size={150} /></div></> : <p role="alert">No tienes acceso a este módulo.</p>}
-        {active && (
-          <Suspense fallback={<Loading />}>
+        {!staff && (
+          <section aria-labelledby="account-title">
+            <h2 id="account-title" className="rpg-title">Tu cuenta</h2>
+            <p className="mt-3">Esta cuenta no tiene permisos de administración. Puedes explorar el sitio público: el mapa, la historia y los eventos de cada iglesia.</p>
+            <p className="mt-4"><a href="#/" className="rpg-button" style={{ display: 'inline-block', textDecoration: 'none' }}>Ir al sitio público</a></p>
+          </section>
+        )}
+        {staff && (active ? <><h2 ref={title} className="rpg-title">{active.label}</h2><div className="mb-4 mt-1" aria-hidden="true"><Ornament name="divider" size={150} /></div></> : <p role="alert">No tienes acceso a este módulo.</p>)}
+        {staff && active && (
+          <Suspense key={user.churchId} fallback={<Loading />}>
             {active.path === 'dashboard' && <Dashboard />}
             {active.path === 'members' && <Members />}
             {active.path === 'events' && <Events canEdit={management} />}
@@ -106,9 +144,11 @@ export default function AdminShell() {
             {active.path === 'ministries' && <Ministries isManagement={management} />}
             {active.path === 'donations' && <Donations />}
             {active.path === 'announcements' && <Announcements canEdit={management} />}
-            {active.path === 'reports' && <Reports role={user.role} />}
+            {active.path === 'reports' && <Reports role={acting} />}
             {active.path === 'users' && <Users />}
             {active.path === 'settings' && <Settings />}
+            {active.path === 'platform' && <Platform />}
+            {active.path === 'access' && <Access />}
           </Suspense>
         )}
       </main>

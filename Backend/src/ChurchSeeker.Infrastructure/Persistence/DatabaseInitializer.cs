@@ -20,7 +20,11 @@ public static class DatabaseInitializer
             if (config.GetValue("Database:Migrate", true)) await db.Database.MigrateAsync();
         }
         else if (config.GetValue("Database:AutoCreate", false))
+        {
             await db.Database.EnsureCreatedAsync();
+            // EnsureCreated leaves an existing database as it is: bring one made by an older version up to date.
+            if (db.Database.IsSqlite()) await SqliteUpgrades.ApplyAsync(db);
+        }
 
         var roles = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
         foreach (var role in Enum.GetNames<UserRole>())

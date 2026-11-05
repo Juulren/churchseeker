@@ -44,6 +44,24 @@ export interface MemberAttendanceRow { eventId: string; title: string; date: str
 
 export const DONATION_METHODS = ['', 'Efectivo', 'Transferencia', 'Cheque', 'Tarjeta', 'Otro']
 export const EVENT_KINDS = ['', 'Religioso', 'Administrativo']
-export interface ManagedUser { id: string; email: string; fullName: string; role: number; isActive: boolean; isSelf: boolean }
+/** isShared: the account works in several churches, so only the platform changes it. */
+export interface ManagedUser { id: string; email: string; fullName: string; role: number; isActive: boolean; isSelf: boolean; isShared?: boolean }
 
-export const ROLE_VALUES = { Administrador: 1, Pastor: 2, Secretario: 3, Tesorero: 4, Coordinador: 5 } as const
+/** The roles a church can give (the platform role never comes from a church). */
+export const ROLE_VALUES = { Administrador: 1, Pastor: 2, Secretario: 3, Tesorero: 4, Coordinador: 5, Usuario: 7 } as const
+
+/** The general dashboard: one row per church. */
+export interface ChurchOverview {
+  id: string; name: string; isActive: boolean; activeMembers: number; upcomingEvents: number; attendancesThisMonth: number
+  activeMinistries: number; administrators: number; incomeThisMonth: number; incomeThisYear: number
+}
+export interface PlatformOverview {
+  churches: ChurchOverview[]; totalMembers: number; totalUpcomingEvents: number; totalAttendancesThisMonth: number
+  totalMinistries: number; totalIncomeThisMonth: number; totalIncomeThisYear: number
+}
+
+/** A staff account with every church it works in. */
+export interface PlatformStaff {
+  id: string; email: string; fullName: string; role: number | string; isActive: boolean; homeChurchId: string
+  churches: { id: string; name: string }[]
+}

@@ -2,6 +2,7 @@ using ChurchSeeker.Domain.Entities;
 using ChurchSeeker.Domain.Enums;
 using ChurchSeeker.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ChurchSeeker.Infrastructure.Persistence;
@@ -30,13 +31,19 @@ public static class DemoAccountsSeeder
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         foreach (var a in Accounts)
         {
-            if (await users.FindByEmailAsync(a.Email) is not null) continue;
-            var user = new ApplicationUser { Id = Guid.NewGuid(), UserName = a.Email, Email = a.Email, EmailConfirmed = true, FullName = a.FullName, ChurchId = a.Home };
-            var created = await users.CreateAsync(user, a.Password);
-            if (!created.Succeeded) throw new InvalidOperationException($"Demo account {a.Email} failed: " + string.Join("; ", created.Errors.Select(e => e.Description)));
-            await users.AddToRoleAsync(user, a.Role.ToString());
-            db.UserChurchAccess.Add(new UserChurchAccess(user.Id, a.Home));
-            foreach (var extra in a.Extra) db.UserChurchAccess.Add(new UserChurchAccess(user.Id, extra));
+            var user = await users.FindByEmailAsync(a.Email);
+            if (user is null)
+            {
+                user = new ApplicationUser { Id = Guid.NewGuid(), UserName = a.Email, Email = a.Email, EmailConfirmed = true, FullName = a.FullName, ChurchId = a.Home };
+                var created = await users.CreateAsync(user, a.Password);
+                if (!created.Succeeded) throw new InvalidOperationException($"Demo account {a.Email} failed: " + string.Join("; ", created.Errors.Select(e => e.Description)));
+                await users.AddToRoleAsync(user, a.Role.ToString());
+            }
+            // Also for an account that already exists: an interrupted earlier start-up may have left it without its role or its access rows.
+            if ((await users.GetRolesAsync(user)).Count == 0) await users.AddToRoleAsync(user, a.Role.ToString());
+            foreach (var church in a.Extra.Prepend(a.Home))
+                if (!await db.UserChurchAccess.AnyAsync(x => x.UserId == user.Id && x.ChurchId == church))
+                    db.UserChurchAccess.Add(new UserChurchAccess(user.Id, church));
             await db.SaveChangesAsync();
         }
     }

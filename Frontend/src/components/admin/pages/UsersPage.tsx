@@ -67,7 +67,7 @@ function Permissions() {
         <table className="table">
           <thead><tr><th>Módulo</th>{roles.map((r) => <th key={r}>{r}</th>)}</tr></thead>
           <tbody>
-            {NAV.map((n) => (
+            {NAV.filter((n) => !n.platformOnly).map((n) => (
               <tr key={n.path}>
                 <th scope="row">{n.label}</th>
                 {roles.map((r) => {
@@ -107,14 +107,15 @@ export default function UsersPage() {
         {list.error && <Notice>{list.error}</Notice>}
         <div className="table-wrap">
           <table className="table">
+            <caption className="sr-only">Cuentas de la iglesia activa</caption>
             <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th><span className="sr-only">Acciones</span></th></tr></thead>
             <tbody>
               {list.data?.map((u) => (
                 <tr key={u.id}>
-                  <td>{u.fullName}{u.isSelf && <span className="muted"> (tú)</span>}</td>
+                  <td>{u.fullName}{u.isSelf && <span className="muted"> (tú)</span>}{u.isShared && <span className="muted" title="Esta cuenta trabaja en varias iglesias: solo la plataforma puede cambiarla."> (varias iglesias)</span>}</td>
                   <td>{u.email}</td>
                   <td>
-                    <select className="input" aria-label={'Rol de ' + u.fullName} value={String(u.role)} disabled={u.isSelf || !u.isActive || pending === u.id}
+                    <select className="input" aria-label={'Rol de ' + u.fullName} value={String(u.role)} disabled={u.isSelf || !u.isActive || u.isShared || pending === u.id}
                       onChange={(e) => act(u, () => adminApi.staff.setRole(u.id, Number(e.target.value)), 'Rol de ' + u.fullName + ' cambiado a ' + roleName(Number(e.target.value)) + '.')}>
                       {ROLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
@@ -123,9 +124,9 @@ export default function UsersPage() {
                   <td>
                     <div className="row-actions">
                       {u.isActive
-                        ? <button className="rpg-button" disabled={u.isSelf || pending === u.id} onClick={() => act(u, () => adminApi.staff.setActive(u.id, false), u.fullName + ' desactivado: ya no puede entrar.')}>Desactivar</button>
-                        : <button className="rpg-button" disabled={pending === u.id} onClick={() => act(u, () => adminApi.staff.setActive(u.id, true), u.fullName + ' reactivado.')}>Activar</button>}
-                      {u.isActive && <button className="rpg-button" disabled={pending === u.id} onClick={() => act(u, () => adminApi.staff.sendReset(u.id), 'Correo de restablecimiento enviado a ' + u.email + '.')}>Enviar restablecimiento</button>}
+                        ? <button className="rpg-button" disabled={u.isSelf || u.isShared || pending === u.id} onClick={() => act(u, () => adminApi.staff.setActive(u.id, false), u.fullName + ' desactivado: ya no puede entrar.')}>Desactivar</button>
+                        : <button className="rpg-button" disabled={u.isShared || pending === u.id} onClick={() => act(u, () => adminApi.staff.setActive(u.id, true), u.fullName + ' reactivado.')}>Activar</button>}
+                      {u.isActive && <button className="rpg-button" disabled={u.isShared || pending === u.id} onClick={() => act(u, () => adminApi.staff.sendReset(u.id), 'Correo de restablecimiento enviado a ' + u.email + '.')}>Enviar restablecimiento</button>}
                     </div>
                   </td>
                 </tr>
