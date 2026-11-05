@@ -40,7 +40,7 @@ public sealed class ChurchService : IChurchService, IPublicChurchService
         try
         {
             c.UpdateProfile(r.Name, r.Denomination, r.PatronSaint, r.Address, r.ContactPhone, r.ContactEmail, r.Latitude, r.Longitude,
-                (r.Schedules ?? []).Select(s => new ScheduleSlot(s.Day, s.Time, s.Description)).ToList());
+                (r.Schedules ?? []).Select(s => new ScheduleSlot(s.Day, s.Time, s.Description)).ToList(), r.History ?? c.History);
             await _churches.SaveChangesAsync(ct);
             return Result<ChurchProfileResponse>.Ok(ToProfile(c));
         }
@@ -102,5 +102,5 @@ public sealed class ChurchService : IChurchService, IPublicChurchService
 
     private static ChurchProfileResponse ToProfile(Church c) => new(c.Id, c.Name, c.Denomination, c.PatronSaint, c.Address,
         c.ContactPhone, c.ContactEmail, c.Latitude, c.Longitude, LogoUrl(c),
-        c.Schedules.Select(s => new ScheduleSlotDto(s.Day, s.Time, s.Description)).ToList());
+        c.Schedules.Select(s => new ScheduleSlotDto(s.Day, s.Time, s.Description)).ToList(), c.History);
 }

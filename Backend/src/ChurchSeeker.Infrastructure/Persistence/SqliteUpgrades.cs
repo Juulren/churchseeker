@@ -24,12 +24,23 @@ public static class SqliteUpgrades
         await db.Database.ExecuteSqlRawAsync("""CREATE INDEX IF NOT EXISTS "IX_UserChurchAccess_ChurchId" ON "UserChurchAccess" ("ChurchId")""", ct);
 
         // The church a session works in, remembered by its refresh token.
-        await AddColumnAsync(db, "RefreshTokens", "ChurchId", "TEXT NULL", ct);
+        _ = await AddColumnAsync(db, "RefreshTokens", "ChurchId", "TEXT NULL", ct);
+
+        // The history of each church (added with the History area). The pilot churches get theirs where nothing is written yet.
+        // The pilot texts are written only in the run that adds the column: a blank history is stored as NULL, so doing this on
+        // every start-up would bring back a text an administrator cleared on purpose.
+        if (await AddColumnAsync(db, "Churches", "History", "TEXT NULL", ct))
+            foreach (var c in ChurchSeedData.Churches())
+                if (c.History is { } text)
+                    await db.Database.ExecuteSqlInterpolatedAsync($"""UPDATE "Churches" SET "History" = {text} WHERE "Id" = {c.Id.ToString().ToUpperInvariant()} AND "History" IS NULL""", ct);
     }
 
-    internal static async Task AddColumnAsync(AppDbContext db, string table, string column, string definition, CancellationToken ct)
+    /// <returns>True when the column was added now, false when it was already there.</returns>
+    internal static async Task<bool> AddColumnAsync(AppDbContext db, string table, string column, string definition, CancellationToken ct)
     {
         var exists = await db.Database.SqlQueryRaw<int>($"""SELECT COUNT(*) AS "Value" FROM pragma_table_info('{table}') WHERE name = '{column}'""").SingleAsync(ct);
-        if (exists == 0) await db.Database.ExecuteSqlRawAsync($"""ALTER TABLE "{table}" ADD COLUMN "{column}" {definition}""", ct);
+        if (exists != 0) return false;
+        await db.Database.ExecuteSqlRawAsync($"""ALTER TABLE "{table}" ADD COLUMN "{column}" {definition}""", ct);
+        return true;
     }
 }

@@ -9,6 +9,7 @@ public record ScheduleSlot(DayOfWeek Day, TimeOnly Time, string Description);
 public class Church : BaseEntity
 {
     public const int MaxSchedules = 30;
+    public const int MaxHistory = 4000;
 
     public string Name { get; private set; } = string.Empty;
     public string Denomination { get; private set; } = string.Empty;
@@ -16,6 +17,8 @@ public class Church : BaseEntity
     public string Address { get; private set; } = string.Empty;
     public double Latitude { get; private set; }
     public double Longitude { get; private set; }
+    /// <summary>The church's history, plain text: paragraphs are separated by a blank line. Shown first on its public page.</summary>
+    public string? History { get; private set; }
     public string? ContactPhone { get; private set; }
     public string? ContactEmail { get; private set; }
     // Server-generated storage names (GUID + extension), never user-supplied file names.
@@ -25,7 +28,7 @@ public class Church : BaseEntity
     private Church() { }
 
     public Church(Guid id, string name, string denomination, string patronSaint,
-                  string address, double latitude, double longitude)
+                  string address, double latitude, double longitude, string? history = null)
     {
         if (id == Guid.Empty) throw new DomainException("Id is required.");
         Id = id;
@@ -34,6 +37,7 @@ public class Church : BaseEntity
         PatronSaint = RequireText(patronSaint, nameof(PatronSaint), 150);
         Address = RequireText(address, nameof(Address), 300);
         SetLocation(latitude, longitude);
+        History = OptionalHistory(history);
     }
 
     public void SetLocation(double latitude, double longitude)
@@ -49,12 +53,13 @@ public class Church : BaseEntity
 
     public void UpdateProfile(string name, string denomination, string patronSaint, string address,
                               string? phone, string? email, double latitude, double longitude,
-                              IReadOnlyList<ScheduleSlot> schedules)
+                              IReadOnlyList<ScheduleSlot> schedules, string? history = null)
     {
         var n = RequirePlainText(name, nameof(Name), 200);
         var d = RequirePlainText(denomination, nameof(Denomination), 100);
         var p = RequirePlainText(patronSaint, nameof(PatronSaint), 150);
         var a = RequirePlainText(address, nameof(Address), 300);
+        var hist = OptionalHistory(history);
         var ph = OptionalPlainText(phone, nameof(ContactPhone), 30);
         if (ph is not null && !ContactValidator.IsValidPhone(ph)) throw new DomainException("ContactPhone has an invalid format.");
         var em = OptionalPlainText(email, nameof(ContactEmail), 256);
@@ -69,8 +74,12 @@ public class Church : BaseEntity
         SetLocation(latitude, longitude);
         Name = n; Denomination = d; PatronSaint = p; Address = a; ContactPhone = ph; ContactEmail = em;
         Schedules = clean;
+        History = hist;
         Touch();
     }
+
+    // Plain text like every other field (no markup), up to MaxHistory characters; blank means "not written yet".
+    private static string? OptionalHistory(string? value) => OptionalPlainText(value, nameof(History), MaxHistory);
 
     public void SetLogo(string storedName) { LogoFile = storedName; Touch(); }
 }

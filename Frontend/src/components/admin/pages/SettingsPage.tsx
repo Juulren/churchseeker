@@ -4,7 +4,7 @@ import { type ProfileInput } from '../../../services/adminTypes.ts'
 import { DAY_NAMES } from '../../rpg-view/format.ts'
 import { emptyToNull } from '../format.ts'
 import { messageOf, useAsync } from '../useAsync.ts'
-import { Check, Loading, Modal, Notice, SelectInput, TextInput } from '../ui.tsx'
+import { Check, Loading, Modal, Notice, SelectInput, TextArea, TextInput } from '../ui.tsx'
 import SlideConfirm from '../../ascii/SlideConfirm.tsx'
 import { useKit } from '../../ascii/useKit.ts'
 import { Empty } from '../../ornament/Illustrations.tsx'
@@ -30,7 +30,7 @@ function Profile() {
   const [busy, setBusy] = useState(false)
   useEffect(() => {
     const c = church.data
-    if (c) setF({ name: c.name, denomination: c.denomination, patronSaint: c.patronSaint, address: c.address, contactPhone: c.contactPhone, contactEmail: c.contactEmail, latitude: c.latitude, longitude: c.longitude, schedules: c.schedules.map((s) => ({ ...s, time: s.time.slice(0, 5) })) })
+    if (c) setF({ name: c.name, denomination: c.denomination, patronSaint: c.patronSaint, address: c.address, contactPhone: c.contactPhone, contactEmail: c.contactEmail, latitude: c.latitude, longitude: c.longitude, schedules: c.schedules.map((s) => ({ ...s, time: s.time.slice(0, 5) })), history: c.history ?? '' })
   }, [church.data])
   if (church.error) return <Notice>{church.error}</Notice>
   if (!f) return <Loading />
@@ -59,6 +59,10 @@ function Profile() {
         <TextInput label="Correo" type="email" value={f.contactEmail ?? ''} onChange={(v) => set('contactEmail', v)} />
         <TextInput label="Latitud" type="number" step="any" value={String(f.latitude)} onChange={(v) => set('latitude', Number(v))} />
         <TextInput label="Longitud" type="number" step="any" value={String(f.longitude)} onChange={(v) => set('longitude', Number(v))} />
+      </div>
+      <div className="grid gap-1">
+        <TextArea label="Historia de la iglesia" value={f.history} onChange={(v) => set('history', v)} maxLength={4000} />
+        <small className="muted">Aparece primero en la página pública de la iglesia. Texto sencillo: separa los párrafos con una línea en blanco. {f.history.length} de 4000 caracteres.</small>
       </div>
       <fieldset className="grid gap-2 border-0 p-0">
         <legend className="rpg-label mb-1">Horarios habituales</legend>

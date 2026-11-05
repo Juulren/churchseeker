@@ -5,7 +5,7 @@ import type { PublicChurch } from '../../services/types.ts'
 import Bookshelf from '../bookshelf/Bookshelf.tsx'
 import SigilMorph from '../sigil/SigilMorph.tsx'
 import EngravingStage from '../engraving/EngravingStage.tsx'
-import { EventsPanel, InfoPanel, NewsPanel } from './Panels.tsx'
+import { EventsPanel, HistoryPanel, InfoPanel, NewsPanel } from './Panels.tsx'
 import { useChurchData } from './useChurchData.ts'
 
 interface Props {
@@ -59,6 +59,7 @@ export default function RpgView({ church, onBack }: Props) {
           </div>
           <button className="rpg-button" onClick={onBack}>← Volver al mapa (Esc)</button>
         </header>
+        <HistoryPanel section={data?.profile} loading={loading} />
         <EventsPanel section={data?.events} loading={loading} />
         <NewsPanel section={data?.announcements} loading={loading} />
         <Bookshelf section={data?.books} loading={loading} fetchFile={fetchFile} onReaderChange={setReaderOpen} />

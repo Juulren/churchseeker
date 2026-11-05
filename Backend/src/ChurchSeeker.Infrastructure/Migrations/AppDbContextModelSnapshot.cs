@@ -186,6 +186,10 @@ namespace ChurchSeeker.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("History")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -227,6 +231,7 @@ namespace ChurchSeeker.Infrastructure.Migrations
                             Address = "Calle 60 s/n, Centro, Mérida, Yucatán",
                             CreatedAt = new DateTime(2026, 11, 3, 5, 22, 57, 830, DateTimeKind.Utc),
                             Denomination = "Católica",
+                            History = "La Catedral de San Ildefonso es la sede de la Arquidiócesis de Yucatán y suele mencionarse entre las primeras catedrales construidas en tierra firme americana. Sus obras comenzaron hacia 1562, sobre una capilla de San José, y se dieron por concluidas en 1598.\n\nEl proyecto fue encomendado a Pedro de Aulestia y lo completaron Juan Miguel de Agüero y Gregorio de la Torre. Es de cantera, con una fachada renacentista y torres de aire morisco. En 1915 sufrió saqueos durante la entrada de fuerzas revolucionarias a la ciudad.",
                             IsActive = true,
                             Latitude = 20.967099999999999,
                             Longitude = -89.622500000000002,
@@ -241,6 +246,7 @@ namespace ChurchSeeker.Infrastructure.Migrations
                             Address = "Calle 60 x 55, Santa Lucía, Mérida, Yucatán",
                             CreatedAt = new DateTime(2026, 11, 3, 5, 22, 57, 830, DateTimeKind.Utc),
                             Denomination = "Católica",
+                            History = "La Iglesia de Santa Lucía nació como una capilla para dar servicio religioso a los vecinos del barrio, poco después de la fundación de Mérida en 1542. Según una de las fuentes, su construcción se concluyó hacia 1575, y alcanzó su tamaño actual hacia 1760. Tiene una entrada rectangular enmarcada en cantera, un vitral y una espadaña.\n\nEn 1804 el gobernador Benito Pérez Valdelomar convirtió en plaza el terreno del actual parque, que era un basurero. Desde 1965 el Parque de Santa Lucía ofrece serenatas yucatecas los jueves.",
                             IsActive = true,
                             Latitude = 20.971599999999999,
                             Longitude = -89.624799999999993,
@@ -255,6 +261,7 @@ namespace ChurchSeeker.Infrastructure.Migrations
                             Address = "Calle 60 x 57, Centro, Mérida, Yucatán",
                             CreatedAt = new DateTime(2026, 11, 3, 5, 22, 57, 830, DateTimeKind.Utc),
                             Denomination = "Católica",
+                            History = "La Iglesia de Jesús, conocida como la Tercera Orden, la levantó la Compañía de Jesús a partir de 1618 como parte de un colegio que ocupaba toda la manzana; hoy es el único edificio que sobrevive de aquel conjunto.\n\nTras la expulsión de los jesuitas, en 1767, pasó a la Tercera Orden franciscana, de la que toma su nombre popular. Su planta es de cruz latina, con bóvedas de cañón y cúpulas sin tambor.",
                             IsActive = true,
                             Latitude = 20.966100000000001,
                             Longitude = -89.623400000000004,

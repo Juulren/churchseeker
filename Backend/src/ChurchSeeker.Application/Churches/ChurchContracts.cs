@@ -7,11 +7,11 @@ public record ScheduleSlotDto(DayOfWeek Day, TimeOnly Time, string Description);
 
 public record ChurchProfileRequest(string Name, string Denomination, string PatronSaint, string Address,
                                    string? ContactPhone, string? ContactEmail, double Latitude, double Longitude,
-                                   IReadOnlyList<ScheduleSlotDto> Schedules);
+                                   IReadOnlyList<ScheduleSlotDto> Schedules, string? History = null);
 
 public record ChurchProfileResponse(Guid Id, string Name, string Denomination, string PatronSaint, string Address,
                                     string? ContactPhone, string? ContactEmail, double Latitude, double Longitude,
-                                    string? LogoUrl, IReadOnlyList<ScheduleSlotDto> Schedules);
+                                    string? LogoUrl, IReadOnlyList<ScheduleSlotDto> Schedules, string? History = null);
 
 public record PublicChurchSummary(Guid Id, string Name, string Denomination, string PatronSaint,
                                   double Latitude, double Longitude, string? LogoUrl);

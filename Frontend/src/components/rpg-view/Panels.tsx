@@ -21,6 +21,23 @@ function State<T>({ section, loading, empty, children }: { section: Section<T> |
 const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`
 const EMAIL = /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/
 
+/** What a church writes about itself, as plain paragraphs (never markup: React escapes the text). */
+export function HistoryPanel({ section, loading }: { section: Section<ChurchProfile> | undefined; loading: boolean }) {
+  return (
+    <div>
+      <PanelTitle>Historia</PanelTitle>
+      <State section={section} loading={loading} empty="Sin información.">
+        {(p) => {
+          const paragraphs = (p.history ?? '').split(/\r?\n\s*\r?\n/).map((t) => t.trim()).filter(Boolean)
+          return paragraphs.length === 0
+            ? <p style={dim}>La historia de esta iglesia se está documentando.</p>
+            : <div className="grid gap-2">{paragraphs.map((t, i) => <p key={i} style={{ whiteSpace: 'pre-line' }}>{t}</p>)}</div>
+        }}
+      </State>
+    </div>
+  )
+}
+
 export function InfoPanel({ section, loading }: { section: Section<ChurchProfile> | undefined; loading: boolean }) {
   return (
     <div className="rpg-panel p-4">
