@@ -132,6 +132,10 @@ dotnet run --project Backend/src/ChurchSeeker.WebAPI --launch-profile http
 
 Sin `Email:Host` el correo solo se registra en el log. Con `Email:Host` se envía por SMTP (MailKit); en producción define `Email:UseSsl`, `Email:User`, `Email:Password` y `Email:From` con secretos del entorno, nunca en el repositorio. Para crear una migración nueva: `dotnet tool restore` y `dotnet ef migrations add <Nombre> --project src/ChurchSeeker.Infrastructure --startup-project src/ChurchSeeker.Infrastructure --output-dir Migrations` (con `CHURCHSEEKER_DESIGN_CS` apuntando a la base).
 
+## Despliegue
+
+Vercel (contenedor con la web y la API) + Neon (PostgreSQL, también guarda los PDF y logos): ver [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md).
+
 ## Pruebas
 
 ```bash
@@ -160,6 +164,7 @@ Las pruebas e2e de acceso usan las cuentas de demostración de arriba, así que 
 - **Grabados:** cada iglesia se muestra como un grabado de líneas SVG: tres láminas dibujadas a mano para las iglesias piloto y cuatro tipologías (nave, rotonda, pórtico, patio) variadas por id para las demás. Sin WebGL ni descargas. Los libros siguen siendo 3D.
 - **Historia:** las de las tres iglesias piloto se basan en fuentes públicas (Wikipedia, INAH, guías turísticas) y dicen cuándo difieren; las de Jesús y Santa Lucía conviene revisarlas. Cada iglesia puede reescribir la suya.
 - **Correo:** SMTP real con MailKit cuando `Email:Host` está definido; si no, solo se registra en el log. Falta elegir y probar un proveedor de producción.
+- **Archivos en la base (Vercel + Neon):** con `Storage:Provider=Database` los PDF y logos viven en la tabla `StoredFiles`. Un libro desactivado conserva su PDF, así que la tabla solo crece (solo se borra el logo anterior al cambiarlo). Con los 0.5 GB gratis de Neon caben unos 100 PDFs de 4 MiB. El límite por PDF es 4 MiB porque Vercel rechaza cuerpos de más de 4.5 MB.
 - **PDF:** el escaneo busca contenido activo por bytes; no detecta el que esté dentro de flujos comprimidos.
 - **QuestPDF** se usa con licencia Community.
 - **Inicio de sesión:** correo y contraseña. No hay enlace por correo ni GitHub.

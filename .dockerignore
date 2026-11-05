@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/test-results/
+**/*.db
+**/*.db-*
+.git/
+docs/
+Backend/tests/
+Frontend/e2e/
+storage/

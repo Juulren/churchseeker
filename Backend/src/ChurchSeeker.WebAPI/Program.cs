@@ -4,9 +4,15 @@ using ChurchSeeker.Infrastructure;
 using ChurchSeeker.Infrastructure.Persistence;
 using ChurchSeeker.WebAPI.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// `--bootstrap`: apply the migrations, create the roles and the platform account, then exit. Run it by hand against the database
+// (with the direct connection string) before a deployment; the running server then starts without touching the schema.
+var bootstrap = args.Contains("--bootstrap");
+if (bootstrap) builder.Configuration["Database:Migrate"] = "true";
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -17,6 +23,19 @@ builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddAppRateLimiting(builder.Configuration);
+
+// Behind a proxy (Vercel) the client address is in X-Forwarded-For. Only trusted when the deployment says it is behind one:
+// otherwise anyone could pick the address that the rate limits see.
+var behindProxy = builder.Configuration.GetValue("ForwardedHeaders:Enabled", false);
+if (behindProxy)
+    builder.Services.Configure<ForwardedHeadersOptions>(o =>
+    {
+        o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        o.ForwardLimit = 1;
+        o.ForwardedForHeaderName = builder.Configuration["ForwardedHeaders:ForwardedForHeaderName"] ?? "X-Forwarded-For";
+        o.KnownNetworks.Clear();
+        o.KnownProxies.Clear();
+    });
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 if (allowedOrigins.Any(o => o.Trim() == "*" || !Uri.TryCreate(o, UriKind.Absolute, out _)))
@@ -96,7 +115,13 @@ builder.Services.AddAuthorization(o =>
 
 var app = builder.Build();
 
-await DatabaseInitializer.InitializeAsync(app.Services, app.Configuration);
+// The schema and the seeds are applied on start-up in development, and by `--bootstrap` anywhere else (a serverless instance
+// that starts cold should not migrate, seed or scan users).
+if (bootstrap || app.Configuration.GetValue("Database:RunOnStart", app.Environment.IsDevelopment()))
+    await DatabaseInitializer.InitializeAsync(app.Services, app.Configuration);
+if (bootstrap) return;
+
+if (behindProxy) app.UseForwardedHeaders();
 
 if (app.Environment.IsDevelopment())
 {
@@ -108,11 +133,39 @@ app.UseSecurityHeaders(allowSwagger: app.Environment.IsDevelopment());
 if (!app.Environment.IsDevelopment())
     app.UseHsts();
 app.UseHttpsRedirection();
+
+// The built web app, when the container carries it in wwwroot (one origin: the API and the pages share cookies and need no CORS).
+var webRoot = app.Environment.WebRootPath;
+var hasWeb = webRoot is not null && File.Exists(Path.Combine(webRoot, "index.html"));
+if (hasWeb)
+{
+    app.UseDefaultFiles();
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        // Built assets carry a hash in their name and never change.
+        OnPrepareResponse = c =>
+        {
+            c.Context.Response.Headers.CacheControl = c.Context.Request.Path.StartsWithSegments("/assets")
+                ? "public, max-age=31536000, immutable"
+                : "no-cache"; // index.html must be revalidated, or a new deploy would keep pointing at old assets
+        }
+    });
+}
+
 app.UseCors();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapGet("/api/health", () => Results.Ok(new { status = "ok" })).AllowAnonymous();
+if (hasWeb)
+    app.MapFallback(async ctx =>
+    {
+        if (ctx.Request.Path.StartsWithSegments("/api")) { ctx.Response.StatusCode = StatusCodes.Status404NotFound; return; }
+        ctx.Response.Headers.CacheControl = "no-cache";
+        ctx.Response.ContentType = "text/html; charset=utf-8";
+        await ctx.Response.SendFileAsync(Path.Combine(webRoot!, "index.html"));
+    });
 
 app.Run();
 
